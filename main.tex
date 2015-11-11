@@ -2,7 +2,7 @@
 
 
 \usepackage{geometry}
-\geometry{legalpaper, margin=1.28in}
+\geometry{legalpaper, margin=1.22in}
 
 
 \usepackage[english]{babel}
@@ -79,7 +79,7 @@ Financially, the medical device market is worth \$289 billion.
 Examples include everything from adhesive bandages to drug infusion pumps, surgical robots, deep brain stimulation systems and devices still undergoing basic research like the artificial pancreas.
 %In fact, many device companies are in the no-revenue startup phase, indicating a vigorous research environment.
 These are safety-critical technologies combining hardware and software, each of which must be rigorously validated to be efficacious and safe.
-\begin{figure}[b]
+\begin{figure}[t]
 	\centering
 	\includegraphics[scale=0.35]{figs/closed-loop.pdf}
 	\caption{\small Open-loop and closed-loop medical devices. The open-loop devices has medical professionals in the loop while the closed-loop medical devices interact with patient physiology directly.}
@@ -94,7 +94,7 @@ An example of closed-loop medical devices is implantable pacemaker which diagnos
 Closed-loop medical devices interact with human physiology directly, and often times without human intervention.
 Therefore device failures like inappropriate therapies may result in serious injuries or death of the patient.
 As the result, closed-loop medical devices are categorized by the regulation agencies as the highest risk devices.
-\begin{figure}[t]
+\begin{figure}[b]
 	\centering
 	\includegraphics[scale=0.35]{figs/fig1pacemaker.pdf}
 	\caption{\small Pacemaker operating in a closed-loop with the heart. The leads sense cardiac electrophysiological activity from inside the heart tissue (AS/VS = Atrial/Ventricular Sense event) and actuate the heart (AP/VP = Atrial/Ventricular Pacing event to maintain a desired heart rate.}
@@ -111,7 +111,7 @@ Implanted cardiac pacemakers and defibrillators have approximately 80,000-100,00
 The primary challenge of high-confidence medical device software is to guarantee the device will never drive the patient into an unsafe condition even though we do not have complete understanding of the physiological plant.  
 \subsection{Closed-loop Interaction with Human Physiology}
 Closed-loop medical devices directly measure physiological signals from the patient and deliver therapy based on the diagnosis.
-The physiology changes its states and corresponding physiological signals in respond to the therapy, therefore the safety and efficacy of the devices have to be validated within its physiological context.
+The patient physiology responds to the device output and generates corresponding physiological signals to the device, therefore the safety and efficacy of the devices have to be validated within its physiological context.
 % However, the understanding of human physiology
 % Due to the knowledge gap between the domain experts and the software developers, it is impossible to encode 
 Currently the only closed-loop validation method is \emph{clinical trials}, in which the performance of the devices are evaluated on real patients.
@@ -120,55 +120,307 @@ Problems found at this late stage are also very costly to fix.
 
 \begin{figure}[t]
 	\centering
-	\includegraphics[scale=0.35]{figs/model_based_b.pdf}
+	\includegraphics[scale=0.45]{figs/model_based_b.pdf}
 	\caption{\small Model-based design of pacemaker software.}
 	\label{fig:MBD}
 \end{figure}
-\section{Proposed Research}
-\emph{Model-based Design (MBD)} enables closed-loop validation at earlier design phrase, which can potentially save development cost.
-\subsection{Model-based Design Framework}
-Fig. \ref{fig:MBD} demonstrates our model-based design framework for implantable pacemaker software.
-Throughout the development process we developed heart models to interact with the pacemaker model in closed-loop. 
-This framework can potentially be applied for developing other closed-loop medical devices.
-There are several key steps within the framework:
-\subsection{Physiological Modeling for Closed-loop Device Validation}
-In closed-loop MBD, the device (or a model thereof) is connected to a \emph{model} of the ``physiological plant" it interacts with.
+\subsection{Model-based Design}
+\emph{Model-based Design (MBD)} can potentially enable closed-loop validation at earlier design phrase, which can potentially save development cost.
+MBD has been widely applied in industries like automotive and aviation. 
+However, MBD has not been very appealing for developing closed-loop medical devices.
+%, the device (or a model thereof) is connected to a \emph{model} of the ``physiological plant" it interacts with.
 %By high confidence verification, researchers mean that under all possible behaviors of the physiological models, the device will act correctly.
-The major challenge for model-based closed-loop validation of medical devices is the development of appropriate physiological models.
+The major challenge is the lack of appropriate physiological models that interact with the device model.
 There are two major differences between modeling physiology and modeling man-made systems:
 first, physiology is much more complex and less well-understood than man-made systems like cars and airplanes, and spans several scales from the molecular to the entire human body.
 Secondly, the variability between humans is orders of magnitude larger than that between two cars coming off the assembly line.
 
-Different applications of the physiological model have different requirements.
+% In this thesis, I propose a model-based design framework for closed-loop medical devices and use implantable cardiac devices as example.
+% Fig. \ref{fig:MBD} demonstrates our model-based design framework for implantable pacemaker software.
+
+% To enable closed-loop validation of the device throughout the development process, physiological models of the heart are developed to interact with the pacemaker model in closed-loop. 
+% The heart models are developed by carefully studying the physiology of the heart while taking into account the interaction between the device and patient physiology.
+% At different development stages, the heart models are abstracted differently to satisfy the specific requirements at the particular stage.
+
+% At the first development stage, a dual chamber pacemaker specification is modeled as an abstract model in model checker UPPAAL.
+% Through the model translation tool we developed, the UPPAAL model of the pacemaker can be translated into Simulink Stateflow chart, which can be further generated into C code implementation.
+
+% At different design stages there are heart models available to interact with the pacemaker models or implementations.
+% At early design stage, the abstract pacemaker model in UPPAAL can be combined with the non-deterministic heart models which capture electrical behaviors of the heart in varieties of patient conditions.
+% Model checking can then explore the entire state space of the closed-loop model for violations or evidence of physiological properties.
+% In this thesis I did risk analysis on a dual chamber implantable pacemaker, which includes risks that can endanger the safety of the patient. 
+% By specifying these risks as physiological properties, I used model checking to identify safety violations of the abstract pacemaker model.
+
+% This closed-loop model checking allows the developer to identify potential risks early in the design phrase and the model checking results can be used for regulatory submissions.
+
+% After the UPPAAL pacemaker model has been translated into Stateflow chart using UPP2SF, all the properties validated for the UPPAAL pacemaker model are still preserved. 
+% However, due to the limitation of the formalism in the model checker, some components of the device cannot be evaluated using model checking.
+
+
+% This framework can potentially be applied for developing other closed-loop medical devices.
+% There are several key steps within the framework:
+\newpage
+\section{Research Completed}
+In this thesis, I propose a model-based design framework for closed-loop medical devices and use implantable cardiac devices as example.
+Fig. \ref{fig:MBD} demonstrates our model-based design framework for implantable pacemaker software.
+The rest of the section covers the research which has been completed so far, and the next section I will propose the additional research for my thesis.
+\subsection{Theme 1: Physiological Modeling for Closed-loop Device Validation}
+\begin{figure}[t]
+	\centering
+	\includegraphics[scale=0.32]{figs/mb_heart.pdf}
+	\caption{\small Model-based design of pacemaker software.}
+	\label{fig:mb_heart}
+\end{figure}
+To enable closed-loop validation of the device throughout the development process, physiological models of the heart are developed to interact with the pacemaker model in closed-loop. 
+In this thesis, I developed a heart model structure based on clinical electro-phisiology, which is also the foundation for implantable cardiac devices.
+The heart models are capable of interacting with implantable cardiac devices in a closed-loop manner, and are available in different complexity with multiple formalisms to account for different requirements through out the design process.
+\subsubsection{Electro-Physiology Model of the Heart}
+The coordinated contractions of heart muscles are governed by electrical activities.
+Anomalies in the timing and patterns of the electrical generation and conduction are referred to as \emph{arrhythmia}, which are the disease implantable cardiac devices are designed to treat.
+I used \emph{node automata} to model the timing for electrical signal generation and blocking in heart tissue (Fig. \ref{fig:mb_heart}).
+Conduction delays between node automata are modeled using \emph{path automata}.
+By configuring the node and path automata with different parameters using different topology, the heart model structure can be used to model the electrical behaviors of a large varieties of heart conditions, which have been validated by physicians. 
+The heart models can also generate realistic electrogram signals that can be used as inputs to implantable cardiac devices.
+
+\subsubsection{Model Variations for Different Applications}
+Performing closed-loop validation during different stages of the development process pose different requirements to the heart models.
+
+During closed-loop simulation or hardware testing, the heart models should be able to capture the complex dynamics of \emph{specific hearts} to provide repeatable deterministic executions.
+Therefore the heart models used for closed-loop simulation are deterministic, and include calculations for parameter changes during state transitions.
+
+During closed-loop model checking, the heart models should be abstract enough to cover the heart behaviors of a large group of patients to account for the large variety of physiological conditions, while at the same time expressive enough to distinguish the heart behaviors specified in the property with the rest.
+There is no single heart model that can satisfy both requirements, therefore a rigorous framework to balance the abstraction and refinement of the heart models is needed to select the most appropriate heart model for the physiological properties.
+
+
+\subsubsection{Heart On a Chip Platform}
+In order to interact with implementations of implantable cardiac devices, the heart model structure is also available on hardware. 
+In this thesis, I developed the Heart On a Chip platform (Fig. \ref{fig:HOC}) which can interact with commercial pacemakers.
+The heart model is implemented on a FPGA board, which interacts with the pacemaker via an analog interface.
+The platform enables us to do closed-loop testing on commercially available devices, which is an important requirement if we would like to do model-based clinical trials before an actual clinical trials.
 %Using the pacemaker as an example of closed-loop device, and the heart as the organ to be modeled, we present several of the challenges and early results in model-based verification.
+\subsubsection{Publications} 
+\begin{itemize}
+\item Z. Jiang, M. Pajic, A. Connolly, S. Dixit, and R. Mangharam. Real-time heart model
+for implantable cardiac device validation and verification. In Real-Time Systems
+(ECRTS), 2010 22nd Euromicro Conference on, pages 239 –248, July 2010.
+\item Z. Jiang, M. Pajic, and R. Mangharam. Cyber-Physical Modeling of Implantable
+Cardiac Medical Devices. Proceedings of the IEEE, 100(1):122 –137, Jan. 2012a.
+\item Z. Jiang, M. Pajic, R. Alur, and R. Mangharam. Closed-loop verification of medical
+devices with model abstraction and refinement. International Journal on Software
+Tools for Technology Transfer, 16(2):191–213, 2014.
+\end{itemize}
+\begin{figure}[t]
+	\centering
+	\includegraphics[scale=0.55]{figs/HOC.png}
+	\caption{\small Heart On a Chip platform}
+	\label{fig:HOC}
+\end{figure}
 
-\subsection{Risk Analysis with Closed-loop Model Checking}
-Risk analysis is an activities mandated by the regulator to provide confidence to the safety of the device, which is currently done manually.
-Model checking has been widely used in semi-conductor industry which can check the whole state space of a model for property violations.
-By specifying the risks as properties, and model checking the closed-loop model which consists of the device model and a physiological model, we can evaluate whether the risks have been \emph{mitigated}.
-With tools like quantitative model checker, we can also evaluate the frequency and severity of the remaining risks.
-All of the analysis above can be used as evidence for the safety of the device model.
 
-The major challenge for closed-loop model checking is to develop appropriate physiological models. 
-The models should be general enough to cover physiological behaviors from different patient conditions, while at the same time expressive enough to maintain physiological meanings of an execution trace.
-There is no single model that can satisfy both requirements and for different properties, different models are required.
-It is therefore important to have a rigorous hierachy of physiological models with different abstraction levels and a procedure to choose the appropriate model for a property.
-\subsection{Closed-loop Testing}
-\subsection{Validated Model to Validated Code}
+\newpage
+
+
+\subsection{Theme 2: Implantable Cardiac Devices Modeling and Implementation}
+\begin{figure}[t]
+	\centering
+	\includegraphics[scale=0.32]{figs/mb_device.pdf}
+	\caption{\small Model-based design of pacemaker software.}
+	\label{fig:mb_device}
+\end{figure}
+In this thesis I tried to demonstrate model-based development process for implantable cardiac devices.
+Therefore models of the device functions at different design stage are essential to enable white-box evaluation of the device functions.
+It is also important to ensure \emph{traceability} between models of the devices and device implementations.
+In this thesis I implemented models for implantable pacemaker and developed model translation tool chain to generate device implementations automatically and rigorously.
+\subsubsection{UPPAAL Model of a Dual Chamber Pacemaker}
+A dual chamber pacemaker senses local electrical events from the right atrium and right ventricle, respectively.
+The software diagnoses the heart condition by comparing the timing relationship among events.
+Electrical pacing will be delivered to restore normal heart rhythm if the heart rate is low.
+Therefore it is intuitive to model the pacemaker functionality as timed-automata.
+In this thesis, I modeled a dual chamber pacemaker as timed-automata in model checker UPPAAL, using specifications from publicly-available literature (Fig. \ref{fig:mb_device}).
+The model includes the basic 5 timing cycles of a dual chamber pacemaker.
+I also implemented two additional algorithms that were designed to eliminate \emph{Pacemaker Mediated Tachycardia (PMT)}, during which the pacemaker inappropriately increase the heart rate.
+Through the experiment I validated the performance of the PMT algorithms, and also evaluated whether implementing additional functionality can violate properties satisfied by the original model.
+\subsubsection{UPP2SF Model Translation}
+Due to the limited semantics of the model checking tool, the device model in the model checker is generally an abstraction of the actual device functions.
+The biggest challenge for model implementation tool chain is how to deal with the additional behaviors in the actual implementation, and how they affect the property preservation.
 After the device model has mitigated all the risks, it is essential for the device implementation to preserve those properties.
 In our framework, we developed a model translation tool which rigorously translates device model in UPPAAL model checker to Stateflow chart.
 The Stateflow chart can then be compiled into C code implementation using Simulink Coder, which completes a tool chain from validated model to validated code.
 
-Due to the limited semantics of the model checking tool, the device model in the model checker is generally an abstraction of the actual device functions.
-The biggest challenge for model implementation tool chain is how to deal with the additional behaviors in the actual implementation, and how they affect the property preservation.
-\subsection{Model-based Clinical Trials}
-%Clinical trials for medical devices are costly in terms of both time and money, therefore they should be carefully planned to reduce the risk of failures.
+\subsubsection{Publications}
+\begin{itemize}
+\item M. Pajic, Z. Jiang, I. Lee, O. Sokolsky, and R. Mangharam. From Verification to
+Implementation: A Model Translation Tool and a Pacemaker Case Study. In Proceedings
+of the 2012 IEEE 18th Real Time and Embedded Technology and Applications
+Symposium, RTAS ’12, pages 173–184, 2012.
+\item M. Pajic, Z. Jiang, I. Lee, O. Sokolsky, and R. Mangharam. Safety-critical medical
+device development using the upp2sf model translation tool. ACM Trans. Embed.
+Comput. Syst., 13(4s):127:1–127:26, 2014.
+\end{itemize}
+
+\newpage
+\subsection{Theme 3: Medical Devices Risk Analysis with Closed-loop Model Checking}
+\begin{figure}[t]
+	\centering
+	\includegraphics[scale=0.32]{figs/mb_mc.pdf}
+	\caption{\small Model-based design of pacemaker software.}
+	\label{fig:mb_mc}
+\end{figure}
+Risk analysis is an activities mandated by the regulator to provide confidence to the safety of the device, which is currently done manually.
+Model checking has been widely used in semi-conductor industry which can check the whole state space of a model for property violations.
+However, model checking has not been applied in the medical device industry due to the lack of appropriate physiological models.
+In this thesis the heart model structure has been modified to non-deterministically cover electrical behaviors of a large number of heart conditions.
+A rigorous abstraction and refinement framework has been developed to choose the most appropriate heart model for a physiological property.
+In the thesis, I did risk analysis on a dual chamber implantable pacemaker, which includes risks that can endanger the safety of the patients.
+By specifying these risks as physiological properties, I used model checking to identify safety violations of the abstract pacemaker model.
+This research demonstrates the potential for application of model checking in the medical device industry.
+\begin{figure}[b]
+	\centering
+	\includegraphics[scale=0.4]{figs/FTA_new.pdf}
+	\caption{\small Fault Tree Analysis}
+	\label{fig:FTA}
+\end{figure}
+\subsubsection{Risk Analysis for Implantable Pacemaker}
+In this thesis, I focused on two most intuitive risks that an implantable pacemaker can pose on patients: 1) The pacemaker fails to increase the ventricular rate no lower than 60bpm, and 2) The ventricular rate is increased inappropriately by the pacemaker.
+Fault Tree Analysis (FTA) has been performed on the two risks to identify known and unknown causes for the two risks. 
+Fig. \ref{fig:FTA} demonstrates the FTA for a car and one of the risks for pacemaker.
+\subsubsection{Closed-loop Model Checking for Risk Analysis of Implantable Pacemaker}
+All identified causes for the two risks have been specified as TCTL properties.
+The closed-loop model which consists of the device model and a physiological model are then verified in model checker UPPAAL.
+UPPAAL returns evidences of these risks as execution traces, if any.
+In this thesis, we were able to identify evidences for risks in our pacemaker model, which are almost impossible to find with traditional testing methods.
+For the additional algorithms designed to terminate Pacemaker Mediated Tachycardia, which is one of the risks, we evaluated their performance in terms of whether the risks have been reasonably \emph{mitigated}.
+
+With tools like quantitative model checker, we can also evaluate the frequency and severity of the remaining risks, which is an important part in risk analysis.
+All of the analysis above can be used as evidence for the safety of the device model.
+\subsubsection{Heart Model Abstraction and Refinement}
+
+The major challenge for closed-loop model checking is to develop appropriate physiological models. 
+The models should be general enough to cover physiological behaviors from different patient conditions, while at the same time expressive enough to maintain physiological meanings of an execution trace.
+There is no single model that can satisfy both requirements for different properties.
+Using models that are too abstract introduces false-negatives, while using models too specific introduces false-positives.
+Moreover, with multiple physiological models, their relationships in terms of coverage is difficult to know, which reduces the rigorousness of the results.
+It is therefore important to have a rigorous hierarchy of physiological models with different abstraction levels and a procedure to choose the appropriate model for a property.
+
+In this thesis, we adopted the Counter-Example-Guided Abstraction and Refinement framework to balance the coverage and expressiveness of the heart models (Fig. \ref{fig:mb_mc}).
+Each property is checked with the heart model with the most behavior coverage.
+If an evidence is returned by the model checker, it is manually analyzed for its physiological validity.
+If the evidence is valid, it is then checked for ambiguity due to the over-abstraction of the model. 
+If the evidence is both valid and unambiguous, the execution is a true evidence for the risk property.
+
+The method above requires enormous amount of domain knowledge and is time consuming.
+Therefore we are proposing an automated and rigorous framework for physiological modeling during closed-loop model checking.
+\subsubsection{Publications}
+\begin{itemize}
+\item Z. Jiang, M. Pajic, S. Moarref, R. Alur, and R. Mangharam. Modeling and Verification
+of a Dual Chamber Implantable Pacemaker. Tools and Algorithms for the
+Construction and Analysis of Systems, 7214:188–203, 2012b.
+\item Z. Jiang, M. Pajic, R. Alur, and R. Mangharam. Closed-loop verification of medical
+devices with model abstraction and refinement. International Journal on Software
+Tools for Technology Transfer, 16(2):191–213, 2014.
+\end{itemize}
+
+\newpage
+\subsection{Theme 4: Closed-loop Testing of Medical Device Software}
+Due to the limitations of the formalism used during model checking, there are aspects that cannot be captured by the abstract models at the model checking stage.
+Therefore closed-loop testing is a necessary complement for model checking to identify potential safety issue originated from aspects that were abstracted away during model checking. 
+In this thesis, I established a closed-loop testing framework for implantable cardiac devices, with deterministic heart models interacting with device models in closed-loop.
+%The heart models in Stateflow can be configured into different heart conditions
+\begin{figure}[t]
+	\centering
+	\includegraphics[scale=0.32]{figs/mb_sim.pdf}
+	\caption{\small Closed-loop Testing of Medical Device Software}
+	\label{fig:mb_sim}
+\end{figure}
+
+\subsubsection{Physiological Requirement Hierarchy}
+Due to the limited diagnostic and therapeutic capability of closed-loop medical devices, it is impossible for the devices to restore the patient's condition to an absolutely optimal condition.
+The devices should be able to restore the patients' maximum health within its capabilities.
+However some compromises have to be made among all physiological requirements that define "healthy". 
+
+In this thesis, I listed physiological requirements that defines "healthy heart" and assigned priorities to them.
+For an open-loop heart which violates some of the requirements, the closed-loop system with the device should always attempt to satisfy requirements with higher priority.
+Monitors for each requirement are also developed in Simulink to automatically monitor the closed-loop system and report requirement violations.
+\subsubsection{Crosstalk and Lead Displacement}
+One of the aspects that are abstracted during model checking is the sensing component of the pacemaker.
+However, sensing errors correspond to a large number of device malfunctions.
+
+In this thesis, I demonstrated two most common causes for sensing error: crosstalk and lead displacement.
+Fig. \ref{fig:mb_sim} demonstrates a lead displacement case in which the atrial lead of a dual chamber pacemaker dislodged and dropped into the ventricle.
+A new artificial pathway is then established between the atrial lead and the ventricular lead, which is much shorter than the intrinsic pathway.
+The pacemaker is not aware of the dislodge and functions as usual, which may miss therapy and endanger the patient.
+The heart model is capable of modeling the mechanism of lead displacement and identify potential safety hazards.
+\subsubsection{Publications}
+\begin{itemize}
+\item Z. Jiang and R. Mangharam. Modeling Cardiac Pacemaker Malfunctions with the
+Virtual Heart Model. In Engineering in Medicine and Biology Society,EMBC,
+2011 Annual International Conference of the IEEE, pages 263 –266, Sept 2011.
+\item Z. Jiang, M. Pajic, and R. Mangharam. Model-based Closed-loop Testing of Implantable Pacemakers. In ACM/IEEE Second International Conference on Cyber-
+Physical Systems (ICCP’11), 2011.
+\end{itemize}
+\newpage
+\subsection{Publications}
+\subsubsection{Conference Publications}
+\begin{itemize}
+\item Z. Jiang, M. Pajic, A. Connolly, S. Dixit, and R. Mangharam. Real-time heart model
+for implantable cardiac device validation and verification. In Real-Time Systems
+(ECRTS), 2010 22nd Euromicro Conference on, pages 239 –248, July 2010.
+\item Z. Jiang and R. Mangharam. Modeling Cardiac Pacemaker Malfunctions with the
+Virtual Heart Model. In Engineering in Medicine and Biology Society,EMBC,
+2011 Annual International Conference of the IEEE, pages 263 –266, Sept 2011.
+\item Z. Jiang, M. Pajic, and R. Mangharam. Model-based Closed-loop Testing of Implantable
+Pacemakers. In ACM/IEEE Second International Conference on Cyber-
+Physical Systems (ICCP’11), 2011.
+
+\item Z. Jiang, M. Pajic, S. Moarref, R. Alur, and R. Mangharam. Modeling and Verification of a Dual Chamber Implantable Pacemaker. Tools and Algorithms for the
+Construction and Analysis of Systems, 7214:188–203, 2012b.
+\item M. Pajic, Z. Jiang, I. Lee, O. Sokolsky, and R. Mangharam. From Verification to
+Implementation: A Model Translation Tool and a Pacemaker Case Study. In Proceedings
+of the 2012 IEEE 18th Real Time and Embedded Technology and Applications
+Symposium, RTAS ’12, pages 173–184, 2012.
+\end{itemize}
+\subsubsection{Journal Publications}
+\begin{itemize}
+\item Z. Jiang, M. Pajic, and R. Mangharam. Cyber-Physical Modeling of Implantable
+Cardiac Medical Devices. Proceedings of the IEEE, 100(1):122 –137, Jan. 2012a.
+\item Z. Jiang, M. Pajic, R. Alur, and R. Mangharam. Closed-loop verification of medical
+devices with model abstraction and refinement. International Journal on Software
+Tools for Technology Transfer, 16(2):191–213, 2014.
+\item M. Pajic, Z. Jiang, I. Lee, O. Sokolsky, and R. Mangharam. Safety-critical medical
+device development using the upp2sf model translation tool. ACM Trans. Embed.
+Comput. Syst., 13(4s):127:1–127:26, 2014.
+\end{itemize}
+\subsubsection{Book Chapters}
+\begin{itemize}
+\item Z. Jiang and R. Mangharam. High-Confidence Medical Device Software
+Development. Foundations and Trends in Electronic Design Automation, Vol. 9, No. 4 (2015) 309–391.
+\end{itemize}
+\subsubsection{Magazine Publication}
+\begin{itemize}
+\item Z. Jiang, H. Abbas, K. Jang and R. Mangharam. Towards high confidence medical device software. IEEE Computer Jan 2016 Outlook
+\end{itemize}
+
+\newpage
+
+\section{Proposed Research}
+The proposed research focus on improving certain steps in the model-based design framework, and proposing new methodology to the regulation of medical devices to complement the model-based design framework.
+\subsection{Abstraction Tree for Physiological Modeling During Closed-loop Model Checking}
+As discussed earlier, during closed-loop model checking of medical devices, there is need to abstract and refine the physiological models according to avoid introducing false-positives and false-negatives to the model checking results.
+In my previous work, abstraction and refinement are performed manually which also requires extensive domain knowledge.
+Moreover, physiological models lose their physiological context during abstraction, therefore evidence traces returned from an abstract model may be difficult to interpret by the domain experts, and there may be multiple concrete execution traces corresponding to the abstract trace, causing ambiguities.
+
+In the proposed research, I would like to introduce an automated and rigorous framework which encode the domain knowledge into an abstraction tree structure, so that developer performing model checking can automatically obtain the most appropriate heart model for the property, and if an evidence trace returns, it is concretized into the most concrete physiological condition(s) for the domain experts to examine.
+
+\subsection{Model-based Clinical Trials for Closed-loop Medical Devices}
+Clinical trials is the ultimate validation for a medical device before the device can be released to the market.
+Clinical trials for medical devices are costly in terms of both time and money, therefore they should be carefully planned to reduce the risk of failures.
 Currently clinical trials for medical devices are planned with data from previous trials and studies, which do not reflect the current patient population and/or technology advancement.
-Clinical trials planned based on these historical data have high chance of failure, which cost a lot of money and time.
-Therefore we are proposing \emph{Model-based Clinical Trials (MBCT)}, which use physiological models to generate a virtual patient population and run trials on them to evaluate the performance of the new device.
-To clarify, MBCT is not designed to replace clinical trials.
-The result of a MBCT can provide useful insights that can be helpful when planning an actual clinical trials.
+Clinical trials planned based on these historical data have high chance of failure, which not only cost a lot of money and time, but also pose significant risks on patients involved.
 
+In this thesis, I propose \emph{Model-based Clinical Trials (MBCT)}, which use physiological models to generate a virtual patient population.
+By running a trials on the virtual population, we can gain useful insights that can be helpful when planning an actual clinical trials.
 The validity of MBCT results relies heavily on the validity of the physiological model and the validity of the virtual patient population, which is the biggest challenge for MBCT.
-
+MBCT is not designed to replace clinical trials.
+But performing MBCT before the clinical trials provides more confidence to the safety and efficacy of the devices, and can potentially reduce the chance of trial failures.
+%\subsubsection{ICD models}
 \end{document}

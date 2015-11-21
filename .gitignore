@@ -1,0 +1,6 @@
+*.aux
+main.bbl
+*.blg
+main.log
+main.pdf
+*.tcp

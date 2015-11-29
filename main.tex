@@ -12,8 +12,8 @@
 \usepackage[colorinlistoftodos]{todonotes}
 \newcommand*\circled[1]{\tikz[baseline=(char.base)]{
 		\node[shape=circle,draw,inner sep=2pt] (char) {#1};}}
-\title{Model-based Development and Certification for\\ Closed-loop Medical Devices}
-
+%\title{Model-based Development for Safe Closed-loop Medical Devices}
+\title{From Verified Model to Verified Code for Safe Medical Devices}
 \author{Zhihao Jiang}
 
 % \date{\today}
@@ -26,10 +26,16 @@
 % \end{abstract}
 
 \section*{Thesis Problem}
-Closed-loop medical devices like implantable pacemakers have both therapeutic and diagnostic capabilities, which are performed by increasingly sophisticated software component. 
-The safety and efficacy of closed-loop medical devices can only be evaluated within their physiological contexts. 
-However, currently the only closed-loop validation method for medical devices is clinical trial on real patients, which is costly and pose significant risks on the patients participating in the trial. 
-There is urgent need to identify potential safety violations earlier during the software design process.
+Closed-loop medical devices like implantable pacemakers diagnose conditions of the patient and autonomously deliver corresponding therapies.
+The fundamental challenge for developing safe closed-loop medical devices are: 
+1) how to make correct diagnosis with \textbf{limited observability} on the patients' physiology? 
+2) how to ensure the closed-loop interactions between \textbf{complex physiology} and device therapies are always safe?
+3) how to develop devices general enough to safely operate on large groups of patients with \textbf{large variability} in their physiology?
+%have both therapeutic and diagnostic capabilities, which are performed by increasingly sophisticated software component. 
+On the other hand, the safety and efficacy of closed-loop medical devices can only be evaluated within their physiological contexts. 
+Currently the only closed-loop validation method for medical devices is clinical trial on real patients, which is costly and pose significant risks on the patients participating in the trial. 
+There is no transition between the engineering realm and 
+%There is urgent need to identify potential safety violations earlier during the software design process.
 
 \section*{Thesis Statement}
 In this thesis, I will focusing on addressing the following questions:

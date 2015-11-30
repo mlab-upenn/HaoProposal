@@ -30,32 +30,38 @@ Closed-loop medical devices like implantable pacemakers diagnose conditions of t
 The fundamental challenge for developing safe closed-loop medical devices are: 
 1) how to make correct diagnosis with \textbf{limited observability} on the patients' physiology? 
 2) how to ensure the closed-loop interactions between \textbf{complex physiology} and device therapies are always safe?
-3) how to develop devices general enough to safely operate on large groups of patients with \textbf{large variability} in their physiology?
+3) how to develop devices that are general enough to safely operate on large groups of patients with \textbf{large variability} in their physiology?
 %have both therapeutic and diagnostic capabilities, which are performed by increasingly sophisticated software component. 
-On the other hand, the safety and efficacy of closed-loop medical devices can only be evaluated within their physiological contexts. 
-Currently the only closed-loop validation method for medical devices is clinical trial on real patients, which is costly and pose significant risks on the patients participating in the trial. 
-There is no transition between the engineering realm and 
+In order to address these challenges, the safety and efficacy of closed-loop medical devices have to be evaluated within their physiological contexts. 
+The ultimate closed-loop testing for medical devices is clinical trial on real patients.
+However, clinical trials are costly and late in the design process. 
+There is urgent need to address the aforementioned challenges earlier during the development process of closed-loop medical devices.
+%There is no transition between the engineering realm and 
 %There is urgent need to identify potential safety violations earlier during the software design process.
 
 \section*{Thesis Statement}
-In this thesis, I will focusing on addressing the following questions:
+In this thesis, I proposed model-based approaches to evaluate the safety and efficacy of closed-loop medical devices during their development process, using implantable cardiac devices as case study.
+I focused on addressing the following questions:
 \begin{itemize}
-\item How to perform closed-loop validation during device software development and certification process?
+\item How to ensure the design of the device is safe with limited observability on complex physiology which has large variability? 
 \end{itemize}
-Model-based techniques can be used throughout the software design process of closed-loop medical devices, and device model can be rigorously translated into implementation. 
+At early design stage, model of the device design can be evaluated in closed-loop with models of patient physiology using model checking.
+The verified device model can then be automatically translated into verified implementation through rigorous model translation and code generation.
+The device can also be evaluated on a virtual population of the patients before heading into clinical trials.
+%Model-based closed-loop evaluation can be performed%Model-based techniques can be used throughout the software design process of closed-loop medical devices, and device model can be rigorously translated into implementation. 
 \begin{itemize}
-\item How to represent the physiological context of the device during model-based development?
+\item How to use models to capture the variability and complexity of patient physiology?
 \end{itemize}
 Models of the physiological context can be created to represent the patients,
-\begin{itemize}
-\item What are the model-based techniques that can be applied?
-\end{itemize}
-By applying model-based techniques including model abstraction, model checking, model translation, closed-loop validation of the device software can be performed during different steps of the software design process.
-\begin{itemize}
-\item How can the results of these model-based techniques contribute to the safety and efficacy of the devices?
-\end{itemize}
-The results of these closed-loop validation provide safety and efficacy evidence of the device software, which are also compatible with the current regulation framework. 
-Applying the proposed model-based techniques can potentially reduce the time and money cost during the software development for all parties involved, including device manufacturers, the regulation agency and also the physicians.
+%\begin{itemize}
+%\item What are the model-based techniques that can be applied?
+%\end{itemize}
+%By applying model-based techniques including model abstraction, model checking, model translation, closed-loop validation of the device software can be performed during different steps of the software design process.
+%\begin{itemize}
+%\item How can the results of these model-based techniques contribute to the safety and efficacy of the devices?
+%\end{itemize}
+%The results of these closed-loop validation provide safety and efficacy evidence of the device software, which are also compatible with the current regulation framework. 
+%Applying the proposed model-based techniques can potentially reduce the time and money cost during the software development for all parties involved, including device manufacturers, the regulation agency and also the physicians.
 
 
 \newpage

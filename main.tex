@@ -194,7 +194,7 @@ As the result, closed-loop medical devices are categorized by the regulation age
 In this thesis, I propose a model-based design framework for closed-loop validation of medical devices, and use implantable cardiac devices as case study.
 Fig. \ref{fig:MBD} demonstrates our model-based design framework for implantable pacemaker software.
 The thesis can be broken down into 4 themes:
-Theme 1 discusses the physiological models that are necessary for closed-loop evaluation of medical devices, and how to use those models to represent complex physiology with large variations.
+Theme 1 discusses the physiological models that are necessary for closed-loop evaluation of medical devices, and how to use those models to represent complex physiology with large variability.
 Theme 2 discusses the use of model-checking techniques to evaluate the safety and efficacy of device design, which can contribute to risk analysis of the device.
 Theme 3 discusses the rigorous translation from verified device model to device implementation which maintains the verified properties.
 Theme 4 discusses the use of physiological models to generate a virtual patient population and the device can go through model-based clinical trials which can provide useful insights for planning a clinical trial on real patient.
@@ -281,7 +281,7 @@ Theme 4 discusses the use of physiological models to generate a virtual patient 
 \begin{figure}[t]
 	\centering
 	\includegraphics[scale=0.32]{figs/mb_heart.pdf}
-	\caption{\small Heart model strucuture which models generation and conduction of the electrical activities of the heart with a network of timed-automata. The node automata models the generation and blocking of electrical signals and the path automata models the conduction delays between nodes. Highlighted region shows the topic of the theme.}
+	\caption{\small Heart model structure which models generation and conduction of the electrical activities of the heart with a network of timed-automata. The node automata models the generation and blocking of electrical signals and the path automata models the conduction delays between nodes. Highlighted region shows the topic of the theme.}
 	\label{fig:mb_heart}
 \end{figure}
 \emph{Validation} of a device evaluates whether the device has fulfilled its intended use.
@@ -292,8 +292,8 @@ Therefore in order to enable closed-loop validation of implantable cardiac devic
 \noindent \textbf{Challenge}: Develop physiological models with respect to the limited observability of the device, while still being able to capture the complexity and large variability of patient physiology.
 
 \noindent \textbf{Contribution:} A heart model structure based on clinical electrophysiology, which is also the foundation for implantable cardiac devices.
-The heart models are capable of interacting with implantable cardiac devices in a closed-loop manner, and are available in different complexity with multiple formalisms to account for different requirements through out the design process.
-\subsubsection{Electro-Physiology Model of the Heart}
+The heart models are capable of interacting with implantable cardiac devices in a closed-loop manner, and are available in different complexity with multiple formalisms for different applications throughout the design process.
+\subsubsection{Electrophysiology Model of the Heart}
 The coordinated contractions of heart muscles are governed by electrical activities.
 Anomalies in the timing and patterns of the electrical generation and conduction are referred to as \emph{arrhythmia}, which are the disease implantable cardiac devices are designed to treat.
 I used \emph{node automata} to model the timing for electrical signal generation and blocking in heart tissue.
@@ -349,6 +349,7 @@ Model checking has been widely used in semi-conductor industry which can check t
 However, model checking has not been applied in the medical device industry due to the lack of appropriate physiological models.
 Risk analysis is an activity mandated by the regulator to provide confidence to the safety of the device, which is currently performed manually and can miss potentially risks.
 In this thesis, I demonstrate the use of closed-loop model checking for risk analysis of implantable cardiac devices, and find potential safety violations which are extremely difficult to find via other techniques like testing.
+
 \noindent\textbf{Challenge:} Abstraction of physiological models may introduce false-positives and/or false-negatives. For different physiological properties, the physiological model(s) should capture the large variability of physiology constrained by the property, while maintaining the capability to distinguish complex physiological behaviors.
 
 \noindent\textbf{Contribution:}
@@ -422,9 +423,9 @@ The abstraction tree effectively bridges the gap between the physiological domai
 \end{figure}
 %In this thesis I tried to demonstrate model-based development process for implantable cardiac devices.
 %Therefore models of the device functions at different design stage are essential to enable white-box evaluation of the device functions.
-It is important to ensure \emph{traceability} between models of the devices and device implementations, i.e. requirements validated in the device model should also hold in device implementation.
+It is important to maintain \emph{traceability} between models of the devices and device implementations, i.e. requirements validated in the device model should also hold in device implementation.
 
-\noindent\textbf{Challenge:} Implementation of device algorithm from under-specified algorithm descriptions. Model translation from abstract formalism in UPPAAL to more expressive formalism in Stateflow.
+\noindent\textbf{Challenge:} Model translation from abstract formalism in UPPAAL to more expressive formalism in Stateflow.
 
 \noindent\textbf{Contribution:}
 In this thesis I implemented models for implantable cardiac devices by reverse-engineering from algorithm descriptions in publicly available literature.

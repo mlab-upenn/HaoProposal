@@ -1,0 +1,384 @@
+% Here is a sample format for dissertation in math.  You need to check
+% University of Pennsylvania Doctoral Dissertation Manual to adjust
+% any changes they made at the webpage:
+
+% http://www.upenn.edu/grad/DissManual.html.  
+
+% This style file was used in connection with printing from printer 3one.
+% (Different printers could give you different margins.)
+
+% This sample can also be used for masters thesis, but you need to make
+% some slight changes.
+    
+\documentclass[12pt,letterpaper]{report}
+% XXX: FORMATTING:
+% http://tex.stackexchange.com/questions/132170/what-do-headheight-headsep-etc-do-in-the-vmargin-package
+\setlength{\hoffset}{0.5in}
+\setlength{\voffset}{0in}
+\setlength{\oddsidemargin}{0in}
+\setlength{\topmargin}{0in}
+\setlength{\headheight}{0in}
+\setlength{\headsep}{0in}
+\setlength{\textheight}{9in}
+\setlength{\textwidth}{6in}
+\setlength{\marginparsep}{0in}
+\setlength{\marginparwidth}{0in}
+\setlength{\marginparpush}{0in}
+%\setlength{\footskip}{30pt}
+\addtolength{\textheight}{-1\footskip}
+\pagestyle{plain}
+
+% bindingoffset=0.2in,footskip=.25in
+%\usepackage[letterpaper,left=1.5in,right=1in,top=1in,bottom=1in,footskip=30pt]{geometry}
+%%\setlength{\topmargin}{0in}
+%\setlength{\headheight}{0in}
+%%\setlength{\headsep}{0in}
+%\setlength{\textheight}{8.5in}
+%\setlength{\oddsidemargin}{0.55in}
+%%\setlength{\marginparwidth}{0in}
+%%\setlength{\marginparsep}{0in}
+%%\setlength{\footskip}{0.3in}
+%%\setlength{\evensidemargin}{-0.25in}
+%\setlength{\textwidth}{5.87in}
+%\setlength{\headsep}{-.19in}
+
+%\newcommand{\doublespaced}{\renewcommand{\baselinestretch}{2}\normalfont}
+%\newcommand{\singlespaced}{\renewcommand{\baselinestretch}{1}\normalfont}
+%\newcommand{\draftspaced}{\singlespaced} %for draft only 
+%\newcommand{\draftspaced}{\doublespaced} %for final version
+%\newcommand{\subsubsubsection}{\paragraph}
+
+
+% XXX: PACKAGES:
+\usepackage[comma]{natbib}
+\setcitestyle{square}
+\usepackage[normalem]{ulem}	                        % underlining!
+\usepackage[table, usenames,dvipsnames]{xcolor}            % color
+\usepackage{extarrows}                              % http://ctan.org/pkg/extarrows
+\usepackage{setspace}                               % \doublespacing or \onehalfspacing
+%\usepackage{showframe}
+%\usepackage{enumitem}
+
+% Math
+\usepackage{amsmath,amssymb,amsfonts,amsthm,dsfont} % math
+\usepackage{algorithm,algorithmicx,listings}        % algorithms
+\usepackage[noend]{algpseudocode}			        % necessary for algorithmicx
+
+% Figures
+\usepackage{graphicx}
+\usepackage{tabularx}
+\usepackage{multirow,multicol,rotating,diagbox}
+\usepackage{booktabs}
+\usepackage{makecell}
+\usepackage[font={small}]{caption}   %onehalfspacing
+\usepackage[font={small}]{subcaption}
+\setlength{\belowcaptionskip}{-3.5pt}
+\setlength{\abovecaptionskip}{3pt}
+\captionsetup[algorithm]{font=small}
+%\usepackage[svgnames]{xcolor}
+%\usepackage[breaklinks=true, colorlinks=true,linkcolor=Blue, bookmarks=true, citecolor=Mahogany, urlcolor=RoyalPurple,linktoc=all]{hyperref}
+\usepackage[breaklinks=true, colorlinks=false,linkcolor=black, bookmarks=true, citecolor=black, urlcolor=black,linktoc=all]{hyperref}
+
+
+% XXX: COMMANDS:
+\def\liminf{\mathop{\lim\inf}\limits}	% EXAMPLE: \liminf_n A_n
+\def\limsup{\mathop{\lim\sup}\limits}	%
+\def\argmin{\mathop{\arg\min}\limits}	%
+\def\argmax{\mathop{\arg\max}\limits}	%
+% Write above and below equal sign
+\newcommand{\longeq}[2]{\xlongequal[\!#2\!]{\!#1\!}}
+% #1 = top; #2 = bottom; #3 = inequality (<,>,\leq,\geq)
+\newcommand{\longineq}[3]{\overset{#1}{\underset{#2}{#3}}}
+\newcommand{\indicator}{\mathds{1}}
+\DeclareMathOperator{\tr}{tr}
+\DeclareMathOperator{\per}{\mathbf{per}}
+\def\deg{^{\circ}}
+\def\negquad{\mkern-18mu}             % negative quad space
+\def\negqquad{\mkern-36mu}            % negative qquad space
+\newcommand{\txbx}[1]{\boxed{\text{#1}}}
+\newcommand{\TODO}[1]{{\color{red}#1}}
+\newcommand{\tcn}[1]{\cellcolor{Magenta!#1!TealBlue}#1}% table colored number
+\newcommand{\tcnb}[1]{\cellcolor{Magenta!#1!TealBlue}}% table colored number
+\def\negl{\scalebox{0.75}{$\boldsymbol{\ominus}$}}
+\def\posl{\scalebox{0.75}{$\boldsymbol{\oplus}$}}
+
+\makeatletter
+\newcommand{\customlabel}[2]{%
+   \protected@write \@auxout {}{\string \newlabel {#1}{{#2}{\thepage}{#2}{#1}{}} }%
+   \hypertarget{#1}{#2}
+}
+\makeatother
+
+%\newtheorem{theorem}{Theorem}
+%\newtheorem{proposition}{Proposition}
+%\newtheorem{corollary}{Corollary}
+%\newtheorem{definition}{Definition}
+\newtheorem{assumption}{Assumption}[chapter]
+\newtheorem*{assumption*}{Assumption}
+%\newtheorem{remark}{Remark}
+\newtheorem*{problem*}{Problem}
+\newtheorem{problem}{Problem}
+%\newtheorem{lemma}{Lemma} 
+
+
+\newtheorem{theorem}{Theorem}[chapter]
+\newtheorem{corollary}[theorem]{Corollary}
+%\newtheorem*{main}{Main~Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[chapter]
+\newtheorem{property}{Property}[chapter]
+
+\theoremstyle{remark}
+\newtheorem*{remark*}{Remark}
+\newtheorem{example}{Example}[chapter]
+
+\numberwithin{equation}{chapter}
+
+
+% NAMED THEOREMS
+% EXAMPLE:
+%\begin{namedthm}{Zorn's Lemma}[Zermelo]
+%All well-behaved ordered sets have maximal elements.
+%\end{namedthm}
+\theoremstyle{plain} % just in case the style had changed
+%\swapnumbers % optional, of course
+\newcommand{\thistheoremname}{}
+\newtheorem{genericthm}[theorem]{\thistheoremname}
+\newenvironment{namedthm}[1]
+  {\renewcommand{\thistheoremname}{#1}%
+   \begin{genericthm}}
+  {\end{genericthm}}
+  
+\newtheorem*{genericthm*}{\thistheoremname}
+\newenvironment{namedthm*}[1]
+  {\renewcommand{\thistheoremname}{#1}%
+   \begin{genericthm*}}
+  {\end{genericthm*}}
+
+
+\usepackage[per-mode=symbol]{siunitx}
+\usepackage{paralist}
+
+%\doublespaced
+\def\thetitle{DATA-DRIVEN MODELING, CONTROL AND TOOLS FOR CYBER-PHYSICAL ENERGY SYSTEMS}
+\def\theauthor{Madhur Behl}
+\def\theyear{2015}
+
+
+
+
+%====================================================================
+\hypersetup{
+  pdfauthor={\theauthor},%
+  pdftitle={\thetitle},%
+  pdfsubject={PhD dissertation},%
+  pdfkeywords={cyber-physical systems, data-driven, modeling, white-box, grey-box, uncertainty propagation, demand response, electricity, real-time pricing, energy, buildings, model predictive control, regression trees, non-parametric statistics, control synthesis, tool, load curtailment, energy systems, energy analytics, sensor placement, model accuracy }
+  %pdfproducer={LaTeX},%
+  %pdfcreator={pdfLaTeX}
+}
+
+%\addtocontents{toc}{\protect{\pdfbookmark[0]{\contentsname}{toc}}}
+
+
+
+\begin{document}
+\pagenumbering{roman}
+
+%=================================================
+%%% TITLE PAGE
+\newpage
+\phantomsection
+\addcontentsline{toc}{chapter}{Title}
+\thispagestyle{empty}
+\vspace*{\fill}
+\begin{center}
+\thetitle
+
+\vspace*{0.3in}
+\theauthor
+
+\vspace*{0.3in}
+A DISSERTATION\\
+$ $\\
+in \\
+$ $\\
+Computer and Infomation Science\\
+$ $\\
+Presented to the Faculties of the University of Pennsylvania\\
+in Partial Fulfillment of the Requirements for the\\
+Degree of Doctor of Philosophy\\
+$ $\\
+\theyear
+\end{center}
+
+\vspace{0.6 in}
+\noindent\makebox[0in][l]{\rule[2ex]{3in}{.3mm}}
+Rahul Mangharam, Associate Professor of Electrical and Systems Engineering\\Supervisor of Dissertation
+
+\vspace*{0.6 in}
+\noindent\makebox[0in][l]{\rule[2ex]{3in}{.3mm}}
+Rajeev Alur, Zisman Professor of Computer and Information Science\\Graduate Group Chairperson
+
+\vspace*{0.2in}
+\noindent Dissertation Committee:\\
+Insup Lee, Cecilia Fitler Moore Professor of Computer and Information Science\\
+Pieter J. Mosterman, Adjunct Professor at the School of Computer Science at McGill University\\
+Richard Gray, Biomedical Engineer at FDA
+\vspace*{\fill}
+%=================================================
+
+
+
+
+%=================================================
+%%% COPYRIGHT PAGE
+\newpage
+\thispagestyle{empty}
+\vspace*{\fill}
+\begin{center}
+From Verified Models to Verified Code for Safe Medical Devices
+
+\vspace*{0.6 in}
+COPYRIGHT
+
+\vspace*{0.6 in}
+\theyear
+
+\vspace*{0.6 in}
+\theauthor
+\end{center}
+\vspace*{\fill}
+%=================================================
+
+
+%=================================================
+%%% DEDICATION
+\newpage
+\begin{center}
+\vspace*{\fill}
+\it{To the universe.}
+\vspace*{\fill}
+\end{center}
+%=================================================
+
+
+%=================================================
+%%% ACKNOWLEDGEMENTS
+\newpage
+\phantomsection
+\addcontentsline{toc}{chapter}{Acknowledgments}
+\chapter*{Acknowledgments}
+%\input{acknowledgements.tex}
+Thank you, God bless you; and may God bless the United States of America
+%=================================================
+
+
+
+
+%=================================================
+%%% ABSTRACT
+\newpage
+\phantomsection
+\addcontentsline{toc}{chapter}{Abstract}
+\begin{center}
+ABSTRACT\\
+$ $\\
+\thetitle\\
+$ $\\
+Zhihao Jiang\\
+Rahul Mangharam\\
+\end{center}
+
+\noindent Energy systems are experiencing a gradual but substantial change in moving away from being non-interactive and manually-controlled systems to utilizing tight integration of both cyber (computation, communications, and control) and physical representations guided by first principles based models, at all scales and levels.  
+Furthermore, peak power reduction programs like demand response (DR) are becoming increasingly important as the volatility on the grid continues to increase due to regulation, integration of renewables and extreme weather conditions.
+In order to shield themselves from the risk of price volatility, end-user electricity consumers must monitor electricity prices and be flexible in the ways they choose to use electricity. 
+
+This requires the use of control-oriented predictive models of an energy system’s dynamics and energy consumption. Such models are needed for understanding and improving the overall energy efficiency and operating costs. 
+However, learning dynamical models using grey/white box approaches is very cost and time prohibitive since it often requires significant financial investments in retrofitting the system with several sensors and hiring domain experts for building the model.
+We present the use of data-driven methods for making model capture easy and efficient for cyber-physical energy systems. 
+
+We develop Model-IQ, a methodology for analysis of uncertainty propagation for building inverse modeling and controls. 
+Given a grey-box model structure and real input data from a temporary set of sensors, Model-IQ evaluates the effect of the uncertainty propagation from sensor data to model accuracy and to closed-loop control performance.
+We also developed a statistical method to quantify the bias in the sensor measurement and to determine near optimal sensor placement and density for accurate data collection for model training and control.
+Using a real building test-bed, we show how performing an uncertainty analysis can reveal trends about inverse model accuracy and control performance, which can be used to make informed decisions about sensor requirements and data accuracy.
+
+We also present DR-Advisor, a data-driven demand response recommender system for the building's facilities manager which provides suitable control actions to meet the desired load curtailment while maintaining operations and maximizing the economic reward.
+ We develop a model based control with regression trees algorithm (mbCRT), which allows us to perform closed-loop control for DR strategy synthesis for large commercial buildings. 
+
+
+
+
+ 
+%=================================================
+
+
+
+%=================================================
+%%% CONTENTS
+\newpage
+\phantomsection
+%\setcounter{tocdepth}{2}
+\addcontentsline{toc}{chapter}{Contents}
+\tableofcontents
+\clearpage
+\phantomsection
+\addcontentsline{toc}{chapter}{\listtablename}
+\listoftables
+\clearpage
+\phantomsection
+\addcontentsline{toc}{chapter}{\listfigurename}
+%\addtocontents{toc}{\protect{\pdfbookmark[0]{\listfigurename}{lof}}}
+\listoffigures
+%=================================================
+
+
+
+
+%=================================================
+%%% MAIN
+\newpage
+\pagenumbering{arabic}
+\setcitestyle{aysep={}} % no separation between author and year
+
+
+%\include{chapters/introduction/introduction}
+%\include{chapters/modeling/buildingmodeling}
+%\include{chapters/modeliq/modeliq}
+%\include{chapters/trees/rtree}
+%\include{chapters/dradvisor/dradvisor}
+%\include{chapters/analytics/energy}
+%\include{chapters/conclusion/discussion}
+
+
+
+
+%\include{tex/Conclusion}
+
+
+%\appendix
+%\include{tex/Appendix}
+%=================================================
+
+
+
+
+%=================================================
+%%% BIBLIOGRAPHY
+\newpage
+%\clearpage
+\phantomsection
+\addcontentsline{toc}{chapter}{Bibliography}
+
+\bibliographystyle{plainnat}
+\bibliography{bibliography}
+
+%=================================================
+
+\end{document}
+
+%\bibliographystyle{amsplain}
+%\bibliographystyle{plainnat}
+

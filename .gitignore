@@ -8,3 +8,9 @@ main.pdf
 main.tps
 *.tps
 *.tps
+*.tps
+*.tps
+*.lof
+PhDThesis/main.toc
+*.out
+PhDThesis/main.lot

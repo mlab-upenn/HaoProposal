@@ -58,6 +58,7 @@
 \usepackage{setspace}                               % \doublespacing or \onehalfspacing
 %\usepackage{showframe}
 %\usepackage{enumitem}
+\usepackage[tight,footnotesize]{subfigure}
 
 % Math
 \usepackage{amsmath,amssymb,amsfonts,amsthm,dsfont} % math
@@ -71,15 +72,16 @@
 \usepackage{booktabs}
 \usepackage{makecell}
 \usepackage[font={small}]{caption}   %onehalfspacing
-\usepackage[font={small}]{subcaption}
+%\usepackage[font={small}]{subcaption}
 \setlength{\belowcaptionskip}{-3.5pt}
 \setlength{\abovecaptionskip}{3pt}
-\captionsetup[algorithm]{font=small}
+%\captionsetup[algorithm]{font=small}
 %\usepackage[svgnames]{xcolor}
 %\usepackage[breaklinks=true, colorlinks=true,linkcolor=Blue, bookmarks=true, citecolor=Mahogany, urlcolor=RoyalPurple,linktoc=all]{hyperref}
 \usepackage[breaklinks=true, colorlinks=false,linkcolor=black, bookmarks=true, citecolor=black, urlcolor=black,linktoc=all]{hyperref}
 
-
+\newcommand{\figref}[1]{Fig.~\ref{fig:#1}}
+\newcommand{\Hao}[1]{$\clubsuit$\footnote{HAO: #1}}
 % XXX: COMMANDS:
 \def\liminf{\mathop{\lim\inf}\limits}	% EXAMPLE: \liminf_n A_n
 \def\limsup{\mathop{\lim\sup}\limits}	%
@@ -163,9 +165,9 @@
 \usepackage{paralist}
 
 %\doublespaced
-\def\thetitle{DATA-DRIVEN MODELING, CONTROL AND TOOLS FOR CYBER-PHYSICAL ENERGY SYSTEMS}
-\def\theauthor{Madhur Behl}
-\def\theyear{2015}
+\def\thetitle{From Verified Models to Verified Code for Safe Medical Devices}
+\def\theauthor{Zhihao Jiang}
+\def\theyear{2016}
 
 
 
@@ -175,7 +177,7 @@
   pdfauthor={\theauthor},%
   pdftitle={\thetitle},%
   pdfsubject={PhD dissertation},%
-  pdfkeywords={cyber-physical systems, data-driven, modeling, white-box, grey-box, uncertainty propagation, demand response, electricity, real-time pricing, energy, buildings, model predictive control, regression trees, non-parametric statistics, control synthesis, tool, load curtailment, energy systems, energy analytics, sensor placement, model accuracy }
+  pdfkeywords={cyber-physical systems,  }
   %pdfproducer={LaTeX},%
   %pdfcreator={pdfLaTeX}
 }
@@ -292,21 +294,7 @@ Zhihao Jiang\\
 Rahul Mangharam\\
 \end{center}
 
-\noindent Energy systems are experiencing a gradual but substantial change in moving away from being non-interactive and manually-controlled systems to utilizing tight integration of both cyber (computation, communications, and control) and physical representations guided by first principles based models, at all scales and levels.  
-Furthermore, peak power reduction programs like demand response (DR) are becoming increasingly important as the volatility on the grid continues to increase due to regulation, integration of renewables and extreme weather conditions.
-In order to shield themselves from the risk of price volatility, end-user electricity consumers must monitor electricity prices and be flexible in the ways they choose to use electricity. 
-
-This requires the use of control-oriented predictive models of an energy system’s dynamics and energy consumption. Such models are needed for understanding and improving the overall energy efficiency and operating costs. 
-However, learning dynamical models using grey/white box approaches is very cost and time prohibitive since it often requires significant financial investments in retrofitting the system with several sensors and hiring domain experts for building the model.
-We present the use of data-driven methods for making model capture easy and efficient for cyber-physical energy systems. 
-
-We develop Model-IQ, a methodology for analysis of uncertainty propagation for building inverse modeling and controls. 
-Given a grey-box model structure and real input data from a temporary set of sensors, Model-IQ evaluates the effect of the uncertainty propagation from sensor data to model accuracy and to closed-loop control performance.
-We also developed a statistical method to quantify the bias in the sensor measurement and to determine near optimal sensor placement and density for accurate data collection for model training and control.
-Using a real building test-bed, we show how performing an uncertainty analysis can reveal trends about inverse model accuracy and control performance, which can be used to make informed decisions about sensor requirements and data accuracy.
-
-We also present DR-Advisor, a data-driven demand response recommender system for the building's facilities manager which provides suitable control actions to meet the desired load curtailment while maintaining operations and maximizing the economic reward.
- We develop a model based control with regression trees algorithm (mbCRT), which allows us to perform closed-loop control for DR strategy synthesis for large commercial buildings. 
+\noindent 
 
 
 
@@ -343,7 +331,13 @@ We also present DR-Advisor, a data-driven demand response recommender system for
 \pagenumbering{arabic}
 \setcitestyle{aysep={}} % no separation between author and year
 
-
+\include{A}
+\include{B}
+\include{C}
+\include{E}
+\include{F}
+\include{MBCT}
+\include{discussion}
 %\include{chapters/introduction/introduction}
 %\include{chapters/modeling/buildingmodeling}
 %\include{chapters/modeliq/modeliq}
@@ -358,7 +352,10 @@ We also present DR-Advisor, a data-driven demand response recommender system for
 %\include{tex/Conclusion}
 
 
-%\appendix
+\appendix
+\include{D}
+\include{pm}
+
 %\include{tex/Appendix}
 %=================================================
 

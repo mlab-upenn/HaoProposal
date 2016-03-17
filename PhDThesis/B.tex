@@ -2,7 +2,8 @@
 
 Closed-loop medical devices such as the implantable cardiac pacemaker and defibrillator are designed to operate autonomously and interact with the human body to maintain and improve the physiological conditions of the patients. To evaluate the device within the closed-loop context of the human body, the knowledge of the physiological contexts (e.g. patient arrhythmia, physical activity) and the signals by which the device interacts with the organ(s) to manage the condition is essential. By constructing physiological models and encoding physiological requirements, our goal is to evaluate the safety and efficacy of the device therapy across a range of physiological conditions. 
 
-Consequently, it is important to model the physiological environment of the device such that details unrelated to the interaction between the device and the human are abstracted away, while essential information required to differentiate different patient conditions are maintained. As we will see, to validate the device operation across a range of physiological conditions and for a set of safety and efficacy properties, a family of models are needed which refine the closed-loop context to appropriately express the condition to be verified. In this chapter, we would therefore like to answer the following questions:
+Consequently, it is important to model the physiological environment of the device such that details unrelated to the interaction between the device and the human are abstracted away, while essential information required to differentiate different patient conditions are maintained. As we will see, to validate the device operation across a range of physiological conditions and for a set of safety and efficacy properties, a family of models are needed which refine the closed-loop context to appropriately express the condition to be verified.
+
 %\newpage
 %\begin{itemize}
 %\vspace{-5pt}
@@ -13,9 +14,9 @@ Consequently, it is important to model the physiological environment of the devi
 %\item What are the different modeling philosophies when developing environment models for testing and for model checking?
 %\end{itemize}
 
-Models, especially environment models of the human physiology, which span a large spectrum of scale and complexity, should be designed in accordance with their respective applications. Each application of the environment model has a different focus and has distinct modeling requirements which influence the model complexity and model identifiability.
+Models, especially models of the human physiology, which span a large spectrum of scale and complexity, should be designed in accordance with their respective applications. Each application of the environment model has a different focus and has distinct modeling requirements which influence the model complexity and model identifiability.
 
-\textbf{Model complexity} is generally measured in terms of the size of the state space and the computation complexity of state transitions, which affect the computation cost (memory and time) for closed-loop validation. Model complexity is largely influenced by the type of interactions with the device (e.g. analog signals, sensing, actuation) and the environment conditions specified by the physiological requirements. 
+\textbf{Model complexity:} How much detail should the physiological models have, in order to unambiguously describe a physiological behavior? In particular, if the model checker returns an execution trace as counter-example, how much details should the physiological model have so that the execution traces can be interpreted by domain experts? 	
 
 \textbf{Model Identifiability} is a metric for the feasibility of identifying model parameters from data. There are two methods for model construction: non-parametric modeling in which no prior knowledge is assumed and the model construction is purely data-driven; and parametric modeling in which domain knowledge of the physiological conditions is taken into account. For example, to model the electrophysiological activity of the heart, there is abundant literature describing the phenomena of individual arrhythmia, which makes parametric modeling of the environment favorable.
 
@@ -23,41 +24,9 @@ Models, especially environment models of the human physiology, which span a larg
 
 %%The complexity requirements of an environment model is usually determined by 1) The complexity of the interactions between the environment model and the system model and 2) The complexity of the environment condition specified in the physiological requirements.
 
-In the following sections, we introduce the physiological contexts within which the implantable pacemaker operates, and proceed to construct heart models for closed-loop validation of the pacemaker. Note that for two different applications, i.e. model checking of the device model in the loop and functional testing of the actual device in the loop, models are constructed differently as we address their respective requirements for environment models. 
+In the following sections, we introduce the physiological contexts within which the implantable pacemaker operates, and proceed to construct a heart model structure for closed-loop validation of the pacemaker. Note that for two different applications, i.e. model checking of the device model in the loop and functional testing of the actual device in the loop, models are constructed differently as we address their respective requirements for environment models. 
 
-\section{Physiology Basis of the Heart and the Pacemaker}
-Before we get into the details of heart modeling, we use this small section to introduce the physiology basis of the heart. Readers with knowledge of this subject can skip to the modeling sections.
-\subsection{Blood Circulation System}
-The heart is the "motor" for blood circulation within our body. The heart has two ventricles which pump the blood out of the heart, and two atria which gather blood from the body and pump them into the ventricles. (\figref{circulation}.(a)) There are two circulations through the heart: the \emph{Pulmonary circulation} and the \emph{Stemic circulation}. In the pulmonary circulation, the right atrium collects oxygen-depleted blood from all over the body and pumps it into the right ventricle. The right ventricle then pumps low-oxygen blood to the lungs. The blood gets oxygenated in the lungs and gathers into the left ventricle. In the stemic circulation, the oxygenated blood in the left atrium is pumped into the left ventricle. The left ventricle pumps the blood to the rest of the body and the heart itself. After the body extracts the oxygen from the blood and injects carbon dioxide, the oxygen-depleted blood then flows back to the right atrium.
-\begin{figure}[!t]
-\centering
-		\includegraphics[width=0.9\textwidth]{figs/circulation.pdf}
-		
-%\vspace{-10pt}
-\caption{\small (a) The circulation system. (b) Electrical Conduction system of the heart}
-\label{fig:circulation}
-%\vspace{-15pt}
-\end{figure} 
-\subsection{Electrical Conduction System of the Heart}
-The oxygen demand of the body changes during different activities. For example, the demand is higher while running and lower while sleeping. To satisfy these demands, the heart muscles in the atria and the ventricles have to contract with certain frequency and in accordance to optimize the \emph{Cardiac Output}, which refers to the volume of blood pumped by the heart per minute (mL blood/min). The coordinated contractions of the heart muscles are governed by the electrical conduction system of the heart (\figref{circulation}.(b)) A \emph{Normal Sinus Rhythm (NSR)} is the healthy heart rhythm which provides efficient blood flow. During a NSR, electrical signals are periodically generated by the \emph{Sinoatrial (SA) node} in the upper right atrium, which acts as the intrinsic pacemaker of the heart. The signals conduct throughout both atria and trigger muscle contractions to push blood into the ventricles. After a long conduction delay at the \emph{AV node} so that both ventricles are fully filled, the signals conduct through fast-conducting \emph{His-Purkinje} system to trigger almost simultaneous contractions of the ventricles and pump blood out of the ventricles. 
 
-Derangement from NSR can result in insufficient cardiac output and thus insufficient oxygen supply to the body and/or the heart itself, which are referred to as \emph{Arrythmia}. Arrhythmia impair the heart's ability to efficiently pump blood and compromise the patient's health. 
-Arrhythmia are categorized into so-called \emph{Tachycardia} and \emph{Bradycardia}. Tachycardia features undesirable fast heart rate which can cause inefficient blood pumping. Bradycardia features slow heart rate which results in insufficient blood supply. Bradycardia are due to failure of impulse generation with anomalies in the SA node, or failure of impulse propagation where the conduction from atria to the ventricles is delayed or blocked. 
-\subsection{Electrophysiology and Implantable Cardiac Devices}
-\label{EP}
-The electrical activities of the heart closely couple with the mechanical contractions thus the electrical activities of the heart can be monitored and used to diagnose arrhythmia. The most well-known method is Electrocardiogram (ECG), which measures the integration of electrical activities of the heart measured along different axis on the body surface. The electrical activities can also be directly measured by inserting electrodes through the vein into the heart. The electrodes are placed against the inside heart wall and localized electrical activities can be measured. Physicians can also deliver pacing sequence through the electrodes to explore the heart conditions. This procedure is referred to as Electrophysiological (EP) Testing  (\cite{josephson}) and the signals are referred to as electrograms (EGMs) (\figref{probes}.b). The timing and morphology of the  ECG and EGM signals together are used to diagnose arrhythmia.
-\begin{figure}[!t]
-\centering
-		\includegraphics[width=0.9\textwidth]{figs/egm.pdf}
-		
-%\vspace{-10pt}
-\caption{\small (a) Lead placement for a dual chamber pacemaker. (b) Electrogram (EGM) signals measured from pacemaker leads and corresponding internal pacemaker events}
-\label{fig:probes}
-%\vspace{-15pt}
-\end{figure} 
-
-%Implantable pacemakers follow the principle of EP testing. For a dual chamber pacemaker, two leads are inserted into the right atrium and right ventricle, respectively. The pacemaker senses the intrinsic generation and conduction of the electrical signals in the two chambers and deliver electrical pacing when the heart rate and/or atria-to-ventricles conduction interval are abnormal.
-The implantable cardiac pacemakers are rhythm management devices designed to treat bradycardia. A typical dual chamber pacemaker has two leads inserted into the heart through the veins which can measure the local electrical activity of the right atrium and right ventricle respectively (\figref{probes}.a). According to the timing between sensed impulses, the pacemaker may deliver electrical pacing to the corresponding chamber to maintain proper heart rhythm.
 
 \begin{figure}[!t]
 \centering
@@ -210,7 +179,7 @@ where $path\_len$ denotes the length of the path and $v$ is the conduction veloc
 After \emph{Tante} or \emph{Tretro} time expires, the path automaton sends out \emph{Act\_node(b)} or \emph{Act\_node(a)} respectively. A transition to \emph{Conflict} state occurs followed by the transition to \emph{Idle} state. The intermediate state \emph{Conflict} is designed to prevent back-flow, where the path is activated by the node \emph{b} it has just activated. If during \emph{Ante} or \emph{Retro} state another \emph{Act\_path} event is received from the other node connected to the path automaton, a transition to \emph{Double} state will occur, corresponding to the two-way conduction. In this case, the activation signals eventually cancel each other and the transition to \emph{Idle} state is taken.
 
 \subsection{Modeling the Heart's Electrical Conduction System}
-The node and path automata are the basic building blocks for heart modeling. Hearts with different conditions are modeled by using different conduction topologies with appropriate timing parameters for each node and path automata. \figref{automata}.(d) shows one such  topology of a network of node and path automata.
+The node and path automata are the basic building blocks for EP heart modeling. Hearts with different conditions are modeled by using different conduction topologies with appropriate timing parameters for each node and path automata. \figref{automata}.(d) shows one such topology of a network of node and path automata.
 \begin{figure}[!t]
 \center
 %\vspace{-15pt}
@@ -220,8 +189,18 @@ The node and path automata are the basic building blocks for heart modeling. Hea
 \label{fig:egm_s}
 %\vspace{-15pt}
 \end{figure}
-\subsection{Interaction with the Heart Model}
-In EP testing and during pacemaker implantation, the local electrical activities, measured as electrogram (EGM) signals, are used to diagnose heart conditions. During heart model construction, we can assign a node automaton at electrode locations and the transitions to the ERP state can be used to represent the local activation events. In a more general setup where electrodes are assigned anywhere within the heart model, a probe model is designed to generate synthetic EGM signals using spatio-temporal information from the proximity to the network of node and path automata. \figref{egm_s} shows the morphology of EGM signal changes with different conduction velocity and probe configurations. A detailed description of the probe model can be found in \cite{vhm_embc11}.
+\section{Interaction with the Heart Model}
+In this section, we first introduce a probe model we developed to generate synthetic EGM signals from the EP heart model.
+We then use two case study to demonstrate that the probe model enables the EP heart model to evaluate device malfunctions due to sensing errors.
+\subsection{Probe Model for Synthetic EGM Generation}
+In EP testing and during pacemaker implantation, the local electrical activities, measured as electrogram (EGM) signals, are used to diagnose heart conditions. During heart model construction, we can assign a node automaton at electrode locations and the transitions to the ERP state can be used to represent the local activation events. In a more general setup where electrodes are assigned anywhere within the heart model, a probe model is designed to generate synthetic EGM signals using spatio-temporal information from the proximity to the network of node and path automata. 
+According to \cite{recording}, a potential difference is generated when the activation wavefront passes by the electrode. 
+The locations of the activation wavefronts are calculated from the locations of the path automata and their current timer values. 
+The amplitude of EGM decreases when the activation wavefront moves away from the probe. 
+We assume the decrease factor is a function related to the distance between the activation wavefront and the probe. 
+The potential difference caused by an activation wavefront to a probe is the signal strength of the path multiplied by the decrease factor. 
+The amplitude of EGM from a probe is the sum of potential differences caused by all activation wavefronts. The bipolar EGM is the subtraction between two unipolar EGMs. 
+\figref{egm_s} shows that this probe model captures timing properties of EGM and the functional shape of the EGM impulses. The probes can be placed anywhere within the heart model and generate clinically-relevant EGMs. 
 
 \begin{figure}[!t]
 \center
@@ -232,8 +211,67 @@ In EP testing and during pacemaker implantation, the local electrical activities
 \label{fig:modeling_heart}
 %\vspace{-15pt}
 \end{figure}
-\subsection{Heart-on-a-Chip Platform}
-Platform testing remains the primary means to verify and validate device software. Currently testing is done by feeding recorded open-loop heart signals to the device and evaluating the device output. Consequently, the change in the state of the heart condition, in response to device output, is not taken into account. Thus, device malfunctions involving state changes due to multiple closed-loop interactions will not be captured during open-loop testing. 
+
+\begin{figure}[t]
+\center
+\vspace{-10pt}
+		\includegraphics[width=0.6\textwidth]{figs/crosstalk_all.pdf}
+%\vspace{-20pt}
+\caption{Crosstalk between pacemaker leads with high sensitivity in the ventricle, adjusted sensitivity and ventricular safety pacing}
+\label{fig:crosstalk}
+%\vspace{-15pt}
+\end{figure}
+With the sensing model, the heart model structure can be used to identify safety hazards caused by sensing errors.
+\subsection{Pacemaker Oversensing and Crosstalk}
+Oversensing is a general term for inappropriate sensing caused by noise or far-field signals. It's very common among pacemaker malfunctions and it may result in failure to pace (\cite{med2, leads}), competitive pacing and inappropriate therapy. Crosstalk is a special case for oversensing which occurs when the pacemaker stimulus in one chamber is sensed in the other chamber. It happens when two leads are close to each other or pacing signal in the other chamber is too strong. It is common that the ventricular lead is placed in the right ventricle outflow tract, which is close to the atrium (\cite{icd}). \figref{crosstalk}(a) shows simulated EGMs from a patient with bradycardia and complete heart block. During atrial pacing (AP), the pacing signal is sensed by the ventricular lead 53 ms after the AP. (Marker 1) It is treated as ventricular sense (VS) signal and thus inhibits the subsequent ventricular pacing (VP). This is indicated by no QRS-wave in the ECG channel. (Marker 2) For a patient with complete heart block this will cause dangerous ventricular asystole, meaning a long time without ventricular events.  
+
+Increasing the sensing threshold of the ventricular channel can prevent false sensing. In \figref{crosstalk}(b), the small signals in ventricular EGM are ignored and ventricular pacing are successfully delivered. 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{figure}[t]
+\centering
+\vspace{-10pt}
+		%\subfigure [\small]{
+		\includegraphics[width=\textwidth]{figs/dislodge_all.pdf}
+		%} 
+		%\subfigure [\small]{
+		%\includegraphics[width=0.36\textwidth]{figs/dislodge_norm.pdf}
+		%\label{fig:dislodge_norm}
+		%} 
+		%\subfigure [\small] 
+		%{
+		%\includegraphics[width=0.36\textwidth]{figs/dislodge_new.pdf}
+		%\label{fig:dislodge}
+		%} 
+%\vspace{-5pt}
+\caption{\small (a) Dotted line shows the location where the atrial lead should be (b) Pacemaker function before lead dislodge. (b) Pacemaker function after lead dislodge}
+		\label{fig:dislodge_all}
+
+%\vspace{-15pt}
+\end{figure} 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\subsection{Lead Displacement}
+Lead displacement affects many patients and can result in inappropriate or ineffective therapy. \figref{dislodge_all}. (b) shows the simulation result for the pacemaker function when the leads are in their designated location. From the figure we can observe: 1) Each P-wave is initialized by an Atrial Pace signal. 2) Each QRS complex is initiated by a ventricular pacing signal. 3) The interval between AP and VP is 150 ms, which matches the programed AVI period.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ %\begin{figure}
+%\center
+%\includegraphics[width=0.7\textwidth]{figs/race_cond.pdf}
+%\caption{Dotted line shows the location where the atrial lead should be}
+%%\vspace{-15pt}
+%\label{fig:race_cond}
+%\end{figure}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+One common case for lead dislodge is shown in \figref{dislodge_all}.(a), where the atrial lead has fallen into the right ventricle outflow tract. In this case the atrial lead senses from the ventricle rather than atrium and atrial pacing will initiate a ventricular event. \figref{dislodge_all}.(c) shows the simulated EGMs in this case. The figure reveals several facts: 1) No P wave is sensed or tracked (Marker 1). 2) Atrial Pace initiates an abnormal, wide QRS which is then sensed by the ventricle lead (Marker 2). 3) Intermittent appearance of VP on QRS 110 ms after the AP. The ventricular lead can receive signal from: 1) pacing signal sent from the atrial lead, 2) the intrinsic A-V conduction path. The two paths are shown in \figref{dislodge_all}.(a) and form a timing race condition. When the signal from the atrial lead arrives the ventricular lead first, it will trigger VS. If the intrinsic signal arrives the ventricular lead during the VSP sensing window (defined in previous section), it will trigger VSP. Although the pacing is 'safe' because the pacing is early enough to avoid the vulnerable refractory period, the damage caused by pacing on depolarized tissue is currently a matter of much investigation.\\
+
+
+
+\section{Heart-on-a-Chip Platform}
+Platform testing remains the primary means to verify and validate device software. Currently testing is performed by feeding recorded open-loop heart signals to the device and evaluating the device output. Consequently, the change in the state of the heart condition, in response to device output, is not taken into account. Thus, device malfunctions involving state changes due to multiple closed-loop interactions will not be captured during open-loop testing. 
 
 To this effect, the heart model described above is also implemented on hardware platform (\figref{modeling_heart}) for closed-loop testing. Since each heart model is a network of node and path automata running concurrently, we implemented the heart model on an FPGA, so that increasing in the number of nodes and paths would not affect real-time constraints. The second generation heart model implementation has been implemented on a lower cost fast micro-controller platform. The fast clock ensures that executions of all nodes and paths can be finished within 1ms. The Heart-on-a-Chip platform includes a heart model implementation which is able to represent common heart conditions such as bradycardia, tachycardia, heart block, etc (for mode details refer to \cite{VHM_proc}). The parameters of the heart model can be changed at run-time by either switching among pre-defined parameter sets, or sending values directly to the model through a user interface in Matlab. A monitoring system observes logical interactions between heart model and the pacemaker and checks them against safety invariants at run-time. 
 
@@ -255,7 +293,6 @@ As shown in (\figref{HOC}), with an analog interface the heart model can interac
 % \subsubsection{Replace ERP Blocking With Non-deterministic Conduction}
 % \subsubsection{Replace }
 
-\subsection{Discussion}
-In this chapter, we use heart modeling as example to demonstrate how to develop physiological models for closed-loop evaluation of closed-loop medical devices. We emphasized that models should be developed according to their applications. We developed heart models based on clinical Electrophysiological Testing, and modeled the topological and temporal behaviors of the heart with timed-automata formulation. In the next chapter we will demonstrate the identification and validation of the heart models.
+
 
 

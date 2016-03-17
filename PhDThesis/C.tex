@@ -1,71 +1,6 @@
-\section{EP Heart Model Identification}
-
-Physiological models are developed to represent certain clinical conditions common across a population of patients, or the conditions of a specific patient. Consequently, the structure of the model and corresponding parameters have to be identified. This information can be obtained from electrogram data collected during medical procedures and from physiological literature in which population data has been analyzed and summarized. Due to limited interactions with the patient (e.g. during a device implantation procedure or an ablation procedure), currently the quality and quantity of patient-specific physiological data is sparse as there is generally not enough information to identify all the parameters in the heart model.  A model with the spatio-temporal structure that is similar to the conduction patterns in the heart helps simplify the process of identifying the model parameters. A rigorous procedure for the model identification step is an important contributor to the model validation step. In this chapter, we first aim to answer the following questions:
-%%It is essential to choose the right level of abstraction so that the model is identifiable (to a large extent). Having physiological correspondence for the model structure and parameters can also simplify the identification process. 
-
-\begin{itemize}
-	\vspace{-5pt}
-	\item What is the importance of model identification for closed-loop simulation and model checking?
-	\vspace{-5pt}
-    	\item How are models identified from patient data and patient population parameters?
-\end{itemize}
-\begin{figure}[t]
-\center
-	\includegraphics[width=0.9\textwidth]{figs/vhmsim.png}
-	\caption{Simulation model of the heart showing the conduction pathways (left) with electrogram signals from different probe locations (right) and an interactive pacing panel (bottom left). In this case, the heart was paced four times at an interval of 500ms, followed by a pacing at a shorter (250ms) interval. This EP Testing procedure is employed to trigger conduction along alternative pathways and check for the existence of a reentry circuit.}
-	\label{fig:vhmsim}
-\end{figure}
-In the following section, we briefly discuss our model identification effort for heart models used in two closed-loop verification applications, and their corresponding challenges. This is followed by the procedures to validate the heart models before they are used for closed-loop verification and testing of the pacemaker.
-\begin{figure}[!b]
-\centering
-		\includegraphics[width=0.9  \textwidth]{figs/modelID.png}
-		
-%\vspace{-10pt}
-\caption{\small (a) The illustration of the probe locations. (b) Multiple pacing sequences with different timing outcomes. (c) The heart model with undecided parameters}
-\label{fig:modelID}
-%\vspace{-15pt}
-\end{figure} 
-
-\subsection{Heart Model Identification for Closed-loop Testing}
-In closed-loop simulation, a deterministic heart model should be identified to represent a specific patient under a certain heart condition. The constraints for model parameters can be obtained from patient data with \emph{Electrophysiological (EP) Testing}. During EP testing, the physician delivers electrical pacing sequences from electrodes placed inside the patient's heart to instigate responses along fast and slow conduction pathways (\figref{vhmsim}). The observed patterns and timing of electrical events are used to extract conduction and propagation properties of different tissue regions across the myocardium. Since the goal for any EP testing procedure is not to determine all the timing parameters for a patient, the number of parameters that can be identified from the patient data is limited.    
-
-\figref{modelID} illustrates how timing parameters can be extracted during an EP testing procedure. \figref{modelID}(a) shows a setup with two electrodes placed in the right atrium and right ventricle of the heart respectively. EGM signals can be measured from these two electrodes (\figref{modelID}(b)). The physician delivers a series of long interval pacing sequences followed by one or more short interval pacing through the electrodes. This may trigger different responses along primary and alternate conduction pathways from the patient's heart. \figref{modelID}(c) shows a heart model structure with unknown parameter values. By analyzing the \emph{timing} and \emph{pattern} of the EGM signals we extract constraints on the heart model parameters. In EGM sequence 1, the interval between two intrinsic activations $a1$ and $a2$ in EGM A is 700ms, so we have:
-$$ERP1+RRP1+Rest=700ms$$
-The interval between $a1$ and $v1$ is 150ms, so we have:
-$$Td1+Td2=150ms$$
-In EGM sequence 2, the pacing interval from Electrode A is 300ms. By observing that the interval between $p1-v1$ is less than the interval between $p2-v2$, we know that $p2$ arrives during the RRP period of the AV node. So we have:
-$$ERP1+RRP1\leq 300ms$$
-In EGM sequence 3, the pacing interval is further reduced to 250ms. There is no $v2$ corresponding to $p2$, indicating $p2$ arrives during the ERP period of the AV node. So we have:
-$$ERP1\leq 250ms$$
-Each experiment provides additional time constraints for model parameters. By systematically conducting experiments certain model parameters can be uniquely identified within a relatively tight range. However, even with simplified model structure like the one in the example, not all model parameters can be uniquely identified due to limited number of electrodes and limited number of experiments during a real procedure.
-
-
-
-
-
-
-\subsubsection{Heart Model Identification in Closed-loop Model Checking}
-In model checking, the heart models have simpler structure and fewer parameters due to non-deterministic abstraction. The placement and connectivity of nodes and paths in the heart models are developed to be consistent with EP practice. This way, each node and path automata and their timing parameters have physiological correspondence to parameters found in literature (\figref{intervals}). The range for non-deterministic parameters directly corresponds to the range for possible values of the respective physiological parameters. Therefore, model identification for model checking is much simpler and requires less EP testing data. It is important to note here that model checking of abstract models of the closed-loop system and testing of the device in the loop are complementary approaches for validating the safety and efficacy of the overall system. 
-
-\begin{figure}[!t]
-\centering
-		\includegraphics[width=0.8\textwidth]{figs/intervals.pdf}
-		
-%\vspace{-10pt}
-\caption{\small Timing intervals measured during clinical studies \cite{josephson}}
-\label{fig:intervals}
-%\vspace{-15pt}
-\end{figure} 
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
 \section{EP Heart Model Validation}
 %The validity of the environment models affects the validity of the closed-loop verification results. 
-Since models are approximations of the actual environment, there are always discrepancies between the model and the actual patient (group). The challenge then is to evaluate the confidence in the safety guarantees that model-based closed-loop verification can provide. The metrics and process to validate the environment model is different for the two applications of heart modeling: in closed-loop model checking, the model's \textbf{coverage} on environmental behaviors is more important, while in closed-loop simulation, the \textbf{accuracy} of the model is more important. 
+Since models are approximations of the actual environment, there are always discrepancies between the model and the actual patient (group). The challenge is to evaluate the confidence in the safety guarantees that model-based closed-loop verification can provide. The metrics and process to validate the environment model is different for the two applications of heart modeling: in closed-loop model checking, the model's \textbf{coverage} on environmental behaviors is more important, while in closed-loop simulation, the \textbf{accuracy} of the model is more important. 
 
 In this chapter, we aim to answer the following questions and use our heart models as examples to demonstrate different validation procedures which improve the fidelity of the environment model. 
 \begin{itemize}
@@ -137,7 +72,7 @@ A physiological model is considered valid for closed-loop simulation if (a) it i
 \vspace{-15pt}
 \end{figure*} 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\newpage
+
 \noindent\textbf{Validation by comparison to real patients:} This heart condition can also show Wenckebach type A-V nodal response. In this case, a sequence of pacing signals with a short coupling interval ($A_1-A_2<=AV.Terp+AV.Trrp$) is delivered in the atrium. This results in a gradual increase in the AV nodal conduction delay and then a dropped beat occurs in the ventricle due to the increased ERP period of the AV node. The EGMs for a real patient with Wenckebach type A-V nodal response are shown in \figref{WB_book}. With the VHM, we observe similar behavior, and the gradually increasing ERP and conduction delay are visualized in \figref{WB}.
 \subsection{Validating Models for Closed-loop Model Checking}
 In model checking, a lot of complex dynamics of the environment are abstracted so that the environment model covers a larger number of environmental behaviors using non-determinism. The validity of the model is obtained by a valid initial model and a rigorous abstraction processes. In \cite{STTT13}, we started with a valid detailed deterministic model (as described above) and by applying different abstraction steps we were able to generate a series of non-deterministic heart models. Between each abstraction step, the heart models satisfy a timed simulation relationship (\cite{simulation}) which is described below. The timed simulation guarantees all behaviors are covered in the more abstract model.
@@ -150,4 +85,76 @@ For two timed automata $T^1=\left\langle S^1,S_0^1,\Sigma^1,X^1,inv^1,E^1\right\
 \end{itemize}
 
 As shown in the later chapters, these validated heart models can then be used for closed-loop verification of implantable pacemaker. Both the identification and validation of the heart models can be used to provide more confidence to the verification results, which would be helpful during the medical device certification process.
+
+
+
+\section{EP Heart Model Identification}
+
+Physiological models are developed to represent certain clinical conditions common across a population of patients, or the conditions of a specific patient. Consequently, the structure of the model and corresponding parameters have to be identified. This information can be obtained from electrogram data collected during medical procedures and from physiological literature in which population data has been analyzed and summarized. Due to limited interactions with the patient (e.g. during a device implantation procedure or an ablation procedure), currently the quality and quantity of patient-specific physiological data is sparse as there is generally not enough information to identify all the parameters in the heart model.  A model with the spatio-temporal structure that is similar to the conduction patterns in the heart helps simplify the process of identifying the model parameters. A rigorous procedure for the model identification step is an important contributor to the model validation step. In this chapter, we first aim to answer the following questions:
+%%It is essential to choose the right level of abstraction so that the model is identifiable (to a large extent). Having physiological correspondence for the model structure and parameters can also simplify the identification process. 
+
+\begin{itemize}
+	\vspace{-5pt}
+	\item What is the importance of model identification for closed-loop simulation and model checking?
+	\vspace{-5pt}
+    	\item How are models identified from patient data and patient population parameters?
+\end{itemize}
+\begin{figure}[t]
+\center
+	\includegraphics[width=0.9\textwidth]{figs/vhmsim.png}
+	\caption{Simulation model of the heart showing the conduction pathways (left) with electrogram signals from different probe locations (right) and an interactive pacing panel (bottom left). In this case, the heart was paced four times at an interval of 500ms, followed by a pacing at a shorter (250ms) interval. This EP Testing procedure is employed to trigger conduction along alternative pathways and check for the existence of a reentry circuit.}
+	\label{fig:vhmsim}
+\end{figure}
+In the following section, we briefly discuss our model identification effort for heart models used in two closed-loop verification applications, and their corresponding challenges. This is followed by the procedures to validate the heart models before they are used for closed-loop verification and testing of the pacemaker.
+\begin{figure}[!b]
+\centering
+		\includegraphics[width=0.9  \textwidth]{figs/modelID.png}
+		
+%\vspace{-10pt}
+\caption{\small (a) The illustration of the probe locations. (b) Multiple pacing sequences with different timing outcomes. (c) The heart model with undecided parameters}
+\label{fig:modelID}
+%\vspace{-15pt}
+\end{figure} 
+
+\subsection{Heart Model Identification for Closed-loop Testing}
+In closed-loop simulation, a deterministic heart model should be identified to represent a specific patient under a certain heart condition. The constraints for model parameters can be obtained from patient data with \emph{Electrophysiological (EP) Testing}. During EP testing, the physician delivers electrical pacing sequences from electrodes placed inside the patient's heart to instigate responses along fast and slow conduction pathways (\figref{vhmsim}). The observed patterns and timing of electrical events are used to extract conduction and propagation properties of different tissue regions across the myocardium. Since the goal for any EP testing procedure is not to determine all the timing parameters for a patient, the number of parameters that can be identified from the patient data is limited.    
+
+\figref{modelID} illustrates how timing parameters can be extracted during an EP testing procedure. \figref{modelID}(a) shows a setup with two electrodes placed in the right atrium and right ventricle of the heart respectively. EGM signals can be measured from these two electrodes (\figref{modelID}(b)). The physician delivers a series of long interval pacing sequences followed by one or more short interval pacing through the electrodes. This may trigger different responses along primary and alternate conduction pathways from the patient's heart. \figref{modelID}(c) shows a heart model structure with unknown parameter values. By analyzing the \emph{timing} and \emph{pattern} of the EGM signals we extract constraints on the heart model parameters. In EGM sequence 1, the interval between two intrinsic activations $a1$ and $a2$ in EGM A is 700ms, so we have:
+$$ERP1+RRP1+Rest=700ms$$
+The interval between $a1$ and $v1$ is 150ms, so we have:
+$$Td1+Td2=150ms$$
+In EGM sequence 2, the pacing interval from Electrode A is 300ms. By observing that the interval between $p1-v1$ is less than the interval between $p2-v2$, we know that $p2$ arrives during the RRP period of the AV node. So we have:
+$$ERP1+RRP1\leq 300ms$$
+In EGM sequence 3, the pacing interval is further reduced to 250ms. There is no $v2$ corresponding to $p2$, indicating $p2$ arrives during the ERP period of the AV node. So we have:
+$$ERP1\leq 250ms$$
+Each experiment provides additional time constraints for model parameters. By systematically conducting experiments certain model parameters can be uniquely identified within a relatively tight range. However, even with simplified model structure like the one in the example, not all model parameters can be uniquely identified due to limited number of electrodes and limited number of experiments during a real procedure.
+
+
+
+
+
+
+\subsubsection{Heart Model Identification in Closed-loop Model Checking}
+In model checking, the heart models have simpler structure and fewer parameters due to non-deterministic abstraction. The placement and connectivity of nodes and paths in the heart models are developed to be consistent with EP practice. This way, each node and path automata and their timing parameters have physiological correspondence to parameters found in literature (\figref{intervals}). The range for non-deterministic parameters directly corresponds to the range for possible values of the respective physiological parameters. Therefore, model identification for model checking is much simpler and requires less EP testing data. It is important to note here that model checking of abstract models of the closed-loop system and testing of the device in the loop are complementary approaches for validating the safety and efficacy of the overall system. 
+
+\begin{figure}[!t]
+\centering
+		\includegraphics[width=0.8\textwidth]{figs/intervals.pdf}
+		
+%\vspace{-10pt}
+\caption{\small Timing intervals measured during clinical studies \cite{josephson}}
+\label{fig:intervals}
+%\vspace{-15pt}
+\end{figure} 
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+\section{Discussion}
+In this chapter, we use heart modeling as example to demonstrate how to develop physiological models for closed-loop evaluation of closed-loop medical devices. We emphasized that models should be developed according to their applications. We developed heart models based on clinical Electrophysiological Testing, and modeled the topological and temporal behaviors of the heart with timed-automata formulation. In the next chapter we will demonstrate the identification and validation of the heart models.
  

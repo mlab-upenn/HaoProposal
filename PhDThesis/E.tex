@@ -18,16 +18,15 @@
 %Unfortunately, because of the extremely high cost of clinical trials (several million dollars and spanning several years,~\cite{trialcost}), the amount and variety of human subjects during the clinical trials are limited, which reduces the opportunity to find bugs. 
 %Moreover, clinical trials are often conducted at the final design stage. Fixing bugs at this stage is very costly.
 
-Model checking is a technique in which the state space of the model under investigation is automatically and exhaustively explored to identify executions or states that violate specified properties. Violations of the properties are returned by the model checkers as \emph{counter-examples}, which can be used by designers to revise the design. In the application of verification of properties in medical devices like implantable pacemaker, model checking can be used to identify known and unknown mechanisms for inducing hazards. This is extended to checking the heart-pacemaker closed-loop models against physiological hazards (e.g. when the pacemaker provides inappropriate therapy which drives the heart to an unsafe state). 
+Model checking is a technique in which the state space of the model under investigation is automatically and exhaustively explored to identify executions or states that violate specified properties. Violations of the properties are returned by the model checkers as \emph{counter-examples}, which can be used by designers to revise the design. 
+In this chapter, model checking is used to evaluate an early design of a dual chamber pacemaker. 
+More specifically, model checking is used to identify known and unknown physiological hazards induced by implantable pacemakers (e.g. when the pacemaker provides inappropriate therapy which drives the heart to an unsafe state).  
 
-Due to the curse of dimensionality as models get more complex, and hence the large computational cost, there are usually restrictions on the formalism and the complexity of the models under investigation. Using abstract models of the actual system adds the responsibility of proving the conformance between the abstract model and the real system. Assumptions made during abstractions may also introduce false-positives and/or false-negatives into the model checking results. Back in Chapter 2, we introduced a set of heart models with different abstraction levels, that can be used to cover behaviors of physiological conditions using non-determinism. In Chapter 4, we then modeled a dual chamber pacemaker algorithm using timed-automata without doing abstractions. In this chapter, we use model checker UPPAAL to evaluate the pacemaker model against safety properties under different heart conditions captured by the heart models. Techniques to eliminate false-positives by refining the heart models are also discussed. We will try to answer the following questions:
-\begin{figure}[!t]
-		\centering
-		\includegraphics[width=0.8\textwidth]{figs/risk_requirements.pdf}
-		\caption{\small Sample Fault Tree Analysis of the physiological conditions leading to the lower rate limit and upper rate limits}
-		  %\vspace{-15pt}
-		\label{fig:risk_req}
-\end{figure}
+The chapter is organized as follow: a dual chamber pacemaker specification is introduced
+
+
+%Due to the curse of dimensionality as models get more complex, and hence the large computational cost, there are usually restrictions on the formalism and the complexity of the models under investigation. Using abstract models of the actual system adds the responsibility of proving the conformance between the abstract model and the real system. Assumptions made during abstractions may also introduce false-positives and/or false-negatives into the model checking results. Back in Chapter 2, we introduced a set of heart models with different abstraction levels, that can be used to cover behaviors of physiological conditions using non-determinism. In Chapter 4, we then modeled a dual chamber pacemaker algorithm using timed-automata without doing abstractions. In this chapter, we use model checker UPPAAL to evaluate the pacemaker model against safety properties under different heart conditions captured by the heart models. Techniques to eliminate false-positives by refining the heart models are also discussed. We will try to answer the following questions:
+
 
 %            \item What are the effects of adding new features to the software? Can they disrupt the safety properties that the previous device hold?
 
@@ -36,14 +35,14 @@ Due to the curse of dimensionality as models get more complex, and hence the lar
 %%\todo[inline]{should we give an example of a heart condition?}
 %A set of initial models of the environment can be constructed, but the set is inherently incomplete because of the large number of environment conditions and their combinations. 
 %As a result, performing model checking using every model in the set cannot ensure full coverage of the environmental conditions. In the following sections, we will investigate how as we go from basic to more complex requirements, we require more sophisticated approaches to generate and navigate through a variety of environment models. We introduce the concept of an \emph{Abstraction Tree} to systematically encode requirements and choose the appropriate heart models for the requirement. By analyzing the concrete counter-examples we are able to distinguish if the problem is a bug within the device or due to the lack of expressiveness in the environment model. 
-\begin{itemize}	
-\vspace{-5pt}
-	\item How do model checking results fit into the regulation framework?
-	\vspace{-5pt}
-	\item How do we find the appropriate abstraction level of the environment model for each physiological requirement?
-        \vspace{-5pt}
-        \item How do we interpret abstract counter-examples returned by model checker?
-\end{itemize}
+%\begin{itemize}	
+%\vspace{-5pt}
+	%\item How do model checking results fit into the regulation framework?
+	%\vspace{-5pt}
+	%\item How do we find the appropriate abstraction level of the environment model for each physiological requirement?
+        %\vspace{-5pt}
+        %\item How do we interpret abstract counter-examples returned by model checker?
+%\end{itemize}
 %\section{Testing vs Verification}
 %
 %\newcommand{\ub}{\bar{u}}
@@ -83,137 +82,11 @@ Due to the curse of dimensionality as models get more complex, and hence the lar
 %Testing, on the other hand, may be the only option for some complex systems that are beyond the capacity of today's model checkers, or which do not possess formal semantics.
 %
 %In this chapter we cover formal verification of the closed-loop system and address testing in the following chapter.
-\section{A Dual Chamber Pacemaker Specification}
 
-As part of the model-based design, it is important to have a functional and formal model of the device software for testing and formal verification respectively. In our study, we focus on the implantable  pacemaker since it is one of the simpler implantable cardiac devices as its functionality is based only on timing and does not consider signal morphology. This serves as a good base case to demonstrate the proposed methodology.  In this chapter, we describe the basic specification and formal implementation of a dual chamber pacemaker, as well as a more advanced function on mode switching. The specifications are based on the algorithm descriptions from Boston Scientific manuals (\cite{compass}) and the functional description released as part of the Pacemaker Challenge (\cite{challenge}). 
-We aim to answer the following questions here:
-\begin{itemize}
-	\vspace{-5pt}
-	\item How are the pacemaker's timers specified to maintain the appropriate heart rhythm?
-	\vspace{-5pt}
-   	\item What happens if new functionality is added to the basic model?
-\end{itemize}
-
-The artificial pacemaker is designed for patients with bradycardia (i.e. slow heart rate). Two leads, one in the right atrium and one in the right ventricle, are inserted into the heart and fixed onto the inner wall of the heart. These two leads monitors the local activation of the atria and the ventricles, and generate corresponding sensed events \textsf{(AS, VS)} to its software. The software determines the heart condition by measuring time difference between events and delivers pacing events \textsf{(AP, VP)} to the analog circuit when necessary. The analog circuit then delivers pacing signals to the heart to maintain heart rate and A-V synchrony. In order to deal with different heart condition, pacemakers are able to operate in different modes. The modes are labeled using a three character system (e.g. $xyz$). The first position describes the pacing locations, the second location describes the sensing locations, and the third position describes how the pacemaker software responds to sensing. Here we introduce the widely used DDD mode pacemaker which is a dual chamber mode with sensing and pacing in both atrium and ventricle. 
-
-\begin{figure}[!b]
-\center
-%\vspace{-10pt}
-\includegraphics[width=0.85\textwidth]{figs/PM_timers.pdf}
-%\vspace{-10pt}
-\caption{Basic 5 timing cycles for a dual chamber pacemaker which include the Lower Rate Interval (LRI),  Atrio-Ventricular Interval (AVI), and Upper Rate Interval (URI). Also included are the blanking intervals, Post Ventricular Atrial Refractory Period (PVARP) and Ventricular Refractory Period (VRP), to inhabit action by the pacemaker.}
-\label{fig:PMtimers}
-%\vspace{-10pt}t
-
-\end{figure} 
-\section{Basic Specifications of a DDD Pacemaker}
-The DDD pacemaker has five basic timing cycles triggered by external and internal events, as shown in \figref{PMtimers}. We decomposed our pacemaker model into five components which correspond to the five timers. $P=LRI\| AVI\| URI\| PVARP\| VRP$. These components synchronize with each other using broadcast channels and shared variables (as shown in \figref{PMdesign}). 
-
-\subsection{Lower Rate Interval (LRI)}
-%\vspace{-5pt}
-The Lower Rate Interval (LRI) component is shown in \figref{PMdesign}(a). This component defines the longest interval allowed between two ventricular events, thus keeping the heart rate above a minimum value. In DDD mode, the LRI interval is divided into a V-A interval (TLRI-TAVI) and a A-V interval (TAVI). The LRI component maintains a maximum V-A delay while the AVI component maintains a maximum A-V delay so together they maintain the maximum V-V delay. In the LRI component, the clock is reset when a ventricular event \textsf{(VS, VP)} is received. If no atrial event has been sensed \textsf{(AS)}, the component will deliver atrial pacing \textsf{(AP)} after TLRI-TAVI. 
-
-%\vspace{-5pt}
-\subsection{Atrio-Ventricular Interval (AVI) and Upper Rate Interval (URI)}
-%\vspace{-5pt}
-The function of the AVI component defines the longest interval between an atrial event and a ventricular event. If there is no ventricular event \textsf{(VS)}  within TAVI after an atrial event \textsf{(AS, AP)}, and the time since the last ventricular event \textsf{(VS, VP)} is longer than TURI, the component will deliver ventricular pacing \textsf{(VP)}. The URI limits the ventricular pacing rate by enforcing a lower bound on the times between consecutive ventricle events. The UPPAAL design of AVI and URI component is shown in \figref{PMdesign}(b) and (c).%The UPPAAL design of AVI component is shown in 
-
-%\vspace{-10pt}
-\subsection{Post Ventricular Atrial Refractory Period (PVARP) and Post Ventricular Atrial Blanking (PVAB)}
-%\vspace{-5pt}
-Ventricular events, especially Ventricular Pace \textsf{(VP)} are sometimes so strong that the atrial lead can sense the activation as well. This signal may be falsely recognized as an atrial event and disrupt normal pacemaker function. This scenario is called crosstalk and was discussed in our previous work (\cite{vhm_embc11}). In order to prevent this undesired behavior, and filter potential noises, there is a blanking period (PVAB) followed by a refractory period (PVARP) for the atrial events after each ventricular event \textsf{(VS, VP)}. Atrial events during PVAB are ignored and atrial events during PVARP trigger \textsf{AR!} events which can be used in some advanced diagnostic algorithms. The UPPAAL design of PVARP component is shown in \figref{PMdesign}(d).
-
-%\vspace{-10pt}
-\subsection{Ventricular Refractory Period (VRP)}
-%\vspace{-5pt}
-The VRP follows each ventricular event \textsf{(VP, VS)} to filter noise and early events in the ventricular channel which could otherwise cause undesired pacemaker behavior. \figref{PMdesign}(e) shows the UPPAAL design of VRP component.
-
-\begin{figure}[!t]
-\center
-%\vspace{-10pt}
-\includegraphics[width=0.9\textwidth]{figs/pacemaker.pdf}
-%\vspace{-10pt}
-\caption{Five basic timing cycles for a dual chamber pacemaker, which include the Lower Rate Interval (LRI), Atrio-Ventricular Interval (AVI), and Upper Rate Interval (URI). Also included are the blanking intervals, Post Ventricular Atrial Refractory Period (PVARP) and Ventricular Refractory Period (VRP), to inhabit action by the pacemaker.}
-\label{fig:PMdesign}
-%\vspace{-10pt}
-\end{figure} 
-
-\section{Mode Switch Operation: Atrial Tachycardia Response}
-\label{Mode_switch}
-Supraventricular Tachycardia (SVT) is an arrhythmia with an abnormally fast atrial rate. %\figref{SVT} is a series of simulation results for closed-loop interaction between a heart model with SVT and the pacemaker model. The atrial and ventricular channels show electrogram inputs to the pacemaker and the pacemaker channel shows the corresponding events received and generated by the pacemaker software, \cite{vhm_embc11}.
-Typically, in a heart without pacemaker, the AV node, which has a long refractory period, can filter most of the fast atrial activations during SVT, thus the ventricular rate remains relatively normal. \figref{SVT_none} demonstrates a pacemaker event trace during SVT, with a pacemaker in ODO mode, which just sensing in both channels. 
-As there is no pacing in ODO mode, the heart is in open-loop with the pacemaker. In this particular case, every 3 atrial events (AS) correspond to 1 ventricular event (VS) during SVT. 
-As an arrhythmia, SVT is still considered a safe heart condition since the ventricles operate under normal rate and still maintain adequate cardiac output. 
-
-However, in the closed loop case with the DDD pacemaker, the AVI component of a dual chamber pacemaker is equivalent to a virtual pathway in parallel to the intrinsic conduction pathway between the atria and the ventricles. The pacemaker tries to maintain 1:1 A-V conduction and thus increases the ventricular rate inappropriately to match the atrial rate.  This is known as Pacemaker Mediated Tachycardia (PMT) as the heart would have been safe without the pacemaker and its virtual pathway. \figref{SVT_DDD} shows the pacemaker trace of the same SVT case with DDD pacemaker. Although half of the fast atrial events are filtered by the PVARP period ([AR]s), the DDD pacemaker still drives the closed-loop system into 2:1 A-V conduction with faster ventricular rate. Maintaining A-V delay is less important than maintaining an appropriate ventricular rate. The DDD pacemaker violates a higher priority requirement in order to satisfy a lower priority requirement, which is inappropriate.
-\begin{figure*}[!t]
-\centering
-		\subfigure [\small]{			
-		\includegraphics[width=0.5  \textwidth]{figs/SVT_none.pdf}
-		\label{fig:SVT_none}
-		} 
-%	\hspace{.1in}%
-\vspace{-10pt}
-		
-		\subfigure [\small] 
-		{
-		\includegraphics[width=0.5\textwidth]{figs/SVT_DDD.pdf}
-		\label{fig:SVT_DDD}
-		} 
-\vspace{-5pt}
-\caption{\small Benign open loop case: SVT without a pacemaker or with a pacemaker in sense-only mode (ODO) (b) Dangerous closed-loop-case SVT with DDD pacemaker which tries to match the fast atrial rate with a corresponding (and dangerous) fast ventricular rate.}
-\vspace{-10pt}
-\end{figure*} 
-
-Pacemaker manufacturers have designed algorithms to detect and terminate these behaviors. Intuitively, the mode-switch algorithm first detects SVT. After confirmed detection, it switches the pacemaker from a dual-chamber mode to a single-chamber mode. During the single-chamber mode, the A-V synchrony function of the pacemaker is deactivated thus the ventricular rate is decoupled from the fast atrial rate. After the algorithm determines the end of SVT, it will switch the pacemaker back to the dual chamber mode. 
-\begin{figure*}
-		\centering
-		%\vspace{-19pt}
-		\includegraphics[width=0.8\textwidth]{figs/AVI_ms.pdf}
-		%\vspace{-10pt}
-		\caption{\small (a) After switching to \textsf{VDI} mode, the new LRI component \textsf{LRI'} maintains a minimum V-V interval; (b) After switching to \textsf{VDI} mode, the new AVI component \textsf{AVI'} keeps track of the time after each atrial events.}
-		%  \vspace{-20pt}
-		\label{fig:avi_ms}
-\end{figure*}
-The mode-switch algorithm (also known as atrial tachycardia response) specification we use is similar to the one described in the Boston Scientific pacemakers' manual (\cite{compass}). The algorithm first measures the interval between atrial events outside the blanking period (AS, AR). The interval is considered as \emph{fast} if it is above a threshold (\emph{Trigger Rate}) and \emph{slow} otherwise. In our UPPAAL model we model it as $INT$ (see \figref{dur_count} (1)). A counter $CNT$ increments for \emph{fast} events and decrements for \emph{slow} events (see \figref{dur_count} (2)). After the counter value reaches the \emph{Entry Count}, the algorithm will start a \emph{Duration} ($DUR$) ,which is a time interval used to confirm the detection of SVT (see \figref{dur_count} (3)). In the \emph{Duration}, the counter keeps counting. If the counter value is still positive after the \emph{Duration}, the pacemaker will switch to the VDI mode (\emph{Fallback mode}). In the VDI mode, the pacemaker only senses and paces the ventricle. At any time if the counter reaches zero, the \emph{Duration} will terminate and the pacemaker is switched back to DDD mode.
-% to show some interesting findings. The basic idea of this simplified model is explained in detail. \\
-%\mySubSubSection{UPPAAL model for mode-switch algorithm}
-In our UPPAAL model of the mode-switch algorithm, we use nominal parameter values from the clinical setting. We define \emph{trigger rate} at 170bpm (350ms), \emph{entry count} at 8, \emph{duration} for 8 ventricular events and \emph{fallback mode} as VDI. 
-\begin{figure*}
-		\centering
-				%\vspace{-15pt}
-		\includegraphics[width=0.9\textwidth]{figs/duration.pdf}
-		%\vspace{-10pt}
-		\caption{\small (1) Component \textsf{INT}: An atrial event (\textsf{AS,AR}) arrives before \textsf{thresh} after the previous atrial event is regarded as a \textsf{fast} event. Atrial event arrives after \textsf{thresh} and \textsf{AP} are regarded as \textsf{slow} event; (2) Component \textsf{CNT}: After 8 \textsf{fast} event the algorithm will start a duration by sending \textsf{du\_beg} and will switch to \textsf{VDI} mode when the duration ends (\textsf{du\_end}); (3) Component \textsf{DUR} :The duration length is 8 ventricular events (\textsf{VS,VP})}
-		  %\vspace{-15pt}
-		\label{fig:dur_count}
-\end{figure*} 
-
-In order to model both DDD and VDI modes and the switching between them, we made modifications to the AVI and LRI components.
-In each component two copies for both modes are modeled, and switch between each other when switching events (DDD, VDI) are received. During VDI mode, \textsf{VP} is delivered by the LRI component instead of the AVI component. The clock values are shared between both copies in order to preserve essential intervals even after switching. The modified AVI ($AVI'$) and LRI ($LRI'$)components are shown in \figref{avi_ms}. 
-\looseness-1
-\section{Heart Models for Closed-loop Model Checking}
-%\begin{itemize}
-	%\item What does nondeterminism do? Where can these model be used?
-    %\item How to replace complex dynamics of the deterministic models with nondeterminism?
-    %\item What are the abstraction rules that can be applied to the heart models and what are their physiological basis?
-    %\item How to encode the information loss during each abstraction steps?
-%\end{itemize}
-During closed-loop model checking, the whole closed-loop state space of the device and the environment is mathematically explored against physiological requirements. The  ideal environment models should be: (1) simple enough to avoid the state space explosion problem (\cite{Abstraction}), (2) general enough to cover possible physiological operation parameters, and (3) expressive enough to represent specific physiological conditions in-depth. It is obvious that no single model can achieve all three properties. A rigorous framework should be adapted so that models with the appropriate level of refinement, from a family of models, are selected based on the requirement type. For example, for a simple property that the pacemaker must maintain the heart rate above a desired level, a relatively abstract model will suffice. For a more complex property such as the termination of Pacemaker Mediated Tachycardia (\cite{josephson}), an appropriately refined model which expresses the physiological condition will be selected.
-
-\subsection{Modeling Philosophy}
-\textbf{Model Formalism: }Choosing an appropriate formalism for the physiological models is important as the formalism determines the closed-loop state space and hence the feasibility to do model checking. The pacemaker utilizes the timing of local electrical events to diagnose heart conditions. It is therefore natural to use timed-automata models of the heart. With this formalism, we use the UPPAAL model checking tool (\cite{uppaal_tut}) such that the whole closed-loop state space is explored symbolically.\\\\
-\textbf{Model Coverage: } Pacemakers are designed to treat bradycardia by maintaining the appropriate heart rate when the intrinsic rate is low. However, at the same time, a pacemaker should not adversely affect other heart conditions such as supraventricular tachycardia (\cite{pacemakerrecalls}). Even for the same patient, the heart condition changes over time and must be addressable by the modeling effort. In order to achieve safety across all possible heart conditions, the heart models used during closed-loop verification should be able to cover all possible heart behaviors, more precisely, their mapping to pacemaker inputs. Over-approximation (\cite{CEGAR}) with non-determinism can be used to simplify model structure while covering larger variety of environmental behaviors. Techniques like model-checking can then be used to examine the whole closed-loop state space for property violations.\\\\ 
-\textbf{Ambiguity due to Limited Sensing Capability: }The spatial sensing resolution of pacemakers is low, in terms of the number of sensing location (2-3 leads), as well as the information obtained from each sensing location (binary events with no analog morphology). Through the process of abstraction, if different heart conditions are able to generate exactly the same input sequence to the pacemaker, there will be ambiguities in concretizing abstract closed-loop executions. For certain conditional requirements, it is important to differentiate all possible concrete executions corresponding to an abstract execution. As the result, the heart model(s) should have the capability to differentiate these heart conditions when verifying certain properties. Thus, a single heart model will not suffice and a family of heart models are required.\\\\
-\textbf{Information Loss during Abstraction: }While over-approximation achieves simplicity and coverage, it also inevitably introduces invalid behaviors (e.g. not clinically feasible or relevant) into the model which can cause false-negatives and false-positives during model checking. To solve this problem, refined models of the heart should be available which can resolve spurious counterexamples and eliminate invalid executions when necessary to avoid false-positives.
-
-The most challenging aspect during closed-loop model checking is the abstraction and refinement of the environment model. In \cite{STTT13} we developed a series of heart model abstractions at various abstraction levels. The models are abstracted using abstraction rules derived from physiological knowledge, thus ensuring that each abstraction step covers more physiological conditions. The models in adjacent abstraction levels also satisfy \textsf{timed-simulation} relationship (\cite{simulation}) to ensure complete coverage in the more abstract model. In the remainder of this section, we briefly discuss this multi-scale modeling process and the domain knowledge used. The detailed abstraction and proof for simulation relationship can be found in \cite{STTT13}.
-
-\subsection{Timed Automata and Timed Simulation}
+\section{Model Checking and Timed Automata}
+\subsection{Timed Automata}
 Timed automata (\cite{timed_automata}) is an extension of a finite automaton with a finite set of real-valued clocks. It has been used for modeling and verifying systems which are triggered by events and have timing constraints between events.  UPPAAL is a standard tool for modeling and verification of real-time systems, based on networks of timed automata. The graphical and text-based interface makes modeling more intuitive. Requirements can be specified using Computational Tree Logic (CTL), as described in \cite{Clarke}, and violations can be visualized in the simulation environment.
-\looseness-1
 
-\emph{The rest of this section describes the process of model abstraction and refinement where more abstract models cover more of the state space but can only prove simpler properties. As we refine models, they cover lesser state space but can prove more complex properties. The reader looking for a more intuitive understanding of the area may skip the detailed description in the rest of this chapter, during the first reading.}
 \subsubsection{Syntax of Timed Automata}
 A timed automaton \textbf{G} is a tuple $\left\langle S,S_0,\Sigma,X,inv,E\right\rangle$, where
 
@@ -234,6 +107,42 @@ $$\Rightarrow (s,v)\xrightarrow{\sigma}(s',v[\lambda :=0])$$
 The \textsf{timed transition} happens when the timed automaton can stay in the same location for certain amount of time. We have:
 $$\delta\in \textsl{R},\forall \delta'\leq\delta, v+\delta'\models inv(s)$$
 $$\Rightarrow (s,v)\xrightarrow{\delta}(s,v+\delta)$$
+
+\subsubsection{Timed Automata Model Checking}
+
+\subsubsection{TCTL}
+
+\subsection{UPPAAL Model of a Dual Chamber Pacemaker}
+\figref{PMdesign}(e) shows the UPPAAL design of VRP component.
+
+\begin{figure}[!t]
+\center
+%\vspace{-10pt}
+\includegraphics[width=0.9\textwidth]{figs/pacemaker.pdf}
+%\vspace{-10pt}
+\caption{Five basic timing cycles for a dual chamber pacemaker, which include the Lower Rate Interval (LRI), Atrio-Ventricular Interval (AVI), and Upper Rate Interval (URI). Also included are the blanking intervals, Post Ventricular Atrial Refractory Period (PVARP) and Ventricular Refractory Period (VRP), to inhabit action by the pacemaker.}
+\label{fig:PMdesign}
+%\vspace{-10pt}
+\end{figure} 
+
+\section{Heart Models for Closed-loop Model Checking}
+%\begin{itemize}
+	%\item What does nondeterminism do? Where can these model be used?
+    %\item How to replace complex dynamics of the deterministic models with nondeterminism?
+    %\item What are the abstraction rules that can be applied to the heart models and what are their physiological basis?
+    %\item How to encode the information loss during each abstraction steps?
+%\end{itemize}
+During closed-loop model checking, the whole closed-loop state space of the device and the environment is mathematically explored against physiological requirements. The  ideal environment models should be: (1) simple enough to avoid the state space explosion problem (\cite{Abstraction}), (2) general enough to cover possible physiological operation parameters, and (3) expressive enough to represent specific physiological conditions in-depth. It is obvious that no single model can achieve all three properties. A rigorous framework should be adapted so that models with the appropriate level of refinement, from a family of models, are selected based on the requirement type. For example, for a simple property that the pacemaker must maintain the heart rate above a desired level, a relatively abstract model will suffice. For a more complex property such as the termination of Pacemaker Mediated Tachycardia (\cite{josephson}), an appropriately refined model which expresses the physiological condition will be selected.
+
+\subsection{Modeling Philosophy}
+\textbf{Model Formalism: }Choosing an appropriate formalism for the physiological models is important as the formalism determines the closed-loop state space and hence the feasibility to do model checking. The pacemaker utilizes the timing of local electrical events to diagnose heart conditions. It is therefore natural to use timed-automata models of the heart. With this formalism, we use the UPPAAL model checking tool (\cite{uppaal_tut}) such that the whole closed-loop state space is explored symbolically.\\\\
+\textbf{Model Coverage: } Pacemakers are designed to treat bradycardia by maintaining the appropriate heart rate when the intrinsic rate is low. However, at the same time, a pacemaker should not adversely affect other heart conditions such as supraventricular tachycardia (\cite{pacemakerrecalls}). Even for the same patient, the heart condition changes over time and must be addressable by the modeling effort. In order to achieve safety across all possible heart conditions, the heart models used during closed-loop verification should be able to cover all possible heart behaviors, more precisely, their mapping to pacemaker inputs. Over-approximation (\cite{CEGAR}) with non-determinism can be used to simplify model structure while covering larger variety of environmental behaviors. Techniques like model-checking can then be used to examine the whole closed-loop state space for property violations.\\\\ 
+\textbf{Ambiguity due to Limited Sensing Capability: }The spatial sensing resolution of pacemakers is low, in terms of the number of sensing location (2-3 leads), as well as the information obtained from each sensing location (binary events with no analog morphology). Through the process of abstraction, if different heart conditions are able to generate exactly the same input sequence to the pacemaker, there will be ambiguities in concretizing abstract closed-loop executions. For certain conditional requirements, it is important to differentiate all possible concrete executions corresponding to an abstract execution. As the result, the heart model(s) should have the capability to differentiate these heart conditions when verifying certain properties. Thus, a single heart model will not suffice and a family of heart models are required.\\\\
+\textbf{Information Loss during Abstraction: }While over-approximation achieves simplicity and coverage, it also inevitably introduces invalid behaviors (e.g. not clinically feasible or relevant) into the model which can cause false-negatives and false-positives during model checking. To solve this problem, refined models of the heart should be available which can resolve spurious counterexamples and eliminate invalid executions when necessary to avoid false-positives.
+
+The most challenging aspect during closed-loop model checking is the abstraction and refinement of the environment model. In \cite{STTT13} we developed a series of heart model abstractions at various abstraction levels. The models are abstracted using abstraction rules derived from physiological knowledge, thus ensuring that each abstraction step covers more physiological conditions. The models in adjacent abstraction levels also satisfy \textsf{timed-simulation} relationship (\cite{simulation}) to ensure complete coverage in the more abstract model. In the remainder of this section, we briefly discuss this multi-scale modeling process and the domain knowledge used. The detailed abstraction and proof for simulation relationship can be found in \cite{STTT13}.
+
+
 \subsubsection{Timed Simulation}
 For two timed automata $T^1=\left\langle S^1,S_0^1,\Sigma^1,X^1,inv^1,E^1\right\rangle$ and $T^2=\left\langle S^2,S_0^2,\Sigma^2,X^2,inv^2,E^2\right\rangle$, a timed simulation relation is a binary relation $\textsf{sim}\subseteq \Omega^1\times \Omega^2$ where $\Omega^1$ and $\Omega^2$ are sets of states of $T^1$ and $T^2$. We say $T^2$ \textsf{time simulates} $T^1$ ($T^1 \preceq_t T^2$) if the following conditions holds:
 \begin{itemize}
@@ -247,53 +156,173 @@ Certain properties are preserved for timed simulation relation. For $\varphi\in 
 
 It is known that timed simulation relation is also closed under composition \cite{simulation}. So when we have two heart models $H_1\preceq_t H_2$ we will have $H_1\| P\preceq_t H_2\| P$ where $P$ is the timed-automata model of the pacemaker. For $\varphi\in ATCTL$, we have $H_2\| P\models\varphi\Rightarrow H_1\| P\models\varphi$. With this property we can verify the pacemaker model with abstract heart model. In the rest of the section, we will describe how we develop our initial heart model from the physiological perspective and abstract the model step by step so that the complexity of the model is reduced for verification. Given two heart models $H_1$, $H_2$ and a timed simulation mapping \textsf{sim}=$\Omega_1\times\Omega_2$, there are no automated methods to check $H_1\preceq_t H_2$. In the Appendix, we show the manual proof for the timed simulation relation between two heart models $H_2$ and $H_3$. Other timed simulation relations can be proved similarly.
 
-\subsection{Abstraction 0: Initial Abstraction}
-For the initial heart model, we assume the heart tissue is modeled with all its spatial detail. For the temporal aspect, we model each tissue region as an automaton $N0$ shown in \figref{HM_abs}(b). The beat-to-beat dynamics of heart tissue, modeled by the deterministic model, is abstracted using non-determinism. For example, the ERP period and conduction delay of the tissue are non-deterministically chosen from ranges instead of deterministic functions. The whole heart can be modeled by composing tissue models with different parameters $H_0=N_0^1\|N_0^2\cdots N_0^n$. However, for a real heart, the number $n$ is very large and the connectivity and parameter values are difficult, and perhaps impossible, to determine, which makes verification with $H_0$ infeasible. 
+\subsection{Counter-Example-Guided Abstraction Refinement}
+In closed-loop model checking, there is only one device model. 
+However there can be a large number of environmental conditions which require different models to represent them. For instance, a heart with atrial flutter has an additional conduction pathway that is not present in a healthy heart, causing fast atrial rate. The timing and structural differences of different heart conditions should be distinguished in corresponding heart models.
+%\todo[inline]{should we give an example of a heart condition?}
+A set of initial models of the environment can be constructed but the set is inherently incomplete because of the large number of environment conditions and their combinations. 
+As a result, performing model checking using every model in the set cannot ensure full coverage of the environmental conditions. 
 
-\subsection{Abstraction 1: Abstract Conduction Delays With Paths}
-At the first abstraction step, we separate the conduction delay (modeled by the \emph{cond} state in $N0$) from the new node automata $N1$ and model the conduction between two nodes using path automaton $P1$. Since the beat-to-beat dynamics are abstracted with non-determinism, the RRP state is merged with the Rest state in $N1$. The procedure gives us the intuition to abstract the heart as a conduction network as shown in \figref{HM_abs} (c). 
+In this paper, domain-specific over-approximation rules are developed that produce abstract models that not only cover explicitly modeled environment conditions, but also cover timing behaviors and conditions not modeled in the set of initial models. 
+The abstract models can be then used for closed-loop model checking of the device model. 
+If the closed-loop system satisfies a requirement, the device under verification satisfies the requirement under environment conditions covered by the abstract models. 
+However, if the requirement is not satisfied, the model checker returns a counter-example. 
+In device modeling, the counter-example is considered \emph{spurious} if it can not be produced by the device (as shown in (\figref{distinction}(a)).
+However in environment modeling, even if the counter-example can not be produced by any of the initial environment models, it might still be a physiologically valid behavior.
+Thus the validity of a counter-example cannot be determined by refining the environment model, but can ultimately only be determined by domain experts. 
 
-\subsection{Abstraction 2: Merging Equivalent States}
-The heart model $H_1'$ still has equivalent locations. In Abstraction 2 we further abstract the node and path automata by merging equivalent states. In the new node automaton $N_2$ we merge the \textsf{RRP} state with the \textsf{Rest} state with:
-$$N_2.Trest\_min = N_1.Trest\_min+N_1.Trrp\_min$$
-$$N_2.Trest\_max = N_1.Trest\_max+N_1.Trrp\_max$$
+Counter-examples returned from abstract models can be difficult to interpret by domain experts.
+One abstract counter-example could be produced by multiple physiologically valid conditions, which causes ambiguity.
+Thus, a rigorous framework is necessary to balance the need to cover a wide range of environmental conditions and the need to provide counter-examples to the physicians within their physiological context.
+
+Another challenge for closed-loop model checking of medical devices is the amount of domain expertise needed during: 1) physiological modeling, 2) model abstraction and refinement, and 3) checking the validity of counter-examples.
+Thus the framework must also allow non-domain experts to perform verification (item 2 above),
+and establish `hand-off' points where the results of verification can be handed back 
+to the experts for interpretation.
+
+\begin{figure}[!t]
+		\centering
+		\includegraphics[width=\textwidth]{figs/distinction.pdf}
+		%\vspace{-5pt}
+		\caption{\small (a) Device modeling with CEGAR framework (b) Closed-loop model checking with environment abstraction tree.}% The initial set of heart conditions are first abstracted and/or merged using abstraction rules $h_1,h_2$ (Marker 1). The abstract model is first used for closed-loop model checking. When a property violation happens, refined models in the abstraction tree are used for model checking. The most concrete counter-examples may be available in the initial model(s) (Marker 2). In the scenario where counter-examples do not exist in explicitly modeled Heart condition 2 and 3, the counter-example in Abstraction 1.2 may correspond to a valid heart condition introduced during abstraction $h_1$. The physician decides the validity of the counter-examples.}
+		  \vspace{-10pt}
+		\label{fig:distinction}
+\end{figure}
+
+\subsection{Abstraction Tree for Heart Model Abstraction Refinement}
+The ideal heart model for closed-loop model checking of an implantable pacemaker not only covers all possible inputs to the pacemaker, but also has physiological explanations to all known heart conditions.
+However, no \textbf{single} heart model can satisfy both requirements.
+Therefore, a set of heart models must be employed where the different abstraction levels of the models strike a balance between coverage and expressiveness.
+More importantly, the heart models should have rigorous relationships among each other to provide formal guarantees.
+
+In this section we present the abstraction tree framework that maintains formal \emph{Timed Simulation} relationships between heart models and enables automated closed-loop model checking of implantable pacemaker. %\todo{this sentence need revise}
+\subsubsection{Initial Set of Heart Models}
+The heart model structure described in the previous section is based on clinical electrophysiology, with state variables and parameters directly corresponding to physiological parameters.
+Therefore, domain experts from clinical electrophysiology can construct models of different heart conditions with their domain expertise and literature.
+
+An example set of initial heart models is shown in \figref{init}.
+The different topologies of node and path automata represent the mechanism of different heart diseases.
+These heart models represent the current knowledge for heart condition variability, thus the set is inherintly incomplete, meaning there is no guarantee for 100\% safety even if a property is satisfied in all of these models.
+These models are mostly used for providing physiological contexts for counter-examples returned by the model checker.
+Domain experts can always expand the set with knowledge of new heart conditions.
 \begin{figure}[!h]
-\center
-%\vspace{-10pt}
-\includegraphics[width=\textwidth]{figs/Heart_abs.pdf}
-%\vspace{-10pt}
-\caption{(a) Electrical voltage change measured on the heart tissue and its adjacent tissue region (dotted) upon activation. The whole process is divided into timing periods with different behaviors. (b) The original tissue model which captures the refactory timing behaviors of the heart tissue. (c) The conduction property is separated to the path automaton and the heart can be modeled as conduction network. (d) Equivalent locations are merged. (e) The blocking property of the ERP location is replaced by a non-deterministic conduction in the path automaton. (f) Conduction between nodes are replaced by self-activations of the nodes. More details in \cite{STTT13}}
-\label{fig:HM_abs}
-%\vspace{-10pt}
-\end{figure} 
-Under the assumption that the ERP period of a node automaton is much longer than the conduction delay of a path automaton,  the \textsf{Double} and \textsf{Conflict} location of the path automaton is merged with the \textsf{Idle} state. The heart can be modeled as $H_2=N_2^1\| P_2^1\| N_2^2\| P_2^2\| N_2^3$.
+	\centering
+	\includegraphics[width=0.4\textwidth]{figs/init.pdf}
+	\vspace{-10pt}
+	\caption{\small Examples of the initial set of heart models. The models are different in node and path topology and/or timing parameters.}
+	\vspace{-10pt}
+	\label{fig:init}
+\end{figure}
+\subsubsection{Physiological Abstraction Rules}
+The initial set of heart models only represents a subset of all possible conditions.
+There always exists conditions that beyond our knowledge or that are combinations of known conditions.
+By using \emph{over-approximation}, heart models can be created that cover the observable behaviors of the initial set and that introduce behaviors that were not captured in the initial set.
+Inevitably, some of the introduced behaviors will be physiologically invalid.
+This problem can be alleviated by carefully designing the abstraction rules so that behaviors introduced are mostly physiologically valid.
+The physiologically invalid behaviors can be eliminated during a validity check in the abstraction tree.
 
-\subsection{Abstraction 3: Replacing Blocking with Non-deterministic Conduction}
-In Abstraction 3, we replace the blocking behavior of the \textsf{ERP} location of the node with non-deterministic conduction in the path automaton. There exists a transition\\ 
-$$RE\| ID\| RE \xrightarrow[Act\_path\_1!]{Act\_node\_1?}\xrightarrow{Act\_path\_1?}RE\| ID\| RE$$
-in $N_3^1\| P_3^1\| N_3^2$ to replace transition\\
-$$ER\| ID\| ER \xrightarrow{Act\_node\_1?} ER\| ID\| ER$$
-in $N_2^1\| P_2^1\| N_2^2$
+Physiological abstraction rules are developed to cover observable behaviors of heart models.
+Applying one abstraction rule to heart model(s) $H_1,H_i\dots H_n, n\geq 1$ yields an abstract heart model $H'$ such that all observable behaviors of $H_i$ are covered by $H'$.
+For each heart model $H_i$, $H'$ is a \emph{timed simulation} of $H_i$.
+To illustrate, a subset of abstraction rules is described intuitively.
+The complete set of abstraction rules and the proofs of timed simulation relationship can be found in the tech report \cite{regar_tech}.
+%Domain-specific abstraction rules are developed that can introduce new behaviors to a given heart model or a set of models. 
+%These new behaviors are physiologically meaningful and might be manifested by a heart condition not explicitly modeled in the initial set of models.
+%The physician (or domain expert) remains the ultimate arbiter of what is physiologically meaningful.
+%This is a peculiarity of environment modeling, borne out of the fact that the initial set of models is necessarily incomplete, and does not represent all valid behaviors.
 
-Without the ERP constraint the AV node is no longer needed and the heart can be modeled as $H_3=N_3^1\| P_3\| N_3^2$.  The detailed proof for this timed simulation relation can be found in \cite{STTT13}. 
-\subsection{Abstraction 4: Random Heart Model (RHM)}
-In Abstraction 4, we further simplify the heart model by removing the conduction path between two nodes. By setting $Trest\_min$ for both nodes to 0 the new heart model $H_4=N_3^1\|N_3^2$ covers all possible behavior of $H_3$. This random heart model with two nodes is the most abstract model that will be used at the beginning of the closed-loop model checking process.
-%\textbf{AG}$\varphi\equiv\neg$\textbf{EF}($\neg\varphi$) 
+%\begin{figure*}[!t]
+	%\centering
+	%\includegraphics[width=1.05\textwidth]{figs/rule5.pdf}
+	%%\vspace{-5pt}
+	%\caption{\small (a) Rule 7 application example; (b)(c) Node and path automata used in $H_{vt}'''$; (d) Node automata used in $H_{all}$ }
+	%\vspace{-15pt}
+	%\label{fig:rule5}
+%\end{figure*}
+\subsubsection{Rule R1: Convert Reentry Circuits to Activation Nodes}
+Within the conduction network of the heart, there can be multiple pathways between two locations, forming conduction loops. If the timing parameters of the tissue along the loop satisfy certain properties, there can be scenarios in which a depolarization wave circling along the circuit. 
+The circuits are referred to as \emph{Reentry Circuits}. 
+Since the time interval for an activation wave to circle a reentry circuit is usually less than the intrinsic heart cycle length, the heart rate will be "`hijacked"' by the reentry circuit once the cycling is triggered, causing tachycardia. 
+Reentry is the most common mechanism for tachycardia, which can be captured by our heart models that are used in \cite{vhm_embc10}. 
 
-Eventually we have a series of heart models with:
+The effect of reentry tachycardia is that activation signals coming out of the circuit with a given cycle length equal the sum of conduction delays along the circuit.
+It is therefore reasonable to model a reentry circuit as a self-activation node with the self-activation range equal to the sum of conduction delays. \\
+\textbf{Applicable Condition: } The rule only affects the topology of the model, and therefore can be applied without preliminaries.\\
+\textbf{Output model: }The "essential structure" of a heart model is the shortest paths (in terms of conduction delay) connecting self-activation nodes and/or sensing nodes. 
+First detect all circles in the input graph. For each circle with nodes $N_i,i\in[1\dots n]$ and paths $P_j,j\in[1\dots m]$, remove all "non-essential" nodes and paths, create a node automaton $N_s$ and connect to the nearest sensing node with a path automaton $P_s$.\\
+\textbf{Effect on parameters: }For the new node automaton $N_s$, the minimum of the Trest parameter is set to the minimum of the sum of the conduction delays within the reentry circuit, and the maximum is set to infinity\\
+\textbf{Effect on behaviors: }The new model captures the behavior of the original model when the reentry circuit is active and inactive. Additionally, the new model captures the behaviors of other heart conditions in which the rate of the reentry circuit is lower.
+%we have :
+%$$N_s.TERP\_min=min(N_i.TERP\_min), N_s.TERP\_max=max(N_i.TERP\_max)$$
+%$$N_s.Trest\_min=\sum P_j.Tcond\_min,N_s.Trest\_max=\sum P_j.Tcond\_max$$
+%For the new path automaton $P_s$, assume the shortest path from $N_s$ to the nearest sensing node has paths $P_k,k\in[1\dots p]$, we have:
+%$$P_s.Tcond\_min=\sum P_k.Tcond\_min,P_s.Tcond\_max=\sum P_k.Tcond\_max$$
 
-$N_0^1\|N_0^2\cdots N_0^n$\\
-$\preceq_t N_1^1\|P_1^1\|N_1^2\cdots P_1^{m}\|N_1^n$\\
-$\preceq_t N_1^1\| P_1^1 \| N_1^2\| P_1^2 \| N_1^3$\\
-$\preceq_t N_2^1\| P_2^1\| N_2^2\| P_2^2\| N_2^2$\\
-$\preceq_t N_3^1\| P_3\| N_3^2$\\
-$\preceq_t N_4^1\| N_4^2$
+\figref{rule1} shows an example in which a circle is replaced by a self-activation node.
+\begin{figure}[!h]
+	\centering
+	\includegraphics[width=0.2\textwidth]{figs/rule1.pdf}
+	\vspace{-10pt}
+	\caption{\small Rule 1: Remove reentry circuits from the model}
+	\vspace{-10pt}
+	\label{fig:rule1}
+\end{figure}
+\subsubsection{Rule R2: Remove Irrelevant Structures}
+After the circles within the topology are removed, the topology of the heart model is in the form of a tree. Since the "non-essential" structures do not affect the activation signals from and/or to the sensing nodes, all the "non-essential" structures can be removed.\\
+\textbf{Applicable Conditions: }The rule can only be applied after Rule 1 has been applied.\\
+\textbf{Output model: } Trimmed topology with only the essential structure remaining.\\
+\textbf{Effects on parameters: } There are no effects on parameters of the node and path automata.\\
+\textbf{Effects on behaviors: } Applying this rule does not affect the observable behaviors of the model.
+ \begin{figure*}[!t]
+	\centering
+	\includegraphics[width=0.8\textwidth]{figs/abs_tree.pdf}
+	%\vspace{-5pt}
+	\caption{\small One example of abstraction tree of heart models}
+	\vspace{-15pt}
+	\label{fig:HM_abs}
+\end{figure*}
 
-Using this technique, we systematically create a family of heart models with different levels of complexity and expressiveness. In Chapter \ref{ModelChecking} we describe how to balance between complexity and expressiveness and use these heart models for closed-loop model checking of implantable pacemaker.
-\section{Risk Analysis for Implantable Pacemaker}
-Implantable pacemakers are designed to treat bradycardia by increasing the heart rate with external pacing. Therefore the heart rate should not only be increased to the minimum physiological need, but also should not be increased beyond physiological need. \figref{risk_req} demonstrates two Fault Tree Analysis (FTA) for these two top level hazards. In the remaining chapter we first specify hazards as properties, and use model checking to evaluate whether these hazards have been mitigated by the pacemaker. Then for one of the mitigation algorithm, we examine the mitigation effectiveness and the residue hazard.
+\figref{rule2} shows an example in which non-essential structures are removed.
+\begin{figure}[!h]
+	\centering
+	\includegraphics[width=0.2\textwidth]{figs/rule2.pdf}
+	\vspace{-10pt}
+	\caption{\small Rule 2: Remove non-essential structures}
+	\vspace{-10pt}
+	\label{fig:rule2}
+\end{figure}
 
-\section{Mitigating Top-level Hazards}
+\subsubsection{Rule R4: Merge Parameter Ranges}
+Timing periods of heart tissue, such as Rest and ERP, are modeled as locations in the node and path automata. 
+The minimum and maximum time an automaton can remain in a location is governed by the parameters in the guards and invariants. 
+By merging and expanding these periods, new behaviors are introduced where a heart model may remain longer in Rest, activate or self-activate a node faster, andsoforth.
+\\
+\textbf{Applicable Conditions: }
+This rule applies to heart models with the same node and path topology but possibly with different parameters.\\
+\textbf{Output Model: }The abstract model has the same topology as the original models.\\
+\textbf{Effects on parameters:} The parameter ranges in the new model are a super-set of the parameter ranges in the old models.\\
+\textbf{Effects on behaviors: }The abstract model captures all behaviors of the original models. In addition, heart conditions with parameters outside of the ranges of the original models are covered.
+\begin{figure}[!h]
+	\centering
+	\includegraphics[width=0.4\textwidth]{figs/rule4.pdf}
+	\vspace{-10pt}
+	\caption{\small Rule 4: Merging parameter ranges}
+	\vspace{-10pt}
+	\label{fig:rule4}
+\end{figure}
+
+\subsubsection{Abstraction Tree}
+By applying the abstraction rules to the initial set of heart models, an abstraction tree is created.
+\figref{HM_abs} shows an example of an abstraction tree with the root model capturing all possible input sequences to the pacemaker.
+Self-activating nodes are marked as red and the Trest parameters are specified next to them.
+Note that this abstraction tree is not unique.
+With a different initial set of heart models and/or different rule application orders the abstraction tree can be very different.
+The abstraction tree can also be extended at any time if new heart conditions are specified.
+The following section demonstrates the use of this abstraction tree during the closed-loop model checking of the pacemaker design.
+
+
+
+\section{Efficacy Validation for Implantable Pacemaker}
 The most essential function for the pacemaker is to treat bradycardia by maintaining the ventricular rate above a certain threshold. We define the region where the ventricular rate is slow, as \textsf{unsafe}. The monitor \textsf{PLRI\_test} is designed to measure intervals between ventricular events and is shown in \figref{safety1}. For property
 \begin{center}
 \textsf{$\varphi_{LRI}=$A[] (PLRI\_test.secV imply PLRI\_test.t$\leq$TLRI)}
@@ -333,27 +362,221 @@ $\varphi_{URI}=$\textsf{A[] (PURI\_test.secV imply PURI\_test.t$\geq$TURI)}
 \end{center}
 we have: $$H_d\| P\| PURI\_test\models \varphi_{URI}$$
 
-\section{Evaluate the Mitigation}
-As described in Chapter \ref{Mode_switch}, the mode switch algorithm has been designed to mitigate the hazard that the A-V synchrony function of DDD pacemaker extends fast
-atrial rate to the ventricle. It is important to ensure the effectiveness of the algorithm without inducing other top-level hazards. In this section we first show the existence of the hazard in a pacemaker without the mode-switch algorithm. If the algorithm if effective the hazard will not exist after introducing the algorithm.
+%\section{Evaluate the Mitigation}
+%As described in Chapter \ref{Mode_switch}, the mode switch algorithm has been designed to mitigate the hazard that the A-V synchrony function of DDD pacemaker extends fast
+%atrial rate to the ventricle. It is important to ensure the effectiveness of the algorithm without inducing other top-level hazards. In this section we first show the existence of the hazard in a pacemaker without the mode-switch algorithm. If the algorithm if effective the hazard will not exist after introducing the algorithm.
+%
+%\subsection{Existence of Pacemaker Mediated Tachycardia during SVT}
+%The monitor \textsf{Pv\_v} is designed to show existence of PMT during SVT. It goes to the error state if the ventricular rate drops below the Upper Rate Limit (\figref{vv}).  
+%
+%
+%We specify 
+%$\varphi_{MS}=E[] (not Pv\_v.err)$\\
+%which verifies the existence of PMT. The heart model $H_e$ in Fig. \ref{fig:HM_abs} is not suitable for this property since the non-deterministic conduction of component $P_3$ does not capture the blocking property of the AV node, which is the key in PMT. We use a more refined model $H_d$ which has AV node modeled. To identify the PMT scenario, we first set $H_d.N^1.Trest\_min<100$ so that the atrial rate can be high and $H_d.N^2.Trest\_min>TURI$ so that the intrinsic heart rate is less than TURI. The property is first verified on pacemaker without the mode-switch algorithm. We have $H_d\|P\|Pv\_v\models\varphi_{MS}$ and the evidence returned by the model checker illustrates the PMT scenario.
+%
+%% There are two separate AVI and LRI components for each mode and switches to the corresponding ones when synchronization signals are received. The clock values are kept so that essential intervals are kept. 
+%\subsection{Verification against fundamental safety properties}
+%For a pacemaker with the mode switch algorithm: 
+%
+%$P_2$=\textsf{LRI'$\|$AVI'$\|$URI$\|$PVARP$\|$VRP$\|$INT$\|$CNT$\|$DUR}, 
+%
+%we verify the same fundamental safety properties on the pacemaker model with mode-switch algorithm. We have:
+%$$H_d\|P_2\|PURI\_test\models\varphi_{URI}$$
+%$$H_d\|P_2\|PLRI\_test\not\models\varphi_{LRI}$$
 
-\subsection{Existence of Pacemaker Mediated Tachycardia during SVT}
-The monitor \textsf{Pv\_v} is designed to show existence of PMT during SVT. It goes to the error state if the ventricular rate drops below the Upper Rate Limit (\figref{vv}).  
+
+\section{Safety Validation for Implantable Pacemaker}
+A dual chamber pacemaker is designed to increase the heart rate during bradycardia, but it should also not increase the heart rate inappropriately.
+Inappropriate increase of heart rate by the pacemaker is referred to as \emph{Pacemaker Mediated Tachycardia (PMT)}.
+Previous work \cite{sttt13} used model checking to identify two known PMT conditions.
+However, in order to avoid ambiguities in the counter-examples, the properties for the two PMTs were specified very specifically, which abandoned the advantage of model checking to find unknown safety violations.
+
+With the abstraction tree approach, the ambiguities can potentially be resolved since the abstraction tree considers all known heart conditions.
+Therefore the property for PMTs can be specified more generally.
+In this paper, we specify a property such that\\
+\emph{Property 1: The interval between ventricular events (Vget, VP) should not be shorter than TURI for 30 consecutive beats}\\
+which means that the ventricular rate should not be faster than the upper rate interval (TURI) for too long, either intrinsically or because of pacemaker interaction.
+Counter-example because of intrinsic fast ventricular rates can be removed from results after analysis from the abstraction tree.
+
+A UPPAAL monitor $M_{con}$ for the property is shown in Fig. \ref{monitor}, and the TCTL property is specified as:\\
+\begin{center}
+\emph{A[] not $M_{con}$.err}
+\end{center}
+
+\begin{figure}[!t]
+	\centering
+	\includegraphics[width=0.4\textwidth]{figs/monitor.png}
+	\vspace{-10pt}
+	\caption{\small UPPAAL monitor for Property 1}
+	\vspace{-10pt}
+	\label{fig:monitor}
+\end{figure}
+
+The model checker UPPAAL\cite{uppaal} was used to check Property 1 on the pacemaker model using the abstraction tree of heart models.
+The property is violated in $H0 || PM$, thus thus the abstraction tree is followed to select pair $H1$ with the pacemaker model and Property 1 is verified again.
+The process continues till either the leaves of the tree are reached of the property is satisfied.
+The result is shown in \figref{CE}, which demonstrates 5 different scenarios that can happen when using the abstraction tree.
+The shaded area marks the heart models with counter-examples.
+
+\textbf{Case 1:} Property 1 is violated in $H2\_1 || PM$ but is satisfied in its children $H3\_1 || PM$.
+Careful examination of the counterexample finds it to be spurious and so it is successfully eliminated by model refinement.
+
+\textbf{Case 2:} $CE_{af}$ is returned by $H3\_2 || PM$ and corresponds to intrinsic atrial tachycardia with fast atrial rate, which is a sub-optimal but non-lethal condition.
+The AV node of the heart will block a subset of the electrical events and maintain a normal ventricular rate.
+However, despite the filters in the pacemaker, the pacemaker still paces the ventricle for every 3 atrial activations, which extends fast atrial rate to more dangerous fast ventricular rate. 
+The condition is referred to as Atrial Tachycardia Response in which the ventricular rate is increased inappropriately, thus requires revision of the pacemaker design.
+
+\textbf{Case 3:} $CE_{vt}$ is returned by $H3\_3 || PM$ and corresponds to intrinsic ventricular tachycardia with fast ventricular rate.
+The counter-example is physiologically valid but the fast ventricular rate is due to the heart itself and is beyond pacemaker functionality.
+Therefore this scenario demands no revision of the pacemaker design.
+
+\textbf{Case 4:}  $CE_{st}$ is returned by $H3\_5 || PM$ and corresponds to sinus tachycardia, for instance, when the patient is exercising.
+The pacemaker improved the open-loop heart condition by pacing the ventricles $AVI$ after each atrial event, which is a correct operation of the pacemaker despite the requirement violation. 
+
+\textbf{Case 5:} $CE_{pvc}$ is returned by $H4\_4 || PM$ and has a very similar input-output relationship to $CE_{n}$. 
+However, the activations of the atrial node are triggered by retrograde conduction from ventricular paces (marker \textsf{cond}). 
+The atrial activations trigger another ventricular pace after $AVI$, which will trigger another retrograde conduction. In this case the heart rate is inappropriately high, which corresponds to a dangerous closed-loop behavior referred to as \emph{Endless Loop Tachycardia}.
+
+From the above result, it can be seen that abstraction tree is able to 1) refine a heart model to eliminate spurious counter-examples as in Case 1; 2) provide (multiple) physiological explanations to a counter-example as in Case 2-5; and 3) resolve ambiguities caused by abstraction as in Case 4 and 5.
 
 
-We specify 
-$\varphi_{MS}=E[] (not Pv\_v.err)$\\
-which verifies the existence of PMT. The heart model $H_e$ in Fig. \ref{fig:HM_abs} is not suitable for this property since the non-deterministic conduction of component $P_3$ does not capture the blocking property of the AV node, which is the key in PMT. We use a more refined model $H_d$ which has AV node modeled. To identify the PMT scenario, we first set $H_d.N^1.Trest\_min<100$ so that the atrial rate can be high and $H_d.N^2.Trest\_min>TURI$ so that the intrinsic heart rate is less than TURI. The property is first verified on pacemaker without the mode-switch algorithm. We have $H_d\|P\|Pv\_v\models\varphi_{MS}$ and the evidence returned by the model checker illustrates the PMT scenario.
+\subsection{Terminating Endless Loop Tachycardia}
 
-% There are two separate AVI and LRI components for each mode and switches to the corresponding ones when synchronization signals are received. The clock values are kept so that essential intervals are kept. 
-\subsection{Verification against fundamental safety properties}
-For a pacemaker with the mode switch algorithm: 
 
-$P_2$=\textsf{LRI'$\|$AVI'$\|$URI$\|$PVARP$\|$VRP$\|$INT$\|$CNT$\|$DUR}, 
+\begin{figure*}
+		\centering
+		%\vspace{-20pt}
+		\includegraphics[width=0.7\textwidth]{figs/pelt_det.pdf}
+		%\vspace{-15pt}
+		\caption{\small (a) Any pattern other than VP-AS will result in error state (b) If the ventricular rate is slower than the Upper Rate Limit will go to error state}
+		 % \vspace{-15pt}
+		\label{fig:elt_det}
+\end{figure*}
 
-we verify the same fundamental safety properties on the pacemaker model with mode-switch algorithm. We have:
-$$H_d\|P_2\|PURI\_test\models\varphi_{URI}$$
-$$H_d\|P_2\|PLRI\_test\not\models\varphi_{LRI}$$
+Due to the limited information the pacemaker has about the heart, the pacemaker cannot distinguish a retrograde atrial event from an intrinsic atrial event which is triggered by the SA node. From the pacemaker's point of view, the pacemaker paces the ventricles as specified for every AS. That is why open-loop testing is unable to detect this closed-loop behavior. 
+
+Modern pacemakers are equipped with anti-ELT algorithms to identify and terminate potential ELT. One common algorithm identifies ELT by the ELT pattern and terminates ELT by increasing TPVARP time once to block the AS caused by the V-A conduction. By increasing the blocking interval after a ventricular event, the pacemaker effectively ignores the early atrial signal detected due to the PVC.
+\begin{figure*}
+		\centering
+		%\vspace{-10pt}
+		\includegraphics[width=0.7\textwidth]{figs/ELT_count.pdf}
+		%\vspace{-20pt}
+		\caption{\small (1) The component \textsf{PVAS} sends \textsf{VP\_AS!} event when a VP-AS pattern with delay between [150,200] is detected; (2) Component \textsf{ELTct}. After 8 VP-AS pattern, the algorithm increase TPVARP to 500ms. (3) Modified \textsf{PVARP'} component. TPVARP can only be set to 500 for one timing cycle.}
+		 % \vspace{-15pt}
+		\label{fig:ELT_count}
+\end{figure*}
+%\subsection{Existence of ELT}
+%Two monitors were designed to show the existence of ELT. One monitor, \textsf{PELT\_det}, shows the persistence of the VP-AS pattern and the other monitor, \textsf{Pvv}, shows that the ventricular rate is always no slower than the upper rate limit (\figref{elt_det}). The property \\
+%\textsf{$\varphi_{ELT}=$E[] ((not PELT\_det.err) $\&\&$ (not Pvv.err))}\\
+%checks the existence of ELT behavior. After our initial verification we have:\\
+%$H_4\|P\|PELT\_det\|Pvv\models\varphi_{ELT}$
+%
+%The evidence trace shows the behavior of the system. For simplicity we only show the state of the heart:\\
+%$RE\|RE\xrightarrow[VP!\rightarrow Act\_node\_2!]{AVI.t\geq TAVI \wedge URI.t\geq TURI}$\\
+%$RE\|RE\xrightarrow[Act\_path\_1!\rightarrow AS!]{N^1.t\geq 0}$\\
+%$RE\|RE\xrightarrow[VP!\rightarrow Act\_node\_2!]{AVI.t\geq TAVI \wedge URI.t\geq TURI}$\\
+%$RE\|RE\xrightarrow[Act\_path\_1!\rightarrow AS!]{N^1.t\geq 0}$\\
+%$RE\|RE$
+%
+%\subsection{Trace Validation and Heart Model Refinement}
+%We check this trace on more refined $H_3\| P$ and discovered that the trace above can correspond to two different scenarios:\\
+%$RE\|AN\|RE\xrightarrow[VP!\rightarrow Act\_node\_2!]{AVI.t\geq TAVI \wedge URI.t\geq TURI}$\\
+%$RE\|ID\|RE\xrightarrow[Act\_path\_1!\rightarrow AS!]{N^1.t\geq N^1.Trest\_min}$\\
+%$RE\|AN\|RE\xrightarrow[VP!\rightarrow Act\_node\_2!]{AVI.t\geq TAVI \wedge URI.t\geq TURI}$\\
+%$RE\|ID\|RE\xrightarrow[Act\_path\_1!\rightarrow AS!]{N^1.t\geq N^1.Trest\_min}$
+%$RE\|AN\|RE$\\
+%and\\
+%$RE\|ID\|RE\xrightarrow[VP!\rightarrow Act\_node\_2!]{AVI.t\geq TAVI \wedge URI.t\geq TURI}$\\
+%$RE\|RT\|RE\xrightarrow[Act\_node\_1!\rightarrow Act\_path\_1!\rightarrow AS!]{P.t\geq P.Tcond\_min}$\\
+%$RE\|ID\|RE\xrightarrow[VP!\rightarrow Act\_node\_2!]{AVI.t\geq TAVI \wedge URI.t\geq TURI}$\\
+%$RE\|RT\|RE\xrightarrow[Act\_node\_1!\rightarrow Act\_path\_1!\rightarrow AS!]{P.t\geq P.Tcond\_min}$\\
+%$RE\|ID\|RE$
+%
+%Both traces correspond to actual clinical scenarios. However, the second trace corresponds to the ELT behavior which inappropriately increased the heart rate. By setting $N^1.Trest\_min\geq TURI$ in $H_3$ we can model the healthy heart and the first scenario will be eliminated. However, in $H_4$ the $Trest\_min$ is set to 0 so the two cases cannot be distinguished. So we use the refined heart model $H_3$ with $N^1.Trest\_min\geq TURI$.
+%With the new heart model we have:\\
+%$H_3\|P\|PELT\_det\|Pvv\models\varphi_{ELT}$\\
+%The evidence trace, which is exactly the second trace above, shows exactly the ELT scenario.
+%%\subsection{Heart Model Refinement 1}
+%The property failed because the RHM cannot distinguish an intrinsic atrial event and a retrograde atrial event and we cannot set their parameters separately to represent a more complex heart condition. In order to deal with this problem, we refine our RHM by adding a non-deterministic A-V conduction \textsf{Cond\_n} (\figref{cond}) between the atrial channel and the ventricular channel. Events from \textsf{RHM\_A} can trigger ventricular event \textsf{V\_act!} with delay, which mimics the intrinsic A-V conduction. Ventricular events can trigger retrograde conduction to the atria, causing event \textsf{A\_retro!}. Since the intrinsic ventricular events are modeled by \textsf{Cond\_n}, \textsf{RHM\_V} is replaced with a PVC component (\figref{PXC}). The refined heart model \textsf{Refinement 1} is shown in \figref{refine}.
+%\begin{figure}
+%		\centering
+%		%\vspace{-15pt}
+%		\includegraphics[width=0.45\textwidth]{figs/cond.pdf}
+%%		%\vspace{-20pt}
+%		\caption{\small \textsf{Aget!} event can either trigger \textsf{V\_act!} event after delay or do nothing. \textsf{PVC!} event can either trigger \textsf{A\_retro!} event after delay or do nothing}
+%		 %\vspace{-15pt}
+%		\label{fig:cond}
+%\end{figure}
+%
+%Since $\mathbb{T}(PVC)=\mathbb{R}$, we have $\mathbb{T}(PVC)\bigcup\mathbb{T}(V\_act)=\mathbb{R}$. We also have $\mathbb{T}(A\_retro)=\mathbb{T}(PVC)\bigcup\mathbb{T}(V\_act)$+ $[Tretromin, Tretromax]=\mathbb{R}$ and $\mathbb{T}(A\_retro)\bigcup\mathbb{T}(Aget)=\mathbb{R}$ thus the refinement is proper abstraction of the VHM. With the refined heart model we can adjust $\mathbb{T}(Aget)$ without changing $\mathbb{T}(A\_retro)$. The existence property holds and the evidence returned by UPPAAL shows an ELT execution trace.
+%\begin{figure*}
+%\centering
+%%\vspace{-10pt}
+		%\subfigure []{
+				%\includegraphics[width=0.4\textwidth]{figs/SVT_none.pdf}
+				%\label{fig:SVT_none}
+		%} 
+		%\subfigure []{	
+			%\includegraphics[width=0.4\textwidth]{figs/SVT_DDD.pdf}
+			%\label{fig:SVT_DDD}
+		%}
+		%%\vspace{-10pt}
+	%\caption{(a) Open-loop: 3:1 A-V conduction during SVT and low ventricular rate without SVT; (b) With DDD pacemaker: the pacemaker paces the ventricle for every atrial sense (AS), thus increase the ventricular rate inappropriately}
+%\vspace{-10pt}
+%\end{figure*} 
+\subsection{ELT termination algorithm} 
+The ELT persists without intervention and the patient's heart is forced to beat at a fast rate approaching the Upper Rate Limit. Thus, device manufacturers require a way to identify ELT and terminate it despite the limited information the pacemaker can get. The ELT detection algorithm by Boston Scientific \cite{challenge} utilizes these three features:
+\vspace{-5pt}
+\begin{itemize}
+  \item Ventricular rate at Upper Rate Limit
+	\item VP-AS pattern
+	\item Fixed V-A conduction delay
+\end{itemize}
+The pacemaker first monitors VP-AS pattern with ventricular rate at upper rate limit. Then it compares the VP-AS interval with previous intervals. ELT is confirmed if the difference between the current VP-AS interval and the first VP-AS interval is within $\pm$32ms for 8 consecutive times. Then the pacemaker increases the PVARP period to 500ms once so that the next AS will be blocked and will not trigger a VP, terminating ELT.
+As the V-A conduction delays are patient-specific, the algorithm compares the VP-AS interval to a previously sensed value instead of an absolute value. Since we can not store past clock values in UPPAAL, we can not explicitly model this ELT detection algorithm. However, since the conduction delay in our heart model is within a known range, we can compare the VP-AS interval with this range. The VP-AS pattern detection module $VPAS$ for our anti-ELT algorithm is shown in \figref{ELT_count} (1). It detects the VP-AS pattern with ventricular rate at the Upper Rate Limit and sends out a \emph{VP\_AS} event if the interval qualifies. 
+
+A counter $ELTct$ counts the number of qualified VP-AS patterns. It increases the PVARP period to 500ms if eight consecutive VP-AS patterns are detected. (\figref{ELT_count} (2)) The PVARP component is also modified so that the PVARP period can only be changed once by the anti-ELT algorithm. (\figref{ELT_count} (3))
+
+\subsection{Verification of the algorithm: }
+With the new pacemaker model\\ 
+$P_1=LRI\|AVI\|URI\|PVARP'\|VRP\|ELTct\|VPAS$\\
+we first check whether the two fundamental safety properties still hold when the anti-ELT algorithm is introduced. We have 
+$$H_3\|P_1\|PLRI\_test\models\varphi_{LRI}$$
+$$H_3\|P_1\|PURI\_test\models\varphi_{URI}$$
+Then we check the existence of ELT and we have:
+$$H_3\|P_1\|PELT\_det\|Pvv\not\models\varphi_{ELT}$$
+which indicates the algorithm successfully eliminated all ELT executions.
+\section{Mode Switch Operation: Atrial Tachycardia Response}
+\label{Mode_switch}
+
+
+Pacemaker manufacturers have designed algorithms to detect and terminate these behaviors. Intuitively, the mode-switch algorithm first detects SVT. After confirmed detection, it switches the pacemaker from a dual-chamber mode to a single-chamber mode. During the single-chamber mode, the A-V synchrony function of the pacemaker is deactivated thus the ventricular rate is decoupled from the fast atrial rate. After the algorithm determines the end of SVT, it will switch the pacemaker back to the dual chamber mode. 
+\begin{figure*}
+		\centering
+		%\vspace{-19pt}
+		\includegraphics[width=0.8\textwidth]{figs/AVI_ms.pdf}
+		%\vspace{-10pt}
+		\caption{\small (a) After switching to \textsf{VDI} mode, the new LRI component \textsf{LRI'} maintains a minimum V-V interval; (b) After switching to \textsf{VDI} mode, the new AVI component \textsf{AVI'} keeps track of the time after each atrial events.}
+		%  \vspace{-20pt}
+		\label{fig:avi_ms}
+\end{figure*}
+The mode-switch algorithm (also known as atrial tachycardia response) specification we use is similar to the one described in the Boston Scientific pacemakers' manual (\cite{compass}). The algorithm first measures the interval between atrial events outside the blanking period (AS, AR). The interval is considered as \emph{fast} if it is above a threshold (\emph{Trigger Rate}) and \emph{slow} otherwise. In our UPPAAL model we model it as $INT$ (see \figref{dur_count} (1)). A counter $CNT$ increments for \emph{fast} events and decrements for \emph{slow} events (see \figref{dur_count} (2)). After the counter value reaches the \emph{Entry Count}, the algorithm will start a \emph{Duration} ($DUR$) ,which is a time interval used to confirm the detection of SVT (see \figref{dur_count} (3)). In the \emph{Duration}, the counter keeps counting. If the counter value is still positive after the \emph{Duration}, the pacemaker will switch to the VDI mode (\emph{Fallback mode}). In the VDI mode, the pacemaker only senses and paces the ventricle. At any time if the counter reaches zero, the \emph{Duration} will terminate and the pacemaker is switched back to DDD mode.
+% to show some interesting findings. The basic idea of this simplified model is explained in detail. \\
+%\mySubSubSection{UPPAAL model for mode-switch algorithm}
+In our UPPAAL model of the mode-switch algorithm, we use nominal parameter values from the clinical setting. We define \emph{trigger rate} at 170bpm (350ms), \emph{entry count} at 8, \emph{duration} for 8 ventricular events and \emph{fallback mode} as VDI. 
+\begin{figure*}
+		\centering
+				%\vspace{-15pt}
+		\includegraphics[width=0.9\textwidth]{figs/duration.pdf}
+		%\vspace{-10pt}
+		\caption{\small (1) Component \textsf{INT}: An atrial event (\textsf{AS,AR}) arrives before \textsf{thresh} after the previous atrial event is regarded as a \textsf{fast} event. Atrial event arrives after \textsf{thresh} and \textsf{AP} are regarded as \textsf{slow} event; (2) Component \textsf{CNT}: After 8 \textsf{fast} event the algorithm will start a duration by sending \textsf{du\_beg} and will switch to \textsf{VDI} mode when the duration ends (\textsf{du\_end}); (3) Component \textsf{DUR} :The duration length is 8 ventricular events (\textsf{VS,VP})}
+		  %\vspace{-15pt}
+		\label{fig:dur_count}
+\end{figure*} 
+
+In order to model both DDD and VDI modes and the switching between them, we made modifications to the AVI and LRI components.
+In each component two copies for both modes are modeled, and switch between each other when switching events (DDD, VDI) are received. During VDI mode, \textsf{VP} is delivered by the LRI component instead of the AVI component. The clock values are shared between both copies in order to preserve essential intervals even after switching. The modified AVI ($AVI'$) and LRI ($LRI'$)components are shown in \figref{avi_ms}. 
+
 The Upper Rate Limit property still holds, but the Lower Rate Limit property is violated. The counterexample is proved to be valid after checking the trace of more refined heart models. By analyzing the trace we found that when the pacemaker is switching from VDI mode to DDD mode, the responsibility to deliver VP switched from LRI component to AVI component. Since the clock reference is different (Ventricular events in LRI component and Atrial events in AVI component), the clock value for delivering the next VP is not preserved. As a result, if an atrial event which triggered the mode-switch from VDI to DDD happens within [TLRI-TAVI, TLRI) after the last ventricular event, the next ventricular pacing will be delayed by at most TAVI time, which violates the Lower Rate Limit property (\figref{safety}). 
 %%\begin{figure}
 %%		\centering
@@ -379,128 +602,24 @@ After implementing the mode-switch algorithm, we verified the model against the 
 	\caption{(a) Safety Violation: VP is delayed due to the reset of timer during mode-switch, (b) Correctness Violation: The blocking period may block some atrial events, turning two \emph{Fast} events to one \emph{Slow} event (\cite{TACAS12}})
 \vspace{-20pt}
 \end{figure} 
-\section{Abstraction Tree for Environment Modeling}
-In the previous two sections, abstractions and selections of the heart models are performed manually, which require knowledge of both electrophysiology and model checking. 
-Counter-examples returned from abstract models can be difficult to interpret by domain experts.
-One abstract counter-example could be produced by multiple physiologically valid conditions, which causes ambiguity.
-Thus, a rigorous framework is necessary to balance the need to cover a wide range of environmental conditions and the need to provide counter-examples to the physicians within their physiological context. The framework must also allow non-domain experts to perform verification, and establish `hand-off' points where the results of verification can be handed back 
-to the experts for interpretation.
 
-In this section, we use a set of domain-specific abstraction rules based on physiological knowledge to ensure the physiological relevance of the behaviors introduced into the abstract models.
-The rules are applied to an initial set of physiological models to obtain an abstraction tree, which will be used for closed-loop model checking of the pacemaker. 
-A straightforward search procedure is then used to conduct model checking using suitable heart models and return the most concrete and unambiguous counter-examples to the physicians for analysis.
-In this framework, physiological knowledge is only needed when constructing the initial model set and when analyzing counter-examples. 
-The application of the physiological abstraction rules and the verification procedure can be automated.
-The proposed method can potentially be generalized to other domains in which the device operates in a large variety of environmental conditions. More information regarding this research can be found in \cite{regar_tech}.
-\subsection*{Step 1: Abstraction Tree construction}
-A set of heart models corresponding to different heart conditions are first developed. 
-The list can be expanded as new heart conditions are discovered.
-Because we start from a set of initial models, and each one may be abstracted using a number of abstraction rules, we have a choice of which rules to apply to which models, and the order in which to apply them. 
-Depending on which rule is applied when, we end up with different abstract models.
-Thus an \emph{abstraction tree} $T_{HM}$ for the heart is created, as shown in \figref{HM_tree}. 
-%Note that applying rules in different order results different abstraction tree. 
-%The order used to obtain $HM\_tree$ is based on the domain knowledge that certain heart conditions may have similar behaviors and similar inputs to the pacemaker. 
-%This systematic grouping maintains the physiological-relevance of the heart model even at higher abstraction levels, and reduce the necessity to resolve ambiguities at lower abstraction levels when model checking certain requirements.
-\begin{figure}[!t]
-	\centering
-	\includegraphics[width=0.85\textwidth]{figs/abs.pdf}
-	%\vspace{-5pt}
-	\caption{\small Heart Model Abstraction Tree with arrows showing the direction of the abstraction process starting from detailed models of different heart conditions. Model refinement is in the opposite direction.}
-	\vspace{-15pt}
-	\label{fig:HM_tree}
-\end{figure}
+\section{Related Work}
+\vspace{-10pt}
+Chen et. al \cite{Marta} extended our verification work \cite{TACAS12}. They developed a hybrid heart model which is able to simulate action potential at tissue level. The model is a more refined model than our Virtual Heart Model \cite{VHM_proc}, with linear dynamics on each state of the heart tissue. They also developed a probability model to simulate natural pacemaker function. They then used the combined heart model for quantitative verification of the pacemaker. However, since the pacemaker only sense the timing of the heart tissue activation, their hybrid extension for action potential does not bring much benefit but increased model complexity dramatically. As a result, they have to use bounded model checking thus sacrificed accuracy.
 
-\subsection*{Step 2: Requirement encoding}
-The following requirement is designed to prevent the pacemaker from pacing too fast: 
-``If the intervals between self-activations of the atria are between 300ms to 1000ms (60bpm - 200bpm), the intervals between ventricular paces should be no shorter than 500ms.''
-Self-activation of the atria can be expressed using the location and clock of node automaton $N_A$.
-The requirement can be formalized using the monitor  $M_{sing}(VP,500,\infty)$:
-%\hatodo{mention $N_A$ is the atrium node automaton}
-\[Req1: N_A.loc=Rest \land N_A.t\in [300,1000] \Rightarrow \neg M_{sing}.loc==Err\]
-%\todo[inline]{some figure captions are all caps, others are not. please use same thing throughout}
-%\begin{figure}[!b]
-	%\centering
-	%\vspace{-10pt}
-	%\includegraphics[width=0.5\textwidth]{figs/abs_sim.pdf}
-%
-	%\caption{\small Abstraction Rule Application Example}
-%\vspace{-10pt}
-	%\label{fig:abs_exam}
-%\end{figure}
- \subsection*{Step 3: Choosing appropriate heart models for the requirement}
-To verify the closed-loop system with pacemaker model $PM$ and abstraction tree $T_{HM}$ (\figref{HM_tree}) against requirement $Req1$, the most abstract appropriate models are selected from the tree. 
-The single event monitor $M_{sing}$ from \figref{monitor}(a) with variables $Var(M_{sing})=\{M_{sing}.t,M_{sing}.loc\}$ is used for this requirement. Model checking is performed on the closed-loop system including the heart model $M_H$, the pacemaker model $M_P$, and the monitor $M$. The requirement $\varphi_P$ can be then represented with TCTL formula:
-\begin{center}
- \textsf{A[] (not M.Err)}
-\end{center}
-The variables in the requirement are:
-$$Var(Req1)=\{N_A.t,N_A.loc,M_{sing}.loc\}$$
-\begin{figure}[b]
-		\centering
-		\includegraphics[width=0.8\textwidth]{figs/monitor.pdf}
-		%\vspace{-5pt}
-		\caption{\small (a) $M_{sing}$ for single event; (b) $M_{doub}$ for two events}
-		  \vspace{-10pt}
-		\label{fig:monitor}
-\end{figure}
+Jee et. al present a safety assured development approach of real-time software using pacemaker as their case study in \cite{Jee}. They formally model and verify a single chamber VVI pacemaker using UPPAAL and then implement it and check the preservation of properties transferred from model to implementation code. 
 
-At the root of the tree $H_{all}$, we have $\{N_A.t,N_A.loc\} \not \subset Var(H_{all})\cup Var(M_{sing})$. 
-So $H_{all}$ is not appropriate for $Req1$. 
-All the children of $H_{all}$: $H_n'',H_{at}'''',H_{vt}'''$ are appropriate for $Req1$,
-%we have $Var(Req1)\cup Var(M_{sing})\subset Var(H_n'')=Var(H_{at}'''')=Var(H_{vt}''')$, 
-thus these three heart models are output as the most abstract models that are appropriate for $Req1$.
-\begin{figure}[!t]
-	\centering
-	\includegraphics[width=0.8\textwidth]{figs/abs_rev.pdf}
-	%\vspace{-5pt}
-	\caption{\small Model refinement: Finding the most concrete counter-examples using the abstraction tree}
-	\vspace{-10pt}
-	\label{fig:CE}
-\end{figure}
-	\vspace{-10pt}
-\subsection*{Step 4: Return the most concrete counter-examples}
-After the appropriate models for $Req1$ are selected, we have the initial set
-$HM=\{H_n'',H_{at}'''',H_{vt}'''\}$.
-By model checking on all three initial models in UPPAAL we have: 
-$$H_n''||PM\not\models Req1;\; H_{at}''''||PM\not\models Req1;\; H_{vt}'''||PM\not\models Req1$$
-%$$[1,[]]=ModelChecking(H_n'',PM,Req1)$$
- %$$[0,CE_1]=ModelChecking(H_{at}'''',PM,Req1)$$
-%$$[0,CE_2]=ModelChecking(H_{vt}''',PM,Req1)$$
-%\hatodoin{In the following text you use $CE_{at}$, etc. It's  best to use the letter subscripts in the above equations as well, so it's clear which cex comes from which heart model.}
-%For the two heart models $H_{at}'''',H_{vt}'''$ in which the requirement is violated, the algorithm keeps going down the abstraction tree, and upon termination counter-examples are returned for the following heart models
-The abstraction tree is then further explored. The heart models with counter-examples are illustrated in \figref{CE}, and the most refined heart models with counter-examples are: $H_{n};H_{pvc};H_{af};H_{avn};H_{afib}$.
-%$$[0,CE_{at}]=ModelChecking(H_{at},PM,Req1)$$
-%$$[0,CE_{pvc}]=ModelChecking(H_{pvc},PM,Req1)$$
-%$$[0,CE_{af}]=ModelChecking(H_{af},PM,Req1)$$
-%$$[0,CE_{avn}]=ModelChecking(H_{avn},PM,Req1)$$
-%$$[0,CE_{afib}]=ModelChecking(H_{afib},PM,Req1)$$
+Tuan et. al propose an RTS formal model for pacemaker and its environment and verified it against number of safety properties and timed constraints using the PAT model checker \cite{Tuan}. They have modeled the pacemaker for all 18 operating modes as described in Boston scientific, but their work lacks specification and analysis of complex behaviors of the pacemaker, such as mode-switch.
 
-%\begin{figure}[!t]
-		%\centering
-		%\includegraphics[width=0.9\textwidth]{figs/case.pdf}
-		%%\vspace{-5pt}
-		%\caption{\small Counter-examples}
-		  %\vspace{-10pt}
-		%\label{fig:CE}
-%\end{figure}
-	\vspace{-10pt}
-\subsection*{Step 5: Analysis of the counter-examples}
-The counter-examples are then shared with physicians for analysis. In \figref{CE} we highlight three counter-examples. In the first counter-example, the intrinsic heart signals over time with up arrows as atrial activations and down arrows as ventricular activations. The signal for the second counter-example shows the pacemaker outputs with up arrows as atrial pacing and down arrows as ventricular pacing.%We only show the activations of the atrial node and ventricle pacing. 
+Wiggelinkhuizen uses mCRL2 and UPPAAL to formally model the pacemaker from the firmware design of Vitatron's DA+ pacemaker \cite{Wigg}. Two main approaches have been used to investigate the feasibility of applying formal model checking to the design of device firmware. The main approach consists of verifying the firmware model in context of a formal heart model and a formal model of a hardware module which fails for high heart rates because of the state explosion. Another approach is to verify a part of firmware design which was feasible and was able to detect a known deadlock rather soon.
 
-Counter-example $CE_{n}$ is returned by $H_n$ and none of its children models violate the requirement. By careful analysis we found that $CE_{n}$ features the combination of fast intrinsic atrial rate and prolonged A-V conduction delay, which is the combination of heart conditions $H_{st}$ and $H_{av}$. This scenario shows that the abstraction rules can introduce physiological heart conditions that were not explicitly modeled in the initial model set. The pacemaker improved the open-loop heart condition by pacing the ventricles $AVI$ after each atrial event, which is a correct operation of the pacemaker despite the requirement violation. 
-%\hatodo{is it TAVI or AVI like in the previous seciton?}
+Macedo et. al have developed a concurrent and distributed real-time model for a cardiac pacemaker through a pragmatic incremental approach \cite{Macedo}. The models are expressed using the VDM and are validated primarily by scenario-based test, where test scenarios are defined to model interesting situations such as the absence of input pulses. The models cover 8 modes of pacemaker operation.
 
-%\hatodoin{Do you mean that $CE_{at}$ is not a bug? Does this mean that the requirement may be violated in ways that are not dangerous?}
-Counter-example $CE_{pvc}$ has a very similar execution to $CE_{n}$. However, the activations of the atrial node are triggered by retrograde conduction from ventricle to the atrium initialized by ventricular paces (marker \textsf{cond}). The atrial activations trigger another ventricular pace after $AVI$, which will trigger another retrograde conduction. In this case, the heart rate is inappropriately high, which corresponds to a dangerous closed-loop behavior referred to as \emph{Endless Loop Tachycardia}.
+Gomes et. al present a formal specification of pacemaker system using the Z notation in \cite{Gomes}. They have also tried to validate that the formal specification satisfies the informal requirements of Boston Scientific by using a theorem prover, ProofPower-Z. They have partially checked the consistency of their specification through reasoning. No validation experiment regarding safety conditions were performed yet.
 
-In counter-example $CE_{af}$, the atrial rate is very high, which is also a sub-optimal but not dangerous heart condition. 
-However, the ventricular rate can stay normal due to the blocking property of the AV node. 
-Despite the filters in the pacemaker, the pacemaker still paces the ventricle for every 3 atrial activations, which extends fast atrial rate to more dangerous fast ventricular rate. 
-%\hatodoin{Not very clear..do you mean that the intrinsoc centricular rate is fine because of AV filtering, but the PM is accelarating it?}
-This scenario is referred to as Atrial Tachycardia Response of a pacemaker. 
+Mery et. al in \cite{Mery}, formally model all operational modes of a single electrode pacemaker system using event-B and prove them. They use an incremental proof-based approach to refine the basic abstract model of the system and add more functional and timing properties. They use the ProB tool to validate their models in different situations such as absence of input pulses. \\
 
-From the analysis, pacemaker operations in $CE_{pvc}$ and $CE_{af}$ must be revised. However, the revision should not affect the behavior in $CE_{n}$. This example demonstrates that counter-examples from refined models provide more physiological context of the requirement violations, and distinguish the physiological conditions that can trigger the violations. The information is helpful for debugging and improving the algorithm. The physicians can also improve the physiological requirement so that these heart conditions can be then considered case by case.\\
 
-\noindent\textbf{Discussion:}\\
+\section{Discussion}
 Model checking is not widely use in industry, in part, due to scalability issues and also because domain expertise must be a skill possessed by the verification engineer. However, with rigorous abstraction of the system and its environment, model checking can be used to identify 
 known and even unknown mechanisms to induce hazards. In this chapter, we use a model of a dual chamber pacemaker as an example to demonstrate the use of model checking during risk analysis. During the process we identified the need to refine the heart models to eliminate false-positives introduced during the abstraction, and demonstrated the difficulty to do so manually. The abstraction tree approach is then proposed to reduce the effort needed for both the developers and the domain experts, which makes model checking a viable approach for providing safety and effectiveness evidence. 

@@ -1,4 +1,42 @@
 \chapter{Theme 4: in-silico Pre-clinical Trials for Implantable Cardiac Devices} 
+10,000 people in the U.S. receive an Implantable Cardioverter Defibrillator (a heart rhythm adjustment device) every month \cite{asktheicd}.
+Clinical trials have presented evidence that patients implanted with ICDs have a mortality rate reduced by up to 31\% \cite{maditrit}.
+Unfortunately, ICDs suffer from a high rate of \emph{inappropriate therapy}, which takes the form of unnecessary electric shocks or pulse sequences delivered to the heart.
+Inappropriate therapy increases patient stress, reduces their quality of life, and is linked to increased morbidity \cite{shock_mortality}.
+Depending on the particular ICD and its settings, the rates of inappropriate therapy range from 46\% to 62\% of all delivered therapy episodes \cite{GoldABBTB11_RIGHTresults}.
+	\begin{figure}[t]
+		\centering
+		\includegraphics[scale=0.5]{figures/figTransResearchSpectrum.pdf}
+		\caption{\small Bringing a device to market.
+			Clinical trials are the last step before a new device's market approval.
+			Model-based clinical trials will provide insight during planning and execution of clinical trials, leading to reduction in costs and increasing the chance of a successful trial.}
+		\label{fig:spectrum}
+	\end{figure}
+
+%The closed loop formed by the organ (heart) and device (ICD) is an example of a life-critical Cyber-Physical System (CPS): the device's software is the cyber component, and the physiological phenomenon (e.g., cardiac rate and electrical activity) is the physical component.
+%\headline{The technology in some of these devices combines hardware and software, each of which must be rigorously verified to be efficacious and safe.}
+%\headline{In this paper we are concerned with \emph{closed-loop devices}.}
+%Such a device is in a feedback loop with the organ(s) it effects (see Fig.\ref{fig:pacemaker}): an ICD for example monitors the heart rate, and delivers therapy to maintain an adequate rate.
+%Another example is the artificial pancreas, which monitors blood glucose levels and delivers insulin to maintain safe glucose levels.
+
+\emph{After the verification and testing effort is completed}, regulatory agencies like the F.D.A. require that the safety and efficacy of new devices be demonstrated in a \emph{CT} (Fig.~\ref{fig:spectrum}).
+%\footnote{In this paper, we always mean a randomized controlled trial, which is the type of trial described here.}
+In a trial, a group of patients that are treated with the new device (this is the `intervention group') are compared to a group of patients who are treated with the current standard of care (e.g., a different device currently on the market; this is the `control group').
+The objective is to see whether the different devices result in significantly different effects on the patients.
+Clinical trials are major endeavors, involving physicians, patients, statisticians, clinical centers, companies and regulators, sometimes in several countries.
+Late-phase trials can run for several years, and cost millions of dollars.
+For example, a 2002 trial for stents lasted 2 years, enrolled 800 patients and cost \$10 to \$12 million and lasted 24 months \cite{Kaplan04_Cost}.
+Trials also pose an inherent risk to the patients in the intervention group by exposing them to an unproven device.
+Thus it is crucial that they be well planned, and rigorously executed.
+
+In reality, any trial runs the risk of errors during its planning and execution stages, which can invalidate the results of the trial.
+In this paper, we pose and propose an answer to the following question: \emph{how can modeling of CPS assist in the planning and execution of a clinical trial, so as to increase the chances of a successful trial}?
+%The advent of computer models for various physiological functions defines a new convergence point for computer science and engineering with medicine.
+
+Specifically, in this chapter,
+we demonstrate how  computer models can be used for early, affordable and reproducible testing of a clinical trial's premises and assumptions.
+Model-based empirical validation of the premises reduces the risk of conducting a trial that fails to demonstrate the desired effect (typically, an improvement of new intervention over the control). 
+We used the Rhythm ID Going Head to Head Trial (RIGHT) \cite{GoldABBTB11_RIGHTresults}, which lasted five years and sought to compare the diagnostic algorithms used by two ICDs for correctly diagnosing potentially fatal tachycardias (abnormally fast heart rhythms).
 \section{Clinical trials and RIGHT}
 \label{sec:rcts}
 
@@ -14,10 +52,15 @@ The planning and execution of an RCT requires carefully navigating a number of t
 
 Because of the very high cost of RCT in terms of money, time, and the risk of harm they present to enrolled patients, our focus in this paper is on the use of CPS models, formalized in an MBCT, \emph{to validate the assumptions made by the investigators and thus increase the chances of success of an RCT}.
 We illustrate our approach by applying it to the Rhythm ID Going Head-to-Head Trial (RIGHT) \cite{GoldABBTB11_RIGHTresults}, which we present next.
+\begin{figure}[tb]
+	\includegraphics[scale=0.6]{figures/figICD.pdf}
+	\caption{ICD connected to the heart. The atrial, ventricular, and shock electrogram signals are measured by the device, which uses them to diagnose the current state of the heart and determine whether therapy is required.}
+	\label{fig:icd}
+\end{figure}
 
 \subsection{The RIGHT trial}
 \label{sec:right}
-We first provide a brief background to better understand RIGHT (see Fig.\ref{fig:icd}). Tachycardias (abnormally elevated heart rates) can be divided into VT, which originate in the heart's ventricles, 
+We first provide a brief background to better understand RIGHT. Tachycardias (abnormally elevated heart rates) can be divided into VT, which originate in the heart's ventricles, 
 and SVT, which originate above the ventricles.
 A sustained VT can be fatal, while an SVT is typically non-fatal.
 The therapy applied by the ICD often takes the form of a high-energy electric shock.
@@ -38,27 +81,14 @@ One of the trial's assumptions was that Rhythm ID would reduce the risk of inapp
 The outcome of the trial~\cite{GoldABBTB11_RIGHTresults}, however, was that patients implanted with ICDs running Rhythm ID had a \emph{\textbf{34\% risk increase}} of inappropriate therapy as compared to patients implanted with ICD running PRL+W. 
 This result  is the opposite of the effect hypothesized by the trial investigators. 
 In this paper, we design an MBCT to test early and quickly whether the hypothesized effect holds by comparing the two ICDs on a large \emph{synthetic} cohort.\\\\
-\textbf{\emph{Organization:}} In the following sections we describe the building blocks of the MBCT: modeling the heart, processing 100's of real patients' data, mapping the timing and morphology components of the signal to a heart model we developed, generating a population of 10,000+ synthetic heart models, implementing the device algorithms and conducting multiple trials for the comparative rate of inappropriate therapy, condition-level rates and evaluating the effect of device parameters on discrimination rates.
+\textbf{\emph{Organization:}} In the following sections we describe the building blocks of in-silico pre-clinical trials: modeling the heart, processing 100's of real patients' data, mapping the timing and morphology components of the signal to a heart model we developed, generating a population of 10,000+ synthetic heart models, implementing the device algorithms and conducting multiple trials for the comparative rate of inappropriate therapy, condition-level rates and evaluating the effect of device parameters on discrimination rates.
 
- \section{Heart Modeling}
+ \section{Virtual Cohort Generation}
  \label{sec:heart modeling}
 %The first step in any MBCT is to choose a patient model that can interact with the device in a closed loop. 
 %Computer models of the heart have been developed to model different aspects of the cardiac function to suit different applications (\cite{natalia,Grosu_wave}).
 %In this section we first give a brief overview of the basic Electrophysiology of the heart which describes the electrical activation and conduction, which is the basis for ICDs. 
 %We also describe our effort to model the electrical activity of the heart to generate signals corresponding to a large range of heart conditions that the ICD can encounter.
-
-\subsection{Basic cardiac electrophysiology}
-\label{sec:cardiac ep}
-The heart has two upper chambers called the \emph{atria} and two lower chambers called the \emph{ventricles} (see Fig. \ref{fig:icd})
-The synchronized contractions of atria and ventricles assure an adequate supply of oxygenated blood to the rest of the body.
-This contraction is driven by electrical activity in the heart.
-A normal pattern of electrical activity is referred to as NSR.
-Disturbances of NSR are referred to as \emph{arrhythmias}, and can result in insufficient blood supply and even death of a patient. 
-\emph{VT} is an example of an arrhythmia originating in the ventricles, in which the ventricles beat at a very high rate.
-If the VT is sustained, or degenerates into VF, it is fatal within seconds.
-An abnormally fast heart rate that originates in the atria and/or the conductinon system above the ventricles is referred to as a \emph{SVT}.
-This is not a fatal condition but does cause patient discomfort and its treatment is elective.
-Many arrhythmias fall under this heading.
 
 Implantable Cardioverter Defibrillators (ICDs) can diagnose VT and VF by observing the electrical activity through three channels, as shown in Fig.~\ref{fig:icd}.
 The measured signals are known as \emph{electrograms}, or EGMs.
@@ -75,15 +105,11 @@ Correspondingly, our model has two components: a timing model, and a morphology 
 \subsection{Timing Model}
 \begin{figure}[t]
 	\centering
-	\vspace{-10pt}
-	\includegraphics[width=0.3\textwidth]{figs/HM_top.pdf}
+	\includegraphics[width=0.8\textwidth]{figs/HM_top.pdf}
 	\caption{\small Timing model of the heart}
-	\vspace{-10pt}
 	\label{fig:HM_top}
 \end{figure}
-Computer models of the heart have been developed to model different aspects of the cardiac function to suit different applications (\cite{natalia}).
-In \cite{VHM_proc}, the authors developed a heart model structure that can be used to simulate the timing for generation and conduction of electrical events of the heart under a variety of conditions.
-The model structure consists of a set of node automata, which model the \emph{generation} and \emph{blocking} of electrical events by heart tissue, and a set of path automata, which model the \emph{conduction delay} of electrical activity between node automata.
+
 The node and path topology used in the MBCT is shown in Fig. \ref{fig:HM_top}. 
 The hollow nodes are passive nodes representing key locations within the heart where electrical events may be blocked. These include the Atrioventricular node (AV), Right Bundle Branch (RBB) and Left Ventricle Apex (LVA). 
 The filled nodes in red, Sinoatrial (SA) node and Right Ventricle Apex (RVA) node, represent the heart locations where ICD electrodes are placed to measure the EGMs.
@@ -112,12 +138,10 @@ Therefore, it is important that our model generate realistic and varied EGM wave
 \begin{figure}[t]
 	\centering
 %	\vspace{-5pt}
-	\includegraphics[scale=0.3]{figures/figEGMGeneration1column.pdf}
-	\vspace{-15pt}
+	\includegraphics[scale=0.4]{figures/figEGMGeneration1column.pdf}
 	\caption{\small EGM waveform generation.
 		From a given model instance and set of tachycardias, an EGM waveform is generated for the duration of an episode. The timing model determines event timings. When an event occurs, the EGM morphology for the event is output from the morphology model.  
 		}
-	\vspace{-15pt}
 	\label{fig:egmGeneration}
 \end{figure}
 The timing model provides the time stamps for electrical events to happen at the interfacing nodes (SA,RVA). 
@@ -146,9 +170,7 @@ Fig. \ref{fig:adjudication} (right) depicts an example of 10 signatures extracte
 
 \begin{figure*}[t]
 	\centering
-	\vspace{-10pt}
 	\includegraphics[scale=0.35]{figures/figadjudication.pdf}
-	\vspace{-10pt}
 	\caption{\small  (Left) The EGM record is segmented into episodes with distinct rhythms in each. (Right) From each episode, individual EGM morphologies are extracted and stored.
 	}
 	\label{fig:adjudication}
@@ -219,8 +241,7 @@ This section gives an overview of both algorithms.
 
 \begin{figure*}[t]
 	\centering
-	\includegraphics[scale=0.38]{figs/BS_det.pdf}
-	\vspace{-10pt}
+	\includegraphics[scale=0.4]{figs/BS_det.pdf}
 	\caption{\small SVT/VT detection algorithm by Boston Scientific \cite{compass}. The two cases on the right illustrate two different decisions by the algorithm. (a) illustrates a sustained VT case where at the end of the Duration, the ventricular rate is faster than the atrial rate. The algorithm correctly identified the rhythm as VT and delivered therapy. (b) illustrates a SVT case where at the end of the Duration, the ventricular rate is slower than the atrial rate. Then by comparing the EGM morphology in the Shock channel (Marker 1) with the stored NSR template (Marker 2) for the last 10 EGM events, the algorithm decided that the morphology is correlated, therefore therapy is inhibited.}
 	\label{fig:BS_det}
 \end{figure*}
@@ -260,9 +281,8 @@ A match between the current activity and one of the pre-defined patterns is used
 
 \begin{figure}[t ]
 	\centering
-	\includegraphics[scale=0.28]{figures/figScreenshot.pdf}
+	\includegraphics[scale=0.5]{figures/figScreenshot.pdf}
 	\caption{\small Example of validation output screenshots (Ventricular fibrillation) showing matching therapy decision for the ICD and our implementation.}
-	\vspace{-10pt}
 	\label{fig:validation}
 \end{figure}
 
@@ -310,9 +330,7 @@ It can be seen that indeed, PRL+W maintains a better rate of arrhythmia discrimi
 %\mynote{SD}{Delete last sentence}
 
 \begin{figure*}[t]
-	\vspace{-10pt}
 \centering
-\vspace{-10pt}
 \includegraphics[scale=0.4]{figures/popvar9}
 \caption{\small Rate of inappropriate detection ($2^{nd}$ and $4^{th}$ columns) for different arrhythmia distributions ($1^{st}$ and $3^d$ columns). The arrhythmias are (left to right on the x axis): Atrial fibrillation, Atrial flutter, Premature Ventricular Complexes, Nonsustained Ventricular Fibrillation, Supraventricular Tachycardia, Sinus Brady-Tachy, Ventricular Fibrillation, Ventricular Tachycardia \cite{josephson}. The top left distribution is uniform, and the bottom right distribution is that of the baseline characterization in RIGHT \cite{GoldABBTB11_RIGHTresults}.}
 \label{fig:popvar8}
@@ -394,7 +412,6 @@ In the case of Atrial flutter, Rhythm ID categorizes it inappropriately as VT fo
 Condition-level analysis pinpoints the specific pathways of the discrimination algorithm which must be addressed to reduce the device's rate of inappropriate therapy. It is difficult to get such insight through an RCT as the patient population is fixed and the conditions are determined retroactively. Such analysis can be further used to investigate condition distributions across different patient population types (e.g. abnormal heart rhythms in children vs geographic region-specific or race-specific condition distributions).   
 
 \begin{table}[t]
-	\vspace{-10pt}
 	Specificity and sensitivity.
 \begin{tabular}{|p{2.8cm}|p{1.5cm}|p{1.5cm}|c|}
 	\hline Arrhythmia & Rhythm ID & PR Logic + Wavelet  & P value \\ 
@@ -411,7 +428,6 @@ Condition-level analysis pinpoints the specific pathways of the discrimination a
 	\hline Ventricular tachycardia & 100 & 100 & 1 \\ 
 	\hline 
 \end{tabular} 
-\vspace{-10pt}
 \label{table:vtsvt}
 \end{table}
 
@@ -449,10 +465,8 @@ When the duration is longer than 5, sensitivities dropped below 100\%, which is 
 \begin{figure}[t]
 	
 		\centering
-		\vspace{-10pt}
-		\includegraphics[width=0.45\textwidth]{figs/parameter.pdf}
+		\includegraphics[width=0.8\textwidth]{figs/parameter.pdf}
 		\caption{\small Effects of Duration and VF threshold parameters on Specificity}
-		\vspace{-10pt}
 		\label{fig:parameter}
 \end{figure}
 However, Rhythm ID and PRL+W displayed opposite trends for the VF threshold.

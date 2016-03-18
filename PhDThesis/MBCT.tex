@@ -33,10 +33,25 @@ In reality, any trial runs the risk of errors during its planning and execution 
 In this paper, we pose and propose an answer to the following question: \emph{how can modeling of CPS assist in the planning and execution of a clinical trial, so as to increase the chances of a successful trial}?
 %The advent of computer models for various physiological functions defines a new convergence point for computer science and engineering with medicine.
 
-Specifically, in this chapter,
+Most medical models today are aimed at either better understanding the phenomenon under study \cite{vfiborganization_Tusscher07} or at device debugging and verification \cite{VHM_proc}. 
+There is only one case in which a computer model has been used to intervene in the regulatory process of medical devices, namely the T1 Diabetes Model (T1DM) of UVA/PADOVA \cite{T1DM}.
+T1DM models glucose kinetics in hypoglycemia, and has been accepted by the FDA as a substitute for animal trials.
+The T1DM has a fixed virtual cohort with 300 patients.
+Its objective is to test the efficacy of new glucose control algorithms by simulating them on the virtual cohort.
+While our models can be used in this way, our objective here is to target specific clinical trials steps and improve how they are conducted.
+This dictates the experimental setup and the cohort generation considerations.
+
+The Avicenna consortium \cite{Avicenna} lays out a vision for `In-Silico Clinical Trials' similar to our approach.
+However, the emphasis in Avicenna is on individualized patient models, as they propose to customize the model to each patient enrolled in a trial.
+In the present work, we propose a usage of MBCT \emph{prior} to recruitment.
+Thus our models need not be fitted to a given patient's data, which might be impossible, invasive, or burdensome for the conduct of the trial.
+
+In this chapter,
 we demonstrate how  computer models can be used for early, affordable and reproducible testing of a clinical trial's premises and assumptions.
 Model-based empirical validation of the premises reduces the risk of conducting a trial that fails to demonstrate the desired effect (typically, an improvement of new intervention over the control). 
 We used the Rhythm ID Going Head to Head Trial (RIGHT) \cite{GoldABBTB11_RIGHTresults}, which lasted five years and sought to compare the diagnostic algorithms used by two ICDs for correctly diagnosing potentially fatal tachycardias (abnormally fast heart rhythms).
+
+
 \section{Clinical trials and RIGHT}
 \label{sec:rcts}
 

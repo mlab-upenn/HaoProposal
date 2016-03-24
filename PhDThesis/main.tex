@@ -55,7 +55,7 @@
 \usepackage[normalem]{ulem}	                        % underlining!
 \usepackage[table, usenames,dvipsnames]{xcolor}            % color
 \usepackage{extarrows}                              % http://ctan.org/pkg/extarrows
-\usepackage{setspace}                               % \doublespacing or \onehalfspacing
+\usepackage{setspace}       
 %\usepackage{showframe}
 %\usepackage{enumitem}
 \usepackage[tight,footnotesize]{subfigure}
@@ -82,6 +82,11 @@
 
 \newcommand{\figref}[1]{Fig.~\ref{fig:#1}}
 \newcommand{\Hao}[1]{$\clubsuit$\footnote{HAO: #1}}
+\newcommand{\tableref}[1]{Table~\ref{tab:#1}}
+\newcommand{\listref}[1]{Listing~\ref{list:#1}}
+
+\newcommand{\eat}[1]{ }
+
 % XXX: COMMANDS:
 \def\liminf{\mathop{\lim\inf}\limits}	% EXAMPLE: \liminf_n A_n
 \def\limsup{\mathop{\lim\sup}\limits}	%

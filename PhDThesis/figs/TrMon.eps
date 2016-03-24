@@ -1,0 +1,96 @@
+%!PS-Adobe-3.0 EPSF-3.0
+%%Title:   Template 'TrCnt'.
+%%Creator: UPPAAL 4.0.6 (rev. 2987), March 2007
+%%Pages: 0
+%%BoundingBox: -163 -42 -84 -11
+%%EndComments
+
+% Basic coordinate transformation.
+0.5 0.5 scale
+
+% Move the origin.
+0 -106 translate
+
+% Size of graphical elements.
+/vertex-radius 12 def
+/vertex-urgent-radius 5 def
+/vertex-commit-radius 5 def
+/vertex-init-radius 8 def
+/vertex-lw 1.2 def
+/edge-lw 0.5 def
+
+% Color setting of graphical elements.
+/black { 0 0 0 setrgbcolor } def
+/vertex-fill-col { 0.647 0.686 0.803 setrgbcolor} def
+/vertex-ol-col { black } def
+/urgent-ol-col { black } def
+/commit-ol-col { black } def
+/initial-ol-col { black } def
+/state-name-col { 0.192 0.396 0.549 setrgbcolor } def
+/inv-col { state-name-col } def
+/select-col { 0.541 0.220 0.380 setrgbcolor } def
+/guard-col { select-col } def
+/sync-col { guard-col } def
+/assign-col { guard-col } def
+/trans-col { black } def
+
+% Draw (filled) vertex at given position.
+/vertex { 
+   2 copy
+   vertex-fill-col
+   newpath vertex-lw setlinewidth 
+   /vertex-radius load 0 360 arc fill
+   vertex-ol-col
+   /vertex-radius load 0 360 arc stroke
+} def
+
+% Mark vertex as urgent.
+/urgent { 
+   urgent-ol-col
+   newpath vertex-lw setlinewidth 
+   /vertex-urgent-radius load 150 30 arc stroke 
+} def
+
+% Mark vertex as committed.
+/commit { 
+   commit-ol-col
+   newpath vertex-lw setlinewidth 
+   /vertex-commit-radius load 50 310 arc stroke 
+} def
+
+% Mark vertex as initial.
+/initial { 
+   initial-ol-col
+   newpath vertex-lw setlinewidth 
+   /vertex-init-radius load 0 360 arc stroke 
+} def
+
+% Vertices.
+% Font used for vertex names and invariants.
+/Helvetica-Bold findfont 14 scalefont setfont
+-312 56 vertex
+   -312 56 initial
+   0 -14 moveto state-name-col () show
+   -322 27 moveto inv-col (t<=1) show
+
+% Edges.
+% Font used for selects, guards, syncs and assigns.
+/Helvetica findfont 14 scalefont setfont
+newpath edge-lw setlinewidth
+   trans-col
+   -300.4617004394531 59.296653747558594  moveto
+   -265.6152392896243 69.25278806728251 lineto
+   -256.0 72.0 -256.0 72.0 -256.0 62.0 curveto   -256.0 42.0 lineto
+   -256.0 32.0 -256.0 32.0 -265.191449856567 35.9391940208899 curveto   -300.9702453613281 51.27296829223633  lineto
+stroke
+newpath edge-lw setlinewidth
+   trans-col
+   -293.11151123046875 45.08907699584961   moveto
+   -300.9702453613281 51.27296829223633   lineto
+   -291.07244873046875 49.846923828125   lineto
+stroke
+   0 -14 moveto select-col () show
+   -248 58 moveto guard-col (t>=1) show
+   0 -14 moveto sync-col () show
+   -248 42 moveto assign-col (t=0, tr_cnt=0) show
+%%EOF

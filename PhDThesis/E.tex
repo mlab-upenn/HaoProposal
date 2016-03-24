@@ -473,7 +473,7 @@ Therefore no heart model refinements are necessary and the requirements are sati
 \section{Safety Validation for Implantable Pacemaker}
 A dual chamber pacemaker is designed to increase the heart rate during bradycardia, but it should also not increase the heart rate inappropriately.
 Inappropriate increase of heart rate by the pacemaker is referred to as \emph{Pacemaker Mediated Tachycardia (PMT)}.
-Previous work \cite{sttt13} used model checking to identify two known PMT conditions.
+Previous work \cite{STTT13} used model checking to identify two known PMT conditions.
 However, in order to avoid ambiguities in the counter-examples, the properties for the two PMTs were specified very specifically, which abandoned the advantage of model checking to find unknown safety violations.
 
 With the abstraction tree approach, the ambiguities can potentially be resolved since the abstraction tree considers all known heart conditions.
@@ -483,7 +483,7 @@ $\varphi_{PMT}$: The interval between ventricular events (Vget, VP) should not b
 which means that the ventricular rate should not be faster than the upper rate interval (TURI) for too long, either intrinsically or because of pacemaker interaction.
 Counter-example because of intrinsic fast ventricular rates can be removed from results after analysis from the abstraction tree.
 
-A UPPAAL monitor $M_{con}$ for the property is shown in Fig. \ref{monitor}, and the TCTL property is specified as:\\
+A UPPAAL monitor $M_{con}$ for the property is shown in Fig. \ref{fig:monitor}, and the TCTL property is specified as:\\
 \begin{center}
 \emph{A[] not $M_{con}$.err}
 \end{center}

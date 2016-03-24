@@ -9,82 +9,804 @@ Model checking is performed on abstract models of the system, which is at an ear
 \end{itemize}
 
 In this chapter, we first describe an approach to automatically translate formal models that are verified in UPPAAL to Stateflow charts for simulation-based testing, and then code generated to run on an embedded platform. Following this, we demonstrate two examples that cannot be explicitly modeled using abstract semantics and must be tested.
+\section{A Brief Overview of UPPAAL}
+\label{sec:uppaal}
 
-\section{UPPAAL to Stateflow Automated Model Translation}
+In this section, we present an overview of the UPPAAL tool, including some of the UPPAAL extensions~\cite{uppaal,uppaal_tut,uppaal_wang} of the timed-automata formalism from~\cite{timed-aut}. Also, to illustrate the need for a tool like UPP2SF we survey existing tools for code synthesis from UPPAAL models.
+
+\subsection{UPPAAL Modeling of Real-time Systems}
+
+UPPAAL supports networks of timed automata. Each automaton is a state machine, equipped with special real-valued variables called \textit{clocks}. Clocks spontaneously increase their values with time, at the same fixed rate. Locations (i.e., states) in automata have invariants that are predicates over clocks. A location in an automaton can be active as long as its invariant is satisfied. Transitions in automata have \textit{guards} that are predicates over clocks and variables.  A transition can be taken only if its guard is true.  Because clock values increase, an initially false guard can eventually become true, allowing us to model time-dependent behaviors, such as delays and timeouts.  When a transition is taken, an associated \textit{action} is executed, which can update variable values and reset clocks to integer values (possibly non-zero). 
+
+Automata in the network execute concurrently. They can communicate via shared variables, as well as via events over synchronous channels.  If $c$ is a channel, $c?$ represents receiving an event from $c$, while $c!$ stands for sending an event on $c$. 
+In the general case, an edge from location $l_1$ to location $l_2$ can be described in a form 
+$
+l_1 \xrightarrow{g,\tau,r} l_2
+$, 
+if there is no synchronization over channels ($\tau$ denotes an 'empty' action), or
+$
+l_1 \xrightarrow{g,c*,r} l_2
+$.
+Here, $c*$ denotes a synchronization label over channel $c$ (i.e., $*\in\{!,?\}$), $g$ represents a guard for the edge and $r$ denotes the reset operations performed when the transition occurs. 
+
+
+
+\subsubsection{Timed-Automata Semantics in UPPAAL}
+We denote with $C$ the set of all clocks and with V the set of all data (i.e., boolean and integer) variables. A clock valuation is a function $u: C\rightarrow \mathbb{R}^+$, and we use $\mathbb{R}^C$ to denote the set of all clock valuations. A simple valuation is the function $u_0(x)=0$, for all $x\in C$. Similarly, a data valuation is a function $v: V\rightarrow \mathbb{Z}$, while $\mathbb{Z}^V$ denotes the set of all data valuations. A valuation $w$, denoted by $w = (u,v)$, is a function $w: C\times V\rightarrow \mathbb{R}^+\times \mathbb{Z}$ such that $w(x,i)=(u(x),v(i))$, for clock valuation $u$ and data valuation $v$. Also, for a valuation $w=(u,v)$, $w+d$ denotes the valuation where $(w+d)(x) = (u+d)(x)=u(x)+d$ for $x\in C$, and $(w+d)(i)=v(i)$ for $i\in\mathbb{Z}$. 
+In the rest of the paper, a clock valuation $u$ that satisfies that for all $x\in C$, $u(x)\in\mathbb{N}_0$ will be referred to as \textit{integer clock valuation}, while a valuation $w=(u,v)$, where $u$ is an integer clock valuation will be referred to as an \textit{integer valuation}.
+
+Furthermore, let $B(C,V)$ denote the set of conjunctions over simple clock and variable conditions of the form $x\bowtie n$, $x-y\bowtie n$ or $i-j\bowtie k$, where $n\in \mathbb{N}$, $x,y\in C$, $i,j\in V$, $k\in\mathbb{Z}$ and $\bowtie\in\{\leq,\geq,=,<,>\}$.\footnote{In the latest UPPAAL versions $n$ can also denote an expression over integer variables. Since all results from this section are valid in the latter case, we use the simplified notation where $n$ is a constant integer.} Similarly, $B(C)$ denotes the set of all conjunctions over the clock variable conditions. Thus, a guard can be defined as an element of $B(C,V)$.\footnote{The default guard is \textit{true}.} 
+Reset operations are used to manipulate clocks and data variables. They have the form $x=n$ or $i=c_1*j+c_2$, where $x\in C$, $i,j\in V$, $c_1,c_2\in \mathbb{Z}$ and $n\in\mathbb{N}_0$. We use $R$ to denote the set of all possible reset operations, and for a reset operation $r\in R$ and valuation $w$, $r(w)$ is the valuation obtained from $w$ where all clocks and data variables specified in $r$ are assigned to the values obtained from the appropriate expressions. 
+Finally, we use $K$ to denote the set of all channels, and $A=\left\{\alpha ? | \alpha\in K\right\}\cup\left\{\alpha !|\alpha\in K\right\}\cup \{\tau\}$ to denote the set of all actions. Here, $\tau$ denotes an 'empty' action -- without synchronization.
+
+
+\begin{definition}%%%[\cite{uppaal_formal,uppaal_tut,uppaal_wang}]
+An automaton $\mathcal{A}$ is a tuple $(L,l_0,A,C,V,E,I)$ where $L$ denotes the set of locations in the timed automaton, $l_0$ is the initial location, $A$ is a set of of actions, $C$  a set of clocks, $V$ is a set of data variables, and $E\subseteq L\times A\times B(C,V)\times R \times L$ denotes the set of edges, while $I$ assigns invariants to locations (i.e., $I: L\rightarrow B(C)$ is a mapping of each location to a constraint over some clocks).
+\end{definition}
+
+If a clock valuation $u$ satisfies the invariants at location $l$, we abuse the notation and write $u\in I(l)$. Similarly, we denote with $w\in I(l)$, if $w=(u,v)$ and $u\in I(l)$. Also, if a valuation $w$ satisfies a condition $g\in B(C,V)$ we write $w\in g$. 
+
+A network of $n$ timed automata is obtained by composing  $\mathcal{A}_i=(L_i,l_i^0,C,A,V,E_i,I_i)$, $i\in\{1,...,n\}$. In this case, a location vector is defined as $\bar{l}=(l_1,l_2,...,l_n)$. In addition, the invariant for location vector $\bar{l}$ is defined as $I(\bar{l})=\wedge_i I_i(l_i)$. To denote the vector where $i^{th}$ element of vector $\bar{l}$ (i.e., $l_i$) is substituted with $l'_{i}$ we use the notation $\bar{l}[l'_i/l_i]$. 
+
+\begin{definition}
+\label{def:semantics}
+Let $\mathcal{A}=\{\mathcal{A}_1,\mathcal{A}_2...,\mathcal{A}_n \}$ be a network of $n$ timed automata, and let $\bar{l}^0=(l_1^0,l_2^0,...,l_n^0)$ be the initial location vector. The semantics of the network is defined as a transition system $\left<\mathcal{S},s_0,\rightarrow\right>$, where $\mathcal{S}=(L_1\times L_2\times ... \times L_n)\times (\mathbb{R}^C\times \mathbb{Z}^V)$ is the set of states, $s_0=(\bar{l}_0,w_0)$ is the initial state, where $w_0=(u_0,v_0)$ and $v_0$ is any initial data valuation, and $\rightarrow \subseteq \mathcal{S}\times\mathcal{S}$ is the transition relation defined by:
+\begin{enumerate}
+\item 
+$(\bar{l},w) \rightarrow (\bar{l},w+d)$ if for all $d'$ such that $0\leq d'\leq d,$ it follows that $w+d'\in I(\bar{l})$;
+
+\item 
+$(\bar{l},w) \rightarrow (\bar{l}[l'_i/l_i],w')$ if  exists $l_i \xrightarrow{g,\tau,r} l'_i$ such that $w\in g$, $w'=r(w)$ and $w'\in I(\bar{l}[l'_i/l_i])$;
+
+\item
+$(\bar{l},w) \rightarrow (\bar{l}[l'_j/l_j,l'_i/l_i],w')$ if there exist $l_i \xrightarrow{g_i,c?,r_i} l'_i$ and $l_j \xrightarrow{g_j,c!,r_j} l'_j$ such that \\$w\in (g_i\wedge g_j)$, $w'=(r_i \cup r_j)(w)$ and $w'\in I(\bar{l}[l'_j/l_j,l'_i/l_i])$.
+
+\end{enumerate}
+\end{definition} 
+Since the first type of transitions is the result of time-passing, unless otherwise stated, in the rest of the paper when we use the term UPPAAL transition we will refer to either case (2) or (3) of the above definition. 
+ 
+
+
+To illustrate the above definition, consider the model from \figref{upp_ex}, where both automata have separate local clocks $t$. Location $P0.l0$ has invariant $t\leq 10$, while the edge $P0.l0\rightarrow P0.l1$ has the guard condition $t\geq 10$, reset action $t=0$, and transmission over channel $e1$. Hence, synchronization over the channel $e1$ ensures that the transitions $P0.l0\rightarrow P0.l1$ and $P1.l0\rightarrow P1.l1$ occur simultaneously. Finally, note that clocks do not have to be reset to zero (e.g.,~as on the edge $P0.l1\rightarrow P0.l0$). 
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{figure*}[!b]
+\begin{figure}[!t]
 \centering
-		\subfigure 
-		{			
-		\includegraphics[width=0.45\textwidth]{figs/method_new1.png}		
-		\label{fig:method}
-		}
-		\hspace{.2in} 
-		\subfigure 
-		{	
-			\includegraphics[width=0.45\textwidth]{figs/chart_GlobalClocks_rev1.png}
-			\label{fig:chart}
-		}
-\caption{(a)~Model Driven Design framework: From UPPAAL to Stateflow to generated code -- covering model verification, simulation-based testing and platform testing.~(b) Structure of Stateflow charts of the pacemaker's five basic timing cycles (from Fig. \ref{fig:PMdesign}) derived by the UPP2SF model translator. Parent states $P_1,...,P_n$ are derived from automata, while the \textit{clock} states $Gc\_{x_1},..., Gc\_{x_m}$ model all global clocks $x_1,...,x_m$ from the UPPAAL model. The state $Eng$ is used to control execution of the chart.}
-\label{fig:upp2sftool}
-\end{figure*} 
+		\subfigure [P0 automaton]		{			
+		\includegraphics[width=0.22\textwidth]{figs/P1_uppaal_rev2.png}
+		\label{fig:upp_p0}
+		} 
+		\subfigure [P1 automaton] {	
+			\includegraphics[width=0.18\textwidth]{figs/P0_uppaal_rev2.png}
+			\label{fig:upp_p1}
+		}		
+		\subfigure [A run of the model] {	
+			\includegraphics[width=0.5\textwidth]{figs/run_example2.png}
+			\label{fig:upp_run}
+		}	
+\caption{An UPPAAL model example.}
+\label{fig:upp_ex}
+\end{figure} 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-A model translation tool, UPP2SF (\cite{TECS}) was developed to translate UPPAAL models to Stateflow (see \figref{method}). Consider an UPPAAL model with automata $P_1,...,P_n$.  After UPP2SF translation, a two-level Stateflow chart is generated as in \figref{chart}. The chart consists of parallel states $P_1,...,P_n$ (referred to as the \textit{parent} states) derived from the automata, parallel states $Gc\_{x_1},..., Gc\_{x_m}$ (referred to as \textit{clock states}) that model all global clocks $x_1,...,x_m$ from the UPPAAL model, and the state $Eng$ that is used as the chart's control execution engine.
-Moreover, the chart has predefined global data variables (and constants) with appropriate ranges and initial values derived from the UPPAAL model. 
-Since all automata in UPPAAL are active simultaneously, the obtained Stateflow chart is a collection of parallel states with unique execution orders. Also, in every UPPAAL automaton exactly one location is active at a time. Thus, each of the parent states is a collection of exclusive states, extracted from locations in the corresponding UPPAAL automaton. 
 
-In \cite{TECS}, we showed that for a large class of UPPAAL models, the generated Stateflow models generated by UPP2SF preserve behaviors of the initial UPPAAL models. The translation tool can be used to estimate the worst case execution time (WCET) during modeling and model checking stage in UPPAAL, and facilitates development of modular code from timed-automata based models. 
 
-%%\begin{figure} [!t]
-%%\center
-%%\includegraphics[width=0.48\textwidth]{figs/chart_GlobalClocks_rev1.png} 
-%%\caption{}
-%%\label{fig:chart}
-%%\end{figure}
+For semantics $\left<\mathcal{S},s_0,\rightarrow\right>$, a sequence $\mathcal{R}:=(\bar{l}_0,w_0)\rightarrow(\bar{l}_1,w_1)\rightarrow...\rightarrow(\bar{l}_i,w_i)\rightarrow...,$ 
+is called a \textit{run}, and we use notation $w_k^\mathcal{R}=w_k$, $\bar{l}_k^\mathcal{R}=\bar{l}_k$, for all $k\geq 0$. An example run for the model from \figref{upp_ex} is shown in \figref{upp_run}. To simplify the notation, we assume that in each run $\mathcal{R}$ no two consecutive transitions are result of time-elapsing (case~(1) of Def.~\ref{def:semantics}), since these transitions can be merged into a single transition of that type. 
 
-\figref{PM_sf} demonstrates the Stateflow chart generated from the UPPAAL model of the DDD pacemaker model in \figref{PMdesign} using the UPP2SF tool.
+
+\subsubsection{Additional UPPAAL Extensions of the Timed-Automata Formalism}
+Beside integer variables and synchronization channels, UPPAAL extends timed-automata with \textit{committed} and \textit{urgent} locations where time is not allowed to pass (i.e., no delay is allowed). 
+\textit{Committed locations} are more restrictive and they are usually used to model atomic sequences of actions. In a network of timed automata, if some automata are in committed locations then only transitions outgoing from the committed locations are allowed. UPPAAL also introduces \textit{broadcast channels}, where one sender can synchronize with multiple receivers (e.g.,~zero, one, or more than one). Furthermore, \textit{urgent channels} can be used for synchronization, to specify that if a transition with synchronization over an urgent channel is enabled, then the transition should occur without any delay. 
+
+
+
+\subsection{Code Synthesis from UPPAAL Models}
+\label{sec:code_gen}
+There are only few tools that can be used for automatic implementation of timed-automata models designed in UPPAAL (e.g., \cite{times,up2nqc}). A commonly used tool is Times~\cite{times} that supports code generation for general platforms, extended with task support for {Lego Mindstorm}\texttrademark  platform. 
+
+The code synthesized using Times has a very simple structure, where all transitions are stored in an array. Each transition is represented with four fields: an activity flag, source and destination location ids, and a synchronization id. The transitions are evaluated in automatically generated \texttt{check\_trans} function, and for the code to operate correctly the values for all clocks should be updated in a separate procedure, triggered by the system timers. Since \texttt{check\_trans} performs a single evaluation for each transition (in the order specified by the array structure), to ensure that no transitions are missed the \texttt{check\_trans} function has to be continuously invoked within an infinite loop, unless the code is executed on a LEGO Mindstorm RCX brick running brickOS. Thus, in the general case, the code generated with Times completely utilizes the CPU, disallowing instantiation of any other tasks. As we will show later in the paper, this is not the case for the code that is synthesized using our development framework.
+
+Due to this array-based structure, with the code obtained using Times it is not straightforward to decouple the controller (in our case the pacemaker) and the environment (e.g., the heart) in scenarios described in \figref{setup_w_monitors}. For example, to facilitate the decoupling~\cite{kim_emsoft11} propose a modification of the initial UPPAAL model by specifying the interaction between the controller and the environment using boolean shared variables. 
+Although the solution preserves behaviors of the initial model, as pointed out by the authors, this type of manual modifications is effectively one of the most error prone aspects of the model-based development. Hence, to avoid this type of errors, it is necessary to provide modular code synthesis from verified UPPAAL models. We will later show  that UPP2SF resolves this issue, since the obtained code has a modular structure (instead of maintaining an array of transitions).
+
+Finally, the code generated from Times models does not guarantee that some aspects of the UPPAAL timed-automata semantics will be preserved~\cite{anaheed}. For example, it does not ensure that the requirement for committed states is satisfied. 
+
+
+\section{Extracting Runs from UPPAAL Models}
+\label{sec:runs}
+
+
+To develop the UPP2SF model translation tool, we consider the problem of extracting runs for UPPAAL models. We focus on a large class of UPPAAL models without clock conditions of the form $x>E$, where $x$ is a clock and $E$ an expression. The restriction, while not limiting in modeling of real control system, guarantees that all invariants and guards are expressed as intersections of left semi-closed (LSC) intervals. Thus, we refer to this class as \textit{Class LSC}, and in this work we consider only this type of models. 
+
+To obtain a run of an UPPAAL model it is sufficient to simulate the model only at integer time points~\cite{PMupp2sf_rtas12}, which allows for the use of discrete-time based tools for model simulation. Since the execution of UPPAAL models is non-deterministic, a transition in UPPAAL can occur at any point at which it is enabled. However, at each time instance it may not be straightforward to determine whether a currently enabled transition will still be enabled at the next integer-time point. 
+Therefore, to simplify the translation procedure we consider runs of UPPAAL models that are obtained using the maximal progress assumption (MPA). 
+
+
+\begin{definition}
+For semantics $\left<\mathcal{S},s_0,\rightarrow\right>$, a run 
+$\mathcal{R}:=(\bar{l}_0,w_0)\rightarrow...\rightarrow(\bar{l}_i,w_i)\rightarrow...$ , 
+satisfies the maximal progress assumption (MPA) if for all $k\geq 0$ such that
+\begin{enumerate}
+\item $\bar{l}_{k+1}=\bar{l}_{k}$ and $w_{k+1}=w_k+d$ for some $d>0$, and
+\item $(\bar{l}_{k+1},w_{k+1}) \rightarrow (\bar{l}_{k+2},w_{k+2})$ satisfies either case (2) or (3) of Def.~\ref{def:semantics},
+\end{enumerate}
+there does not exist a $d'$, $0\leq d'<d$, for which there exist a transition
+$(\bar{l}_k,w_k+d') \rightarrow (\bar{l}_k[l'_j/l_j],w')$ or a transition $(\bar{l}_{k},w_{k}+d') \rightarrow (\bar{l}_k[l'_p/l_p,l'_q/l_q],w')$ for the given semantics.
+\end{definition}
+
+A run that satisfies the MPA will be referred to as an \textit{MPA run}. Note that from the definition, if some transitions in an MPA run are enabled, one of them should occur. 
+
+\begin{theorem}
+\label{thm:basic_mpa}
+Consider an UPPAAL model from the \textit{Class LSC}. For every MPA run $\mathcal{R}$ of the model
+and for all $k\geq 0$, the clock valuation $u^{\mathcal{R}}_k$ satisfies that for each clock~$x$, $u^{\mathcal{R}}_k(x)\in \mathbb{N}_0$ (i.e., all transitions of $\mathcal{R}$ occur at integer time points).
+\end{theorem}
+
+\begin{proof}
+Lets assume that the theorem does not holds -- i.e.,~there exists an MPA run $\mathcal{R}$ for which there exists $k\geq 0$ and a clock $x$ such that $u^{\mathcal{R}}_k(x)\notin \mathbb{N}_0$. By $k_0$ we denote the first (i.e., lowest) such $k$. Since all clocks are initialized to zero, $k_0>0$ and $w_{k_0-1}=(u_{k_0-1},v_{k_0-1})$ is an integer valuation. Thus, consider the part    
+$(\bar{l}_{k_0-1},w_{k_0-1}) \rightarrow (\bar{l}_{k_0},w_{k_0}) \rightarrow (\bar{l}_{k_0+1},w_{k_0+1})$ of the run $\mathcal{R}$. From Def.~\ref{def:semantics} one of the following cases is valid:
+
+\begin{enumerate}
+\item $(\bar{l}_{k_0-1},w_{k_0-1}) \rightarrow (\bar{l}_{k_0},w_{k_0})$ satisfies case (1) of Def.~\ref{def:semantics} (i.e., time passing). Then from the definition of a \textit{run}, the transition $(\bar{l}_{k_0},w_{k_0}) \rightarrow (\bar{l}_{k_0+1},w_{k_0+1})$ is described by either case (2) or (3) from Def.~\ref{def:semantics}. In the former case $\bar{l}_{k_0+1}=\bar{l}_{k_0}[l_i'/l_i]$, meaning that there exists $l_i \xrightarrow{g,\tau,r} l_i'$ such that $w_{k_0}=(u_{k_0},v_{k_0})\in g$, $w_{k_0+1}=r(w_{k_0})$, and $w_{k_0+1}\in I(\bar l_{k_0+1})$. 
+Consider the valuation $w_{k_0}'=\lfloor w_{k_0}\rfloor=(\lfloor u_{k_0}\rfloor,v_{k_0})$. 
+Since $w_{k_0}\in g$ then $w_{k_0}'$ also satisfies all variable conditions from $g$. For each clock $x$, if $u_{k_0}(x)$ satisfies the clock guard conditions of the form $x\bowtie n$, where $n\in \mathbb{N}_0$ and $\bowtie\in\{\leq,\geq,=,<\}$, then $u_{k_0}(x)$ belongs to an intersection of left-closed intervals with integer boundaries. Thus, $\lfloor u_{k_0}(x)\rfloor$ belongs to the same intersection of the intervals, meaning that $u_{k_0}'=\lfloor u_{k_0}\rfloor$ satisfies this type of clock constraints from $g$. 
+Furthermore, if for some clocks $x$ and $y$, valuation $u_{k_0}$ satisfies constraints of the form $x-y\bowtie n$, it follows that $u_{k_0}(x)-u_{k_0}(y)\bowtie n$. From $u_{k_0}=u_{k_0-1}+d$ (where $d$ is the elapsed time), we have:
+$
+u_{k_0}'(x)-u_{k_0}'(y)=\lfloor u_{k_0}(x)\rfloor - \lfloor u_{k_0}(y)\rfloor = u_{k_0-1}(x)+\lfloor d\rfloor-(u_{k_0-1}(y)+\lfloor d\rfloor) =u_{k_0-1}(x)-u_{k_0-1}(y) =
+ u_{k_0-1}(x)+d-u_{k_0-1}(y)-d=u_{k_0}(x)-u_{k_0}(y).
+$
+Thus, $u_{k_0}'(x)-u_{k_0}'(y)\bowtie n$ is true, and all clock constraints of this form are also satisfied, implying that $w_{k_0}'\in g$. Similarly, for $w_{k_0+1}'=r(w_{k_0}')=(u_{k_0+1}',v_{k_0+1}')$, from $w_{k_0}'=\lfloor w_{k_0}\rfloor$ and $w_{k_0+1}=r(w_{k_0})$ it follows that $v_{k_0+1}'=v_{k_0+1}$ and $u_{k_0+1}'=\lfloor u_{k_0+1} \rfloor$ (all reset clocks are equal, since clocks are reset to integer values). 
+Therefore, as for the guard, it can be shown that $w_{k_0+1}\in I(\bar l_{k_0+1})$ implies that $w_{k_0+1}'\in I(\bar l_{k_0+1})$,  
+which proves that the transition $(\bar{l}_{k_0},w_{k_0}') \rightarrow (\bar{l}_{k_0+1},w_{k_0+1}')$ was also enabled. Since $w_{k_0}'(x)<w_{k_0}(x)$ it follows that in this case $\mathcal{R}$ is not an MPA run, which violates our initial assumption.
+
+A similar proof can be used in the latter case when $(\bar{l}_{k_0},w_{k_0})\rightarrow (\bar{l}_{k_0+1},w_{k_0})$ satisfies case (3) of Def.~\ref{def:semantics}, by showing the existence of a transition enabled for $\lfloor u_{k_0} \rfloor$. Since $\lfloor u_k(x) \rfloor < u_k(x)$,  the transition $(\bar{l}_{k_0},w_{k_0}) \rightarrow (\bar{l}_{k_0+1},w_{k_0+1})$ cannot be in an MPA~run.
+
+\item  $(\bar{l}_{k_0-1},w_{k_0-1}) \rightarrow (\bar{l}_{k_0},w_{k_0})$ satisfies either case (2) or (3) of Def.~\ref{def:semantics}.  Then, there exists a transition with reset $r$ such that $w_{k_0}=r(w_{k_0-1})$, or a synchronized transition with resets $r_i,r_j$ such that $w_{k_0}=(r_i\cup r_j)(w_{k_0-1})$. 
+However, since $w_{k_0-1}$ is an integer valuation, in both cases $u_{k_0}(x)\in\mathbb{N}$ because no clock can be reset to a non-integer value. 
+This conflicts our initial assumption, and thus concludes the proof.
+\vspace{-10pt}
+\end{enumerate}
+\end{proof}
+
+The theorem presents the basis for the translation procedure. It allows us to obtain an MPA run by evaluating transitions from active locations in each automaton only at integer time points. Note that each automaton may be evaluated more than once, as more than one transition could occur within a single automaton at any integer time. 
+
+
+Theorem~\ref{thm:basic_mpa} can be easily extended for UPPAAL models with committed and urgent locations, and urgent and broadcast channels. For example, urgent locations can be modeled by adding an extra clock $x_u$ that is reset to zero on all incoming edges to urgent locations, and adding condition $x_u\leq 0$ to invariants in all urgent locations. Yet, this does not affect the proof of Theorem~\ref{thm:basic_mpa}, and thus the theorem is still valid.  
+In addition, semantics for UPPAAL models that employ urgent channels is similar to the semantics from Def.~\ref{def:semantics}, with an additional condition in case (1) of the definition. In this case $(\bar{l},w) \rightarrow (\bar{l},w+d)$, if for all $d', 0\leq d'< d$ it holds that $w+d'\in I(\bar{l})$, and for any urgent channel $c$ there does not exist $l_i \xrightarrow{g_i,c?,r_i} l'_i$ and $l_j \xrightarrow{g_j,c!,r_j} l'_j$ such that $w+d'\in (g_i\wedge g_j)$ and $(r_i \cup r_j)(w+d')\in I(\bar{l}[l'_j/l_j,l'_i/l_i])$. 
+Similarly, broadcast channels semantics does not require that exactly one transition with receiving channel occurs simultaneously with a transition that contains a transmission over the channel -- with broadcast channels none, one or more than one 'receiving' transitions could occur. Thus, Theorem~\ref{thm:basic_mpa} is also satisfied even if urgent and broadcast channels are used. 
+
+
+\section{Brief Overview of Stateflow}
+\label{sec:sf}
+
+A Stateflow chart (i.e., model) employs a concept of finite state machines extended with additional features, including support for different data types and events that trigger actions in a part or the whole chart. Here, we present a small subset of the Stateflow features used in the translation procedure. Detailed descriptions of other features can be found in~\cite{stateflow,SF2lustre,SFsem1,SFsem2}.
+
+A state in a Stateflow chart can be active or inactive, and the activity dynamically changes based on events and conditions. States can be defined hierarchically -- i.e.,~a state can contain other states (referred to as \textit{substates}). 
+A decomposition of a chart (or a state) determines if its states (substates) are \textit{exclusive} or \textit{parallel} states. 
+Within a chart (or a state), no two exclusive states can be active at the same time, while any number of parallel states can be simultaneously activate (but executed sequentially).
+
+
+Unlike in UPPAAL, transitions between states in Stateflow are taken as soon as enabled. They are described in the form (where each part of the description is optional)
+\begin{equation}
+\label{eqn:trans_general}
+Event[condition]\{condition\_actions\}/\{transition\_actions\}
+\end{equation}
+$Event$ identifies the event that enables the transition (which is enabled by default if $Event$ is not stated), if the $condition$ (if specified, by default it is true) is valid. The $condition$ is described using basic logical operations on conditions over chart variables and Stateflow operators. Actions in $condition\_actions$ and $transition\_actions$ include event broadcasting and operations on data variables. The Stateflow semantics specifies that when a transition from a state $s_i$ to state $s_j$ occurs, then $condition\_action$ are executed first, before the state $s_i$ becomes inactive. This is followed by the execution of $transition\_actions$, and finally activation of the state $s_j$ (i.e., during the execution of $transition\_actions$ none of the states is active). 
+
+
+A Stateflow chart runs on a single thread and it is executed only when an event occurs. All actions that occur during an execution triggered by an event are atomic to that event. After all activities that take place based on the event are finished, the execution returns to its prior activity (i.e., activity before receiving the event). 
+All parallel states within a chart (and similarly, all parallel substates in a state) are assigned with a unique execution order. Furthermore, all outgoing transitions from a state have different execution indices. Thus, the execution of a Stateflow chart is fully deterministic -- Stateflow semantics specifies that active states are scheduled, and state transitions are evaluated in the execution order (starting from the lowest execution index).\footnote{The user can specify the execution index for each transition and state -- default values are assigned by the order of instantiation. Parallel states (or transitions from a state) must have different execution indices.}
+
+
+\subsubsection{Notion of Time in Stateflow}
+Stateflow temporal logic can be used to control execution of a discrete-time chart in terms of time. It defines time periods using absolute-time operators based on the simulation time, or event-based operators that use the number of event occurrences. Absolute-time logic defines operators $after$, $before$ as
+\begin{equation}
+\label{eqn:temp_logic}
+after(n, \hbox{sec}) = \left\{
+\begin{array}{lr} 0,\hbox{ if } t< n\\
+1,\hbox{ if } t\geq n\end{array},
+\right.
+~~~~~~
+before(n, \hbox{sec}) = not(after(n, \hbox{sec}))
+\end{equation}
+where $t$ denotes the time that has elapsed since the activation of the associated state (i.e., from the last transition to the state - including self-transitions). The value for time $t$ can be obtained using the operator $temporalCount(\hbox{sec})$. Similarly, event-based temporal logic operators are used for event counting -- e.g.,~$after(n,clk)$ returns 1 if the event $clk$ has occurred more than $(n-1)$ times after the state has been activated.
+section{UPP2SF: Model Translation Procedure}
+\label{sec:upp2sf}
+
+In this section, we present an overview of the UPP2SF translation procedure. We also describe the translation rules for UPPAAL models with urgent and broadcast channels, urgent and committed locations, and local clocks, as these functionalities are used for the pacemaker modeling. For the full UPP2SF description refer to~\cite{upp2sf_rep}. 
+
+
+\subsection{Overview of UPP2SF}
+Consider an UPPAAL model with automata $P_1,...,P_n$. The UPP2SF translation procedure would produce a two-level Stateflow chart as in \figref{chart}, with parallel states $P_1,...,P_n$ (referred to as the \textit{parent} states) derived from the automata, parallel states $Gc\_{x_1},..., Gc\_{x_m}$ (referred to as \textit{clock states}) that model all global clocks $x_1,...,x_m$ from the UPPAAL model,\footnote{Note that if no global clocks are used in the UPPAAL model, the obtained Stateflow chart would not contain parallel global clocks states $Gc\_x_j$.}  and the state $Eng$ that is used as the chart's control execution engine.
+In addition, the chart has predefined global data variables (and constants) with appropriate variable ranges and initial values obtained from the UPPAAL model. 
+Since all automata in UPPAAL are simultaneously active, the obtained Stateflow chart is a collection of parallel states with unique execution orders. Also, in every UPPAAL automaton exactly one location is active at a time. Thus, each of the parent states is a collection of exclusive states, extracted from locations in the UPPAAL automaton.
+
+
+To ensure that the extracted chart is simulated at integer time points, input trigger event~$clk$ is added to the chart and a signal generator block is added to the parent Simulink model. We call a \textit{$clk$ execution} the execution of the chart from the moment the chart is triggered by a $clk$ event, until processing of the event has been finished. Since our goal is to derive a Stateflow chart whose execution is one of the MPA runs of the initial UPPAAL model, it is possible that  more than one transition within the model (and even within a single automaton) occur at any time point. Therefore, the chart can (re)activate itself by transmitting local (within the scope of the chart) events from the additional parallel state $Eng$, which is executed last of all chart's parallel states. Processing of the events triggered during a $clk$ \textit{execution} is considered a part of the $clk$ \textit{execution}. Since event processing is atomic in Stateflow, no time elapses (in Simulink) during a $clk$ \textit{execution} regardless how many additional event broadcasts have occurred. With this approach, a single activation of the chart triggers all transitions enabled at that integer time point, effectively extracting an MPA execution trace of the model. 
+
+
+Finally, any UPPAAL edge from location $l_{k_i}$ to $l_{k_j}$ in any automaton $P_k$, which does not use global clocks and synchronization over binary channels, is mapped into a Stateflow transition $P_k.l_{k_i}\rightarrow P_k.l_{k_j}$ between the corresponding substates in the parent state $P_k$. In the rest of the section we provide a description of the edge translation procedure. 
+
+
+\emph{Remark:} In the general case, the edge $l_{k_i}\xrightarrow{g,\alpha,r} l_{k_j}$ (where $\alpha\in\{\tau,c!,c?\}$ and $c$ is a binary or broadcast channel) is mapped into a more complex structure in Stateflow between the substates $P_k.l_{k_i}$ and $P_k.l_{k_j}$. If the edge uses global clocks then a junction $J_{ij}$ and transition $P_k.l_{k_i}\rightarrow P_k.J_{ij}$ are introduced to update global clock values used in the edge's guard and invariants. Also, if $\alpha$ does not use a binary channel, a single transition is introduced from $J_{ij}$ to $P_k.l_{k_j}$. However, if $\alpha$ uses a binary channel, to preserve the semantics three edges and a junction are added between $J_{ij}$ and $P_k.l_{k_j}$.
+
+
+
+
+\begin{figure} [!t]
+\center
+\includegraphics[width=0.34\textwidth]{figs/chart_GlobalClocks_rev1.png} 
+\caption{Structure of Stateflow charts derived by UPP2SF. Parent states $P_1,...,P_n$ are derived from automata, while the \textit{clock} states $Gc\_{x_1},..., Gc\_{x_m}$ model all global clocks $x_1,...,x_m$ from the UPPAAL model. The state $Eng$ is used to control execution of the chart.}
+\label{fig:chart}
+\end{figure}
+
+\subsection{Mapping UPPAAL Edges Without Synchronization}
+\label{sec:upp_noSync}
+
+
+Consider an UPPAAL edge $l_{k_i}\xrightarrow{g,\tau,r} l_{k_j}$ in automaton $P_k$. The guard $g$ can be split into a conjunction of data and clock conditions, and thus during the translation UPP2SF introduces a Stateflow transition $P_k.l_{k_i}\rightarrow P_k.l_{k_j}$ of the form:
+\begin{equation}
+\label{eqn:trans}
+[\underbrace{G_C(I(l_{k_i})\wedge g) \wedge G_V(g) \wedge G_C(r,I(l_{k_j}))}_{G_{C,V}(l_{k_i},l_{k_j},g,r)}] /\{\underbrace{R_V(r); R_C(r);}_{R_{C,V}(r)} R_S(r);\}
+\end{equation}
+
+\vspace{-10pt}\noindent
+where:
+
+\begin{enumerate}
+\item $G_C(h)$ ($G_V(h)$) translates the clock (data) conditions from UPPAAL condition $h$ into an equivalent Stateflow condition,
+\item $R_C(r)$ ($R_V(r)$) maps clock (data) resets in $r$ to an equivalent Stateflow assignment,
+\item $G_C(r,I(l_{k_j}))$ maps the condition that the clock valuation after the reset $r$ satisfies the invariant at the `new' location $l_{k_j}$,
+\item $R_S(r)$ controls execution of the chart.
+\end{enumerate}
+
+Data resets ($R_V(r)$) and guard conditions ($G_V(g)$) are directly mapped into the identical Stateflow expressions. Mapping local clocks' resets and guards is described below.
+
+\subsubsection{Mapping Clock Conditions and Resets}
+
+In UPPAAL, each clock condition $h\in B(C)$ is specified as $h=h_1\wedge h_2\wedge...\wedge h_M$, where $h_i$'s are basic clock conditions.  Therefore, $G_C(h)=G_C(h_1)\wedge G_C(h_2)\wedge...\wedge G_C(h_M)$, and it is only necessary to provide a set of rules for the translation of basic clock conditions of the form $x\bowtie n$ or $x-y\bowtie n$, where $x,y\in C$ and $n\in\mathbb{Z}$ (or an expression over integer variables and constants).
+
+To specify conditions over clocks, UPP2SF employs event based Stateflow temporal logic operators that (only) count the number of $clk$ event occurrences. When the temporal logic operators are used in a chart with the two-level hierarchy shown in \figref{chart}, Stateflow associates a unique counter with each parallel (i.e., parent) state. It is important to highlight here that Stateflow semantics specifies that when the appropriate event activates the chart (i.e.,~when $clk$ triggers the chart) all these counters are incremented at the \textbf{beginning} of the chart's execution - i.e., even before the first parallel state begins its execution. Consequently, when each of the parallel states is executed, the counter value is equal to the number of the event's appearances from the activation of its currently active substate. For each parent state $P_k$ this values is $temporalCount(clk)$, and thus we denote this value by $tC^{P_k}$. In addition, we define $tC^x=tC^{P_k}$ if $x$ is a local clock defined in the automaton $P_k$.
+
+Unlike in UPPAAL where clocks might not be reset to zero during a transition, for a parallel state in the Stateflow chart the aforementioned counter is always reset when a transition occurs (when the associated substate is activated). Thus, while mapping edges from the automaton $P_k$, we explicitly model \textbf{each local} (from $P_k$) \textbf{clock} $x$ by introducing the accounting variable $n_x$ that maintains the clock value from the moment of the last state activation. This is done using $R_{C}(r)$ from~\eqref{eqn:trans}, which is specified as
+\begin{equation}
+\label{eqn:lclock_res}
+[R_{C}(r)](x) = \left\{
+\begin{array}{lr} 
+n_x=n_x+temporalCount(clk), & \hbox{if } x\notin r\\
+n_x = r(x),& \hbox{if } x\in r
+\end{array}
+\right.
+\end{equation}
+Our goal is that at integer time points UPPAAL valuation $u$ of the clock $x$ (i.e.,~$u(x)$) is equal to the value 
+$u^\mathcal{S}(x)$ defined as 
+$
+\label{eqn:us_def}
+u^\mathcal{S}(x)=n_x+tC^x
+$ 
+(we will show this in the next section). Note that a single counter value is used for all local clocks defined within the same automaton (i.e., $tC^x=tC^y$ if $x,y$ are local clocks defined in automaton $P_k$). 
+
+
+The transformation of the basic clock conditions presented in \tableref{UP2SF_clocks} employs event-based temporal logic operators while taking into account the values of the accounting variables for all used clocks. In the mapping each clock $x$ is replaced with the value $u^\mathcal{S}(x)$. In addition, we used a relationship between Stateflow temporal logic operators from~\eqref{eqn:temp_logic} to simplify the notation. For example, the condition $x<n$ for a local clock $x$ is mapped into $n_x+temporalCount(clk)<n$, which is equivalent to $before(n-n_x,clk)$ (since $before(n-n_x,clk)=1\Leftrightarrow temporalCount(clk)< n-n_x$).
+
+
+\begin{table*}[!t]
+Mapping UPPAAL conditions over clocks into Stateflow{
+\centering
+\begin{tabular}{|l|r|r|}
+\hline
+UPPAAL condition ($x\in C,n\in \mathbf{N}_0$) & Stateflow condition --  $x$ is replaced with $u^\mathcal{S}(x)$ \\
+\hline
+$x\leq n$ &  $(temporalCount(clk)\leq n-n_x)$ \\
+$x< n$  & $before(n-n_x,clk)$ \\
+$x= n$   & $(temporalCount(clk)==n-n_x)$ \\
+$x\geq n$  & $after(n-n_x,clk)$ \\
+$x-y\bowtie n$  & $n_x-n_y\bowtie n$  \\
+\hline
+\end{tabular}
+}
+\caption{}
+\label{tab:UP2SF_clocks}
+\end{table*}
+
+
+
+Finally, as specified in Def.~\ref{def:semantics}, the requirement that the new clock valuation satisfies the invariant at the (new) location $l_{k_j}$ is equivalent to the condition that both the non-reset and the reset clock values satisfy the clock invariants at location $l_{k_j}$. Hence, if $I(l_{k_j})=h_1\wedge ...\wedge h_k$, then $G_C(r,I(l_{k_j}))=G_C(r,h_1))\wedge...\wedge G_C(r,h_k))$ where
+
+\footnotesize
+\vspace{-10pt}
+\begin{equation}
+\label{eqn:gc1}
+G_C(r,x\bowtie n) = \left\{
+\begin{array}{cc} 
+r(x)\bowtie n, & \hbox{ if } x\in r\\
+u^\mathcal{S}(x)\bowtie n & \hbox{ if } x\notin r 				
+\end{array},
+\right. 
+\hspace{10pt}
+G_C(r,x-y\bowtie n) = 
+\left\{
+\begin{array}{lr} 
+r(x)-r(y)\bowtie n, & \hbox{ if } x,y\in r\\
+r(x)-u^\mathcal{S}(y)\bowtie n, & \hbox{ if } x\in r,y\notin r\\
+u^\mathcal{S}(x)-r(y)\bowtie n, & \hbox{ if } x\notin r,y\in r\\
+u^\mathcal{S}(x)-u^\mathcal{S}(y)\bowtie n & \hbox{ if } x,y\notin r													  
+\end{array}
+\right.
+\end{equation}
+\normalsize
+
+\noindent 
+The expression for $G_C(r,I(l_{k_j}))$ can be significantly simplified. If $r(x)$ resets the clock $x$ to a constant (which is the prevailing case in UPPAAL), conditions from~\eqref{eqn:gc1} can be evaluated during the translation and can be replaced with fixed terms ($false$~or~$true$).
+
+
+
+\subsection{Obtaining an MPA Execution of the Chart}
+\label{sec:sfmpa}
+The execution semantics of Stateflow ensures that in each of the parent states transitions from the active state will be evaluated at least once during a \textit{clk} execution. However, to obtain an MPA run of the model, after a transition occurs it is necessary that in each parent state transitions from the active state are reevaluated. We guarantee this by reactivating the chart if at least one transition has occurred. Thus, in the chart, UPP2SF introduces the parallel state $Eng$ (\figref{chart}), which is executed last among the parent (and clock) states. Furthermore, additional chart event $tt$ and flag $act$ are defined, and as a part of each transition, by adding $act=1;$ to $R_S(r)$ from~\eqref{eqn:trans}, $act$ is set to 1. 
+Finally, $Eng$ contains a single substate and it broadcasts the event $tt$ to the chart if $act$ has been set to 1, using the lowest priority self-transition of the form
+\begin{equation}
+\label{shrst}
+[act==1]\{act=0; send(tt)\}
+\end{equation}
+
+
+
+\subsection{Translating Broadcast Channels}
+Events in Stateflow are a good semantic match for broadcast channels in UPPAAL. Therefore, for each broadcast channel $c$, UPP2SF defines a Stateflow event $c$ assigned with a unique positive integer $ID(c)$. To translate edge $l_i \xrightarrow{g,c!,r} l_j$ from automaton $P_k$, UPP2SF uses a centralized approach where the $Eng$ state broadcasts events and controls execution of the chart by using additional variable $sent$ that can have the following values (here, $ExO(P_k)>0$ is the execution order of the parent state $P_k$)
+\begin{equation}
+sent = \left\{
+\begin{array}{lr} 
+ID(c), & \hbox{event \textit{c} is scheduled for broadcast}\\
+0, & \hbox{no event scheduled for broadcast}\\
+-ExO(P_k), & \hbox{an event is broadcast, only receiving edges are enabled}
+\end{array}
+\right.
+\end{equation}
+Note that $ID(c)>0$, and~$ExO(P_i)\neq ExO(P_j)$ if $P_i\neq P_j$. 
+
+
+
+\begin{table}[!t]
+\centering
+Mapping UPPAAL edges from automaton $P_k$ into Stateflow transitions{
+\begin{tabular}{|l|c|}
+\hline
+UPPAAL edge & Stateflow transition\\\hline
+$l_i \xrightarrow{g,\tau,r} l_j$		& $[(sent==0)\wedge G_{C,V}(l_i,g,r,l_j)] /\{R_{C,V}(r); R_S(r);\}$ 			\\\hline
+$l_i \xrightarrow{g_j,c!,r_j} l_j$	& $[(sent==0) \wedge G_{C,V}(l_i,g,r,l_j)] /\{R_{C,V}(r); sent=ID(c);\}$	\\\hline
+$l_i \xrightarrow{g_i,c?,r_i} l_j$	& $c[(sent\sim=-ExO(P_k))\wedge G_{C,V}(l_i,g,r,l_j)] /\{R_{C,V}(r); \}$		\\\hline
+\end{tabular}
+}
+\caption{}
+\label{tab:up2sf_bc}
+\end{table}
+
+
+\tableref{up2sf_bc} shows the mapping of UPPAAL edges into Stateflow. Action $c!$ is mapped into $sent=ID(C)$ assignment, thus disabling all `non-receiving' transitions due to their condition $(sent==0)$. Similarly, condition $(sent\sim=-ExO(P_k))$ 
+disables all `receiving' transitions in the parent state $P_k$, ensuring that the parent state does not synchronize with itself. Finally, the $Eng$ state is used to broadcast events by adding for each event $c$ the following self-transition in the state:
+\begin{equation}
+\label{eqn:eng_send}
+[(sent==ID(c))]\{sent=-ExO(P_k);send(c);\}
+\end{equation}
+In addition, to reset $sent$ and to ensure that all previously disabled transitions are reevaluated by reactivating the chart after the event is processed (i.e., after all parent states are re-executed), UPP2SF adds the following self-transition in the state $Eng$
+\begin{equation}
+\label{eqn:eng_sendtt}
+[(sent<0)]\{sent=0;send(tt);\}
+\end{equation}
+Transitions~\eqref{eqn:eng_send},~\eqref{eqn:eng_sendtt} have precedence (i.e.,~lower execution order) over the transition~\eqref{shrst}. 
+
+
+\emph{Remark:} In general, more than one UPPAAL automaton could transmit over a shared broadcast channel. In this case, $Eng$ state would not always be able to determine the parent state $P_k$ that has initiated the event broadcast. Thus, variable $ExOP$ would have to be defined along with additional reset action $ExOP=ExO(P_k)$ in transitions with $sent=ID(c);$ (from~\tableref{up2sf_bc}). Also, transition~\eqref{eqn:eng_send} would take the form $[(sent==ID(c))]\{sent=-ExOP;send(c);\}$. However, since this case does not occur in most UPPAAL models, due to the space limitation we present the simpler formulation. 
+
+
+
+
+\subsection{Translating Urgent and Committed States}
+UPP2SF also preserves semantics of urgent and committed states, and urgent channels. By extracting MPA runs of the UPPAAL model we ensure that no time passes in the states from which there exists an enabled transitions. Thus, as a byproduct, semantics of urgent channels and locations are preserved. On the other hand, if some automata in UPPAAL are in committed locations, then only transitions {outgoing} from one of the committed locations are allowed. Thus, to deal with committed locations we introduce a new `control' variable $comm$ that always contains the number of active committed states. For all transitions incoming to a committed state expression $comm=comm+1;$ is added to the reset operations (i.e., $R_S(r)$ from~\eqref{eqn:trans}). Similarly, for all outgoing transitions from a committed state $comm=comm-1;$ is added to the reset. To disable transitions from non-committed states when there exists an active committed state, guard condition $(comm==0)$ is added to all `non-receiving' transitions outgoing from a non-committed state. Note that setting $act$ to 1 (as specified in~\eqref{shrst}, for all transitions in parent states) reactivates the chart to ensure that all transitions are reevaluated, including the ones that have been disabled due to $(comm==0)$ condition.
+
+
+\subsection{Stateflow Chart Optimization}
+Stateflow charts obtained using the described set of rules can usually be significantly simplified. For example, clock guards and invariants specify fixed left-closed intervals if in conditions from \tableref{UP2SF_clocks} $n$ denotes a constant. 
+These intervals can be expressed in Stateflow with maximum two terms from \tableref{UP2SF_clocks} (e.g., invariant $t\leq n$ and guard $t\geq n$ can be combined into a single Stateflow condition $temporalCount(clk)==n-n_t$).
+In addition, it is possible to remove updates to an accounting variable $n_x$ from transitions incoming to a state, 
+if on all paths from the state there exist resets of the clock $x$ before the clock is used in a transition guard or invariant. Similarly, due to~\eqref{eqn:eng_sendtt} there is no need to reactivate the chart with the $act=1$ reset on transitions to a committed/urgent state that are conditioned with event receiving. The same holds if outgoing transitions from a new state are disabled (which is a common case) at the time of activation, and no shared variable has been updated on the incoming transition.
+
+\section{Correctness of the Translation Procedure}
+\label{sec:correc}
+
+In this section, we show that the set of rules specified in the previous section preserves the UPPAAL semantics. Specifically, we show that the execution of the obtained Stateflow chart presents one of MPA runs of the initial UPPAAL model. 
+However, since the Stateflow semantics is informally defined, formally proving correctness of the translation procedure is not possible. For a subset of Simulink features, there exist some attempts to derive formal semantics (e.g.,~\cite{SFsem1,SFsem2}), which have been validated by testing on many examples. We follow a similar approach in this work. We start by formulating basic assumptions on the semantics of the Stateflow charts obtained by UPP2SF -- i.e., with the structure shown in \figref{chart} and which utilize only a small subset of Stateflow functionalities. 
+
+
+Consider a deadlock-free UPPAAL model with automata $P_1,...,P_n$, where each automaton has at least one location, and the extracted two-level Stateflow chart as in \figref{chart}, with parent states $P_1,...,P_n$ and the parallel state $Eng$. Since none of the chart's parallel states has transitions\footnote{Parallel states in Stateflow do not typically use transitions~\cite{stateflow,SFsem1}.} the following proposition holds.
+
+\begin{proposition}
+\label{p1_allactive}
+All parallel states in the chart will always be active.
+\end{proposition}
+
+The translation rules specify that all transitions in parent states do not have $condition\_action$  (from~\eqref{eqn:trans_general}), and no event broadcasting is specified in $transition\_actions$. Thus, when a transition $P_k.l\rightarrow P_k.l'$ occurs in a parent state $P_k$, substate $l'$ will be directly activated (i.e., activity will be directly passed from $l$ to $l'$).\footnote{Broadcasting events in transition actions would result in deactivation of the substate $l$ and event broadcasting before the substate $l'$ is activated. Thus, during the event's processing (including processing events sent during the event's processing) the parent state $P_k$ would not have active substates and would be effectively removed from the execution. On the other hand, broadcasting events in $condition\_actions$ would usually result in an infinite behavior (since in most cases the $condition$ would still be satisfied)~\cite{stateflow}.} 
+In addition, transitions in the $Eng$ state do not have $transition\_actions$ and they broadcasts events as part of $condition\_actions$.\footnote{Note that in this case infinite cycle behavior does not occur, since the data values enabling a transition guard are changed before broadcasts -- this disables the transition in the next activation.} That means that the state $Eng.l0$ will never be deactivated.
+
+\begin{proposition}
+\label{p1_noinactivechild}
+Each parallel state in the chart always has an active substate.
+\end{proposition}
+
+In the general case, event broadcasting to the whole chart introduces recursive behavior (we will also see this later, in Section~\ref{sec:impl}, during the analysis of the pacemaker code -- Listing 5, \figref{PM_sf}). These recursions are in general very difficult to control and analyze, and~\cite{SFsem1} restricted the use of events to the definition of sequencing behaviors. 
+In UPP2SF-derived charts, only $Eng$ can broadcast events, on self-transitions from the (only) substate $Eng.l0$. Since $Eng$ state is executed last within each chart activation, and within its execution only a single transition may occur, local event broadcasts can \textbf{only occur at the end of chart activations}. Therefore, although event broadcasts from the self-transitions in $Eng$ state introduce recursive behavior to the chart, we can consider these recursive runs as series of sequential chart activations with different active events -- i.e., we can disregard the recursive behavior. 
+
+
+Consequently, we can describe the state of the chart as a $\theta^\mathcal{S}=(\bar{l}^\mathcal{S},w^\mathcal{S},f^\mathcal{S})$, where $\bar{l}^\mathcal{S}$ is the vector of size $n$ containing active substates for each of the $n$ parent states.\footnote{Note that since $Eng$ state has a single substate that is always active, we do not specify it in the vector $\bar{l}^\mathcal{S}$.} 
+In addition, $w^\mathcal{S}=(u^\mathcal{S},v^\mathcal{S})$ where $u^\mathcal{S}$ is defined in~\eqref{eqn:us_def} and $v^\mathcal{S}$ denotes the Stateflow variables mapped from UPPAAL variables -- i.e., $v^\mathcal{S}(i)$ is the value of the Stateflow variable $i$. Finally, $f^\mathcal{S}=(act,sent,comm,AE,k)$ denotes the values of all control flags introduced by UPP2SF. $AE$ ($AE\in\{clk,tt,\phi, SCE\}\cup\{c|c\in K\}$) is the currently active event being processed by the chart,\footnote{Here, $\phi$ denotes the case when no event is active - when the chart is sleeping, between consecutive 
+\textit{clk} executions, while $SCE$ is the Simulink Call Event, an intrinsic way for Simulink to activate a Stateflow~chart.} while $k$, $k\in\{0,1,...,n,n+1\}$, is the state index of the currently executed parallel state.\footnote{In general, $f$ should also contain a $transition\_index$ denoting the transition (from the active substate of the parallel state $k$) which is being evaluated. However, to simplify our notation we have omitted this term.} 
+We denote by $\bar{l}^\mathcal{S}[l_{k_j}/l_{k_i}]$ a vector where the active substate of the parent state $P_k$ in vector $\bar{l}^\mathcal{S}$ has changed from $l_{k_i}$ to $l_{k_j}$, and use a similar notation for $w^\mathcal{S}$ and $f^\mathcal{S}$ updates -- e.g.,~$f^\mathcal{S}[k=k+1]$ denotes $f^\mathcal{S}$ where only $k$ is increased by 1. 
+For  UPPAAL models we use the notation from Sec.~\ref{sec:uppaal}, and for $w=(u,v)$ we write $w=w^{\mathcal{S}}$ (and $u=u^{\mathcal{S}},v=v^{\mathcal{S}}$) if $\forall x\in C, i\in V$, $u(x)=u^\mathcal{S}(x)$ and $v(i)=v^{\mathcal{S}}(i)$.
+
+
+We can now formalize the behavior (i.e., semantics) of extracted Stateflow charts. From translation rules, the initial vector of active substates~$\bar{l}^\mathcal{S}_0$ is equal to the initial location vector in UPPAAL (i.e., $\bar{l}^\mathcal{S}_0=\bar{l}_0$), and $w^\mathcal{S}_0=w_0$ ($w_0$ is the initial UPPAAL valuation), $f^\mathcal{S}_0=(0,0,0,SCE,1)$ ($AE=SCE$, as charts are executed during initialization). 
+
+\begin{definition}
+\label{def:sf_sem}
+A \textit{transition relation} for a UPP2SF-derived chart is defined as:
+
+\begin{enumerate}
+\item $(\bar{l}^\mathcal{S},w^\mathcal{S},f^\mathcal{S})\rightarrow (\bar{l}^\mathcal{S},w^\mathcal{S}[u^\mathcal{S}=u^\mathcal{S}+1],f^\mathcal{S}[k=k+1])$ if $k=0$ and $AE=clk$,
+
+\item  $(\bar{l}^\mathcal{S},w^\mathcal{S},f^\mathcal{S})\rightarrow (\bar{l}^\mathcal{S},w^\mathcal{S},f^\mathcal{S}[AE=clk])$ if $k=0$ and $AE=\phi$,
+
+\item $(\bar{l}^\mathcal{S},w^\mathcal{S},f^\mathcal{S})\rightarrow (\bar{l}^\mathcal{S},w^\mathcal{S},f^\mathcal{S}[k=k+1])$ if $k=0$ and $AE\notin\{clk,\phi\}$,
+
+\item $(\bar{l}^\mathcal{S},w^\mathcal{S},f^\mathcal{S})\rightarrow (\bar{l}^\mathcal{S}_1,w^\mathcal{S}_1,f^\mathcal{S}_1)$ if $k\in\{1,...,n\}$, where
+\begin{equation*}
+(\bar{l}^\mathcal{S}_1, w^\mathcal{S}_1,f^\mathcal{S}_1)= \left\{
+\begin{array}{lr} 
+(\bar{l}^\mathcal{S}[l_{k_{i_0}}/l_k], R_{C,V}^{i_0}[w^\mathcal{S}],R_S^{i_0}[f^\mathcal{S}][k=k+1]), & \exists i, (G_s^i\wedge G_{C,V}^i)=True, \hbox{and }\\
+& (e^i\hbox{ not specified or } AE=e^i)\\
+& i_0=\min i\\
+(\bar{l}^\mathcal{S}, w^\mathcal{S},f^\mathcal{S}[k=k+1]), & \hbox{otherwise}
+\end{array}
+\right.
+\end{equation*}
+and all transitions outgoing from the active substate $l_k$ (in $P_k$) are represented as 
+$e^i[G_s^i\wedge G_{C,V}^i]/\{R_{C,V}^i; R_S^i;\}$ ($i$ is the transition index, and for example, $R_{C,V}^{i_0}[w^\mathcal{S}]$ denotes the value of $w^\mathcal{S}$ after reset operations specified in~$R_{C,V}^{i_0}$ are performed on~$w^\mathcal{S})$;
+
+\item $(\bar{l}^\mathcal{S},w^\mathcal{S},f^\mathcal{S})\rightarrow (\bar{l}^\mathcal{S},w^\mathcal{S},f^\mathcal{S}_1)$ if $k=n+1$, where
+\begin{equation*}
+f^\mathcal{S}_1= \left\{
+\begin{array}{lr} 
+R_S^{i_0}[f^\mathcal{S}][k=0,AE=e^i], & \exists i, G_s^i=True, \hbox{ where } i_0=\min i\\
+f^\mathcal{S}[k=0,AE=\phi]), & \hbox{otherwise}
+\end{array}
+\right.
+\end{equation*}
+and all self-transitions in $Eng$ state are described as $[G_s^i]\{R_S^i;send(e^i);\}$. 
+\end{enumerate}
+
+\end{definition}
+
+
+We define the chart's execution trace $\mathcal{R}^\mathcal{S}$ as a sequence of consecutive chart states $\theta^\mathcal{S}_0\rightarrow\theta^\mathcal{S}_1\ldots\rightarrow\theta^\mathcal{S}_t\rightarrow\dots$. 
+We also denote by $\theta^\mathcal{S}_{t_0}\xrightarrow{*}\theta^\mathcal{S}_{t_i}$ (referred to as an \textit{SF-transition}) a sequence  $\theta^\mathcal{S}_{t_0}\rightarrow\theta^\mathcal{S}_{t_1}\ldots\rightarrow\theta^\mathcal{S}_{t_i}$ of the execution such that one of the following holds:
+
+\begin{itemize}
+
+\item the sequence does not contain any transitions mapped from UPPAAL edges, and $k=1, AE=clk$ in $\theta^\mathcal{S}_{t_i}$; 
+in this case we denote the sequence by $\theta^\mathcal{S}_{t_0}\xrightarrow{*(+d)}\theta^\mathcal{S}_{t_i}$, since (as none of the transitions in parent states has occurred during the sequence) for some $d\in\mathbb{N}$ (when $i>0$), for all $x,y\in C,u^\mathcal{S}_{t_i}(x)-u^\mathcal{S}_{t_0}(x)=u^\mathcal{S}_{t_i}(y)-u^\mathcal{S}_{t_0}(y)=d$.
+
+\item $k\neq 0$ or $AE\neq clk$ in all $\theta^\mathcal{S}_{t_j},j\leq i-1$; 
+also, $\theta^\mathcal{S}_{t_i-1}\rightarrow \theta^\mathcal{S}_{t_i}$ is a transition mapped from some UPPAAL edge $l_f \xrightarrow{g,\tau,r} l_j$, and it is the only transition in the sequence mapped from any UPPAAL edge; in this case we also use the notation $\theta^\mathcal{S}_{t_0}\xrightarrow{*\tau}\theta^\mathcal{S}_{t_i}$,
+
+\item $k\neq 0$ or $AE\neq clk$ in all $\theta^\mathcal{S}_{t_j},j\leq i-1$, and the sequence contains exactly one transition mapped from some UPPAAL edge $l_f \xrightarrow{g,b!,r} l_j$, which is the first transition in the sequence that is mapped from any UPPAAL edge; 
+followed by a number of  transitions (i.e.,~0, 1 or more) mapped from UPPAAL edges of the form $l_p \xrightarrow{g,b?,r} l_q$ (i.e., receiving over channel $b$), where  $\theta^\mathcal{S}_{t_i-1}\rightarrow \theta^\mathcal{S}_{t_i}$ is the last of them; in addition, the next transition in the execution trace which is mapped from an UPPAAL edge is not mapped from an edge $l_n \xrightarrow{g,b?,r} l_m$; here, we also use the notation $\theta^\mathcal{S}_{t_0}\xrightarrow{*b!?}\theta^\mathcal{S}_{t_i}$.
+
+\end{itemize}
+
+From the above definition, the following lemma follows directly.
+
+\begin{lemma}
+\label{same_lw}
+If $\theta^\mathcal{S}_{t_0}\xrightarrow{*\tau}\theta^\mathcal{S}_{t_i}$ then for all $n\in\{t_0,...,t_i-1\}$, 
+$\bar{l}^\mathcal{S}_n=\bar{l}^\mathcal{S}_{t_0}$ and $w^\mathcal{S}_n=w^\mathcal{S}_{t_0}$.
+\end{lemma}
+
+
+
+\begin{proposition}
+\label{p3_transition}
+Assume that $\theta^\mathcal{S}_{t_0}\xrightarrow{*\tau}\theta^\mathcal{S}_{t_i}$, and $\bar{l}^\mathcal{S}_{t_0}=\bar{l}$ and $w^\mathcal{S}_{t_0}=w$. If $\theta^\mathcal{S}_{t_i-1}\rightarrow \theta^\mathcal{S}_{t_i}$ is a transition mapped from UPPAAL edge $l_{k_f} \xrightarrow{g,\tau,r} l_{k_j}$ in automaton $P_k$ ($k$ is the state index from $f$), then $(\bar{l},w)\rightarrow (\bar{l}[l_{k_j}/l_{k_f}],r(w))$ in UPPAAL, and $r(w)=w^{\mathcal{S}}_{t_i}, \bar{l}[l_{k_j}/l_{k_f}]=\bar{l}^\mathcal{S}_{t_i}$.
+\end{proposition}
+
+
+\begin{proof}
+From Lemma~\ref{same_lw}, $\bar{l}^\mathcal{S}_{t_i-1}=\bar{l}^\mathcal{S}_{t_0}=\bar{l}$ and~$w^\mathcal{S}_{t_i-1}=w^\mathcal{S}_{t_0}=w$. Since $\theta^\mathcal{S}_{t_i-1}\rightarrow\theta^\mathcal{S}_{t_i}$ is a transition mapped from $l_{k_f} \xrightarrow{g,\tau,r} l_{k_j}$, it follows that $\bar{l}[l_{k_j}/l_{k_f}]=\bar{l}^\mathcal{S}_{t_i}$, and from~\eqref{eqn:trans} $G_C(I(l_{k_f})\wedge g) \wedge G_V(g) \wedge G_C(r,I(l_{k_j}))$ is satisfied. $G_V(g)$ presents the identical conditions over data variables as in the UPPAAL guard $g$, and since $v^{\mathcal{S}}_{t_i-1}$ satisfies $G_V(g)$, then $v$ satisfies data conditions in $g$. Similarly, since $u^\mathcal{S}_{t_i-1}$ satisfies $G_C(I(l_{k_f})\wedge g)$ from~\tableref{UP2SF_clocks}, then from $u^\mathcal{S}_{t_i-1}=u$ we have that $u$ satisfies the guard and invariant at $l_{k_f}$ -- i.e.,~$u\in g$ and $u\in I(l_{k_f})$. 
+Finally, $u^\mathcal{S}_{t_i-1}$ satisfies $G_C(r,I(l_{k_j}))$ defined in~\eqref{eqn:gc1}, and using the same reasoning we have that $r(u)\in I(I(l_{k_j}))$, implying $w\in g$ and $r(w)\in I(I(l_{k_j}))$. 
+
+In addition, $w^{\mathcal{S}}_{t_i}=(u^{\mathcal{S}}_{t_i},v^{\mathcal{S}}_{t_i})$, where $v^{\mathcal{S}}_{t_i}=R_V(r)[v^{\mathcal{S}}_{t_i-1}]$ and $u^{\mathcal{S}}_{t_i}=R_C(r)[u^{\mathcal{S}}_{t_i-1}]$. Since $R_V(r)$ specifies the identical data expressions as $r$, $v^{\mathcal{S}}_{t_i}=r(v^{\mathcal{S}}_{t_i-1})=r(v)$. On the other hand, when a transition occurs $temporalCount(clk)$ is reset. Thus, for all $x\in C$, $u^{\mathcal{S}}_{t_i}(x)=n_x$, and if $x\in r$ from~\eqref{eqn:lclock_res} $u^{\mathcal{S}}_{t_i}(x)=r(x)$; otherwise $n_x=u^{\mathcal{S}}_{t_i-1}(x)$, meaning that $u^{\mathcal{S}}_{t_i}(x)=u^{\mathcal{S}}_{t_i-1}(x)$. Consequently, $u^{\mathcal{S}}_{t_i}=r(u)$, and $w^{\mathcal{S}}_{t_i}=r(w)$, which concludes the proof. 
+\end{proof}
+ 
+ 
+The following results can be proven using similar approaches as in the above proof. 
+
+\begin{proposition}
+\label{p4_broadtransition}
+Assume that $\theta^\mathcal{S}_{t_0}\xrightarrow{*b!?}\theta^\mathcal{S}_{t_i}$, for a broadcast channel $b$, and $\bar{l}^\mathcal{S}_{t_0}=\bar{l}$ and $w^\mathcal{S}_{t_0}=w$. If  the sequence contains transitions mapped from UPPAAL edges  $l_{j} \xrightarrow{g_j,b!,r_j} l'_{j}$ in automaton $P_{j}$, and  $l_{j_i} \xrightarrow{g_{j_i},b?,r_{j_i}} l'_{j_i}$ in automata $P_{j_i}$ ($i=0,...,m$), then 
+$(\bar{l},w)\rightarrow (\bar{l}[l'_j/l_j,l'_{j_0}/l_{j_0},...,l'_{j_m}/l_{j_m}],(r_j\cup_{i=0}^m r_{j_i})(w))$ in UPPAAL. Furthermore, \\$(r_j\cup_{i=0}^m r_{j_i})(w)=w^{\mathcal{S}}_{t_i}$ and $\bar{l}[l'_j/l_j,l'_{j_0}/l_{j_0},...,l'_{j_m}/l_{j_m}]=\bar{l}^\mathcal{S}_{t_i}$.
+\end{proposition} 
+
+\begin{proof}[sketch]
+We first show that after the transition mapped from the edge $l_{j} \xrightarrow{g_j,b!,r_j} l'_{j}$ occurs it is not possible in the obtained chart to have a 'non-receiving' transition, or a 'receiving' transition conditioned with an event $c$, where $c\neq b$. We prove then that $j\neq j_i$ for $i=0,...,m$, and $j_p\neq j_q$ for $p,q=0,...,m$ and $p\neq q$ (i.e., an automaton cannot synchronize with itself, or synchronize twice with another automaton for a single broadcast). After showing these properties, using a similar approach as for Prop.~\ref{p3_transition} we show that the UPPAAL semantics for broadcast channels is preserved. 
+\end{proof}
+
+
+\begin{proposition}
+\label{p5_notransition}
+Consider a sequence $\theta^\mathcal{S}_{t_0}\xrightarrow{*(+d)}\theta^\mathcal{S}_{t_i}$, for some $d\in\mathbb{N}$, and lets assume $\bar{l}^\mathcal{S}_{t_0}=\bar{l}$ and $w^\mathcal{S}_{t_0}=w$. Then $w^\mathcal{S}_{t_i}=w+d$, and $(\bar{l},w)\rightarrow (\bar{l},w+d)$ is the only transition relation in the semantics of the UPPAAL model from $(\bar{l},w)$ -- i.e., there does not exist a transition $(\bar{l},w)\rightarrow (\bar{l}_1,w_1)$ specified by either case (2) or (3) of Def.~\ref{def:semantics}.
+\end{proposition} 
+
+
+Note that the chart's execution trace $\mathcal{R}^\mathcal{S}$ can be decomposed into a sequence of \textit{SF-transitions}. 
+Therefore, since the initial UPPAAL location vector $\bar{l}_0$ and valuation $w_0$ are equal to the initial Stateflow vector of active states and valuation $w^{\mathcal{S}}$, from the above three propositions and Theorem~\ref{thm:basic_mpa} we have that the sequence of \textit{SF-transitions} for the UPP2SF-derived chart corresponds to an MPA run of the initial UPPAAL model. Furthermore, it is worth noting that these proofs can be easily extended to show that the semantics of committed locations is also preserved by the translation rules (semantics of urgent channels and locations are guaranteed by the \textit{MPA-runs} requirement). 
+
+
+In the rest of the paper, we will demonstrate the use of the UPP2SF-based MDD framework on the pacemaker case study. 
+
+\section{Pacemaker Stateflow Design}
+\label{sec:pm_sf}
+
+From the model shown in \figref{PMdesign}, using the UPP2SF tool we obtained the pacemaker Stateflow chart presented in \figref{PM_sf}. For closed-loop verification in UPPAAL we modeled both the heart and pacemaker, and therefore the obtained chart contains both models of the controller (i.e., pacemaker) and environment (i.e., the heart). To be able to use the obtained Stateflow chart for both simulation and code generation it was necessary to decouple the pacemaker from the heart model. 
+
+Note that the verified UPPAAL model also contains several monitors used to specify verification queries. Since none of these monitors uses shared variables, and they only interact with the rest of the model by receiving synchronization over broadcast channels, they do not affect behavior of the basic automata from \figref{PMdesign}. Thus, to simplify \figref{PM_sf}, we did not show the parallel states that were obtained from them. 
+
+
+
 \begin{figure*} [!t]
 \center
-\includegraphics[width=0.77\textwidth]{figs/PM_SF_buffer_newC1.png} 
-\caption{Pacemaker Stateflow chart converted from the UPPAAL model in~\figref{PMdesign} using UPP2SF; the heart and buffer models are highlighted.} 
+\includegraphics[width=0.8\textwidth]{figs/PM_SF_buffer_newC1.png} 
+\caption{Pacemaker Stateflow chart extracted using UPP2SF from the UPPAAL model in~\figref{PMdesign}; the heart and buffer models are highlighted.} 
 \label{fig:PM_sf}
 \end{figure*}
-We generated C code from the pacemaker Stateflow chart using the Simulink Coder. The code structure is shown in \figref{pm_code}.
-The code was generated for the general embedded real-time target and as a result we obtained the main procedure, \texttt{rt\_OneStep}, which processes the three input events, $VinB$, $AinB$ and $clk$. To ensure that the model semantics are preserved (modulo the execution time), $clk$ input events should be created every 1ms, followed by the procedure's activation. This makes it suitable for implementation on top of a real-time operating system (RTOS).
+
+
+\subsection{Decoupling the Controller and Environment}
+Here we present the approach used to decouple the pacemaker and heart. The same approach can be used to decouple models of the environment and controllers in most commonly used scenarios where they only interact by broadcasting events. 
+
+ Since the interaction between the heart and the pacemaker model is modeled using synchronization over broadcast channels, the pacemaker model can be easily extracted from the chart shown in \figref{PM_sf}. This is done by removing the parent states that model the heart and buffers (RH\_a, RH\_b, ASbuf, VSbuf), and by defining $AinB$ and $VinB$ as input events. Also, the $Eng$ state has to be modified to remove the transitions used to broadcast these input events. In our case we removed the transitions that broadcast $AinB$ or $BinB$ (highlighted in red in \figref{PM_sf}).
+
+Stateflow does not allow the use of output events to condition internal transitions. Hence, it is necessary to define additional output events from the chart, and in our case for local events a\_p and v\_p two output events (AP and VP) were defined. These events are broadcast on the same transitions used to broadcast a\_p and v\_p, respectively. In addition, to deal with some implementation issues (details are provided in Section~\ref{sec:code}), for each output \texttt{Event} an empty C function \texttt{sendHW\_Event} is added using Simulink features for integrating custom C code. The function does not affect Simulink chart simulations, but allows for the correct output generation from the synthesized code. For example, the $Eng$ transition highlighted with dotted green rectangle was modified to 
+\begin{equation*}
+[(sent==3)]\{sent=-1;send(VP);sendHW\_VP();send(v\_p);\}
+\end{equation*}
+Note that if the user specifies all components that are part of the controller, UPP2SF can automatically perform the above actions to decouple it from the environment.
+
+
+It is interesting to compare the chart from \figref{PM_sf} with the manually designed Stateflow model of the DDD pacemaker~\cite{vhm_ecrts10}, which is slightly simpler as it does not use event broadcasting. Thus, each \textit{clk execution} has a single chart activation, causing a violation of several of the pacemaker requirements. For example, the $URI$ requirement is not satisfied because $URI$ state is always scheduled after $AVI$ state; since the chart is not reactivated within a \textit{clk execution}, after $URI$ period expires, AP will be generated late -- in the next \textit{clk activation}.
+
+
+Since the UPP2SF mapping has been validated, we ensure that the chart's execution will be equivalent to one of the MPA runs of the initial UPPAAL model. However, the chart also contains the model the environment and has no inputs and outputs, and thus we performed validation of the pacemaker Stateflow chart after the decoupling, by extending the approach for testing real-time constraints by~\cite{ClarkeLee}. 
+\section{Stateflow Model Validation}
+\label{sec:valSF}
+
+We performed validation of the pacemaker Stateflow chart after the decoupling by extending the approach for testing real-time constraints described in~\cite{ClarkeLee}. The same approach was also used for the testing of the final physical implementation (Section~\ref{sec:testing}).
+
+In~\cite{ClarkeLee}, the authors proposed a testing procedure for behavioral and performance constraints (as the ones specified in Section~\ref{sec:form_reqs}) if the following assumptions are satisfied:
+
+\begin{enumerate}
+\item All output sequences of a system under test must be eventually distinguishable.
+\item All time bounds must be constant.
+\item There is no sharing of resources between concurrent threads.
+\item Specification intervals are implemented in software as continuous, linear domains.
+\end{enumerate}
+
+In our case, all of the assumptions are inherently satisfied,  and thus we adapted the method for the pacemaker testing. From the formal specifications we derived an appropriate set of tests to validate correctness of the obtained pacemaker design. For each performance constraint we used a test that validates whether the appropriate output has been generated within the required interval. On the other hand, testing behavioral constraints was more complex. For each interval boundary we generated two tests. For closed boundaries we applied inputs that were exactly at the boundary point and tests that were outside the interval, at the distance $\epsilon$ from the boundary point (see \figref{b_tests}). For open boundaries we generated inputs that were inside and outside the interval, at the distance $\epsilon$ from the boundary point.
+
+
+\begin{figure} [!t]
+\center
+		\includegraphics[width=0.69\textwidth]{figs/test_vects.png}
+\caption{Test points for behavioral real-time constraints.}
+\label{fig:b_tests}
+\end{figure}
+
+
+To perform validation of the Stateflow chart and the physical implementation, we used the model parameters from \tableref{params}. For testing in Simulink we considered only tests for the \textit{ideal} system specifications. Since the chart was activated every 1ms, and transitions in Stateflow are instantaneous (all transition actions are atomic) we used $\epsilon = 0.5 ms$ and $\epsilon = 1 ms$ for simulations. All the `ideal' real-time constraints (and thus, the constraints with tolerances) were satisfied in Simulink. This was expected since all actions within a $clk$ execution are atomic to the event and no simulation time elapses during them. 
+
+In addition, the chart exhibited the same behaviors as the initial UPPAAL model. For example, for the aforementioned model parameters, when no inputs were applied the chart generated AP and VP pulses at the same time points as the UPPAAL model (i.e., AP were generated at  $t^{ap}_i=(850+1000(i-1))ms,~i=1,2, ...$, and VP at $t^{vp}_i=(1000i)ms,~i=1,2, ...$). 
+Similarly, no time was spent in committed states $st3C\_CC$ in AVI, and $inter\_CC$ states in PVARP and VRP parallel states, and outgoing transitions from the states would occur immediately after the states were activated. To illustrate a more complex behavior we also showed that, as in UPPAAL, if $st3$ state in AVI parent state was active when the transition $URIst1\rightarrow URIst2$ occurred (causing broadcast of $uri\_s$ event), then no time had elapsed in the $URIst2$ state, before the transition $URIst2\rightarrow URIst1$ conditioned with $v\_p$ took place.
+
+
+\begin{table}[!b]
+Pacemakers parameters.
+
+{
+\begin{tabular}{|l|c|c|c|}
+\hline
+Parameter & Range & Value & Tolerance \\ 
+\hline
+$LRI_{d}$ & 343-1200 ms & 1000ms & $\pm 4ms$  \\\hline
+$AVI_{d}$ & 70-300 ms   &  150ms & $\pm 4ms$  \\\hline
+$URI_{d}$ & 1000 ms     &  400ms & $\pm 4ms$  \\\hline
+$VRP_{d}$ & 150-500 ms  &  150ms & $\pm 4ms$  \\\hline
+$ARP_{d}$ & 150-500 ms  &  200ms & $\pm 4ms$  \\\hline
+\end{tabular}}
+\caption{}
+\label{tab:params}
+\end{table}
+
+\section{Pacemaker Implementation}
+\label{sec:code}
+
+
+We generated C code from the pacemaker Stateflow chart using the Simulink Real-Time Workshop Embedded Coder (RTWEC).\footnote{Since Matlab 2011b, RTWEC toolbox is referred to as Simulink Embedded Coder.}$^,$\footnote{Although we focus on a specific implementation, code with the same structure would be generated from all Stateflow charts obtained from UPPAAL models using UPP2SF (due to the derived charts' structure).} 
+The code was generated for the general embedded real-time target and as a result we obtained the main procedure, \texttt{rt\_OneStep}, which processes the three input events, $VinB$, $AinB$ and $clk$. To ensure that the model semantics is preserved (modulo the execution time), $clk$ input events should be created every 1ms, followed by the procedure's activation.\footnote{In this case, the procedure's execution corresponds to the $clk$ execution.}  This makes it suitable for implementation on top of a real-time operating system (RTOS).
 
 \begin{figure*} [!t]
 \center
-\includegraphics[width=\textwidth]{figs/CodeListingFinal.png}
+\includegraphics[width=0.77\textwidth]{figs/CodeListingFinal.png}
 \caption{Structure of the pacemaker code obtained from the Stateflow chart shown in \figref{PM_sf}.}
 \label{fig:pm_code}
 \end{figure*}
 
 
-The pacemaker code generated by the Simulink Real-Time Workshop's Embedded Coder was executed on nanoRK (\cite{nanork}), a fixed-priority preemptive RTOS that runs on a variety of resource constrained platforms. We tested the implementation on the TI MSP-EXP430F5438 Experimenter Board interfaced with a signal generator that provides inputs for the pacemaker code (\figref{setup}). More details regarding UPP2SF translation and platform testing can be found in \cite{TECS}.
+\subsubsection{Code Structure}
+The structure of the code is straightforward. The current state of the procedure and all variables defined in the chart are maintained in the structure \texttt{rtDWork}, along with counter values used for temporal logic operators (i.e.,~a counter per parallel state). In addition, \texttt{rtDWork} contains a structure (List.~1,~\figref{pm_code}) that for each parent state specifies if it is active, along with which of its substates is active. 
+For example, for the state AVI variable \texttt{is\_active\_AVI} describes whether the state is active, while \texttt{is\_AVI} specifies which of its exclusive substates is active.\footnote{Note that since all parent states are decomposed into exclusive states, activity status for all of the substates within a parent state can be specified with a single variable. However, in the general case, if a state consists of a group of parallel states, RTWEC would define a new variable for each of the parallel states.}
+
+The structure of \texttt{rt\_OneStep} is shown in List.~2,~\figref{pm_code}. After detecting active input events, an execution of the chart procedure \texttt{c1\_ChartName} is invoked for each active input event. The variable $\_sfEvent\_$ is used to denote the event that is processed during the chart execution. As in Stateflow, starting from input events with lower indices, the events are processed in a prespecified order (using \texttt{c1\_ChartName} function). After all events are processed the procedure updates the outputs and event states in the prespecified order. This means that although we broadcast output events and the local events corresponding to them (e.g.,~VP and v\_p) as a part of same transitions, the outputs will be actually updated at the end of \texttt{rt\_OneStep} procedure. This can cause a couple of problems. First, ordering of the generated output events can differ from the order of the corresponding local events. Note that this does not affect simulations in Simulink, since all actions within a $clk$ \textit{execution} are atomic from perspective of the rest of the Simulink model. The second problem is that with this approach, for each output event only a single output trigger can be generated at the end of a $clk$ \textit{execution}. Thus, if an output event is broadcast more than once within a single $clk$ \textit{execution}, the corresponding output events will be actually generated one by one, at the end of the consecutive $clk$ executions (i.e.,~separated by the duration of $clk$ period).
+
+These issues are resolved using the aforementioned \texttt{SendHW\_EventName} functions.\footnote{These issues do not present a problem for the pacemaker design from \figref{PM_sf}, since only a single AP or a single VP can be broadcast within one $clk$ \textit{execution}. However, in this paper we describe the general approach that allows utilization of the UPP2SF translation tool for all UPPAAL models.} Using Simulink features for integrating custom C code with Stateflow charts in Simulink, we define empty C functions for each output event (e.g., for VP we define \texttt{SendWH\_VP}). When the code is implemented on a particular hardware platform, the user needs to define these functions. For example, the simplest implementation would include toggling a particular CPU pin every time the function is invoked. 
+
+At the beginning of the chart execution procedure (List.~3, \figref{pm_code}) all counters associated with the event (stored in $\_sfEvent\_$) are increased. Since the pacemaker code uses only $clk$ event in temporal logic operators, the five counters will be incremented only when $clk$ is processed. After this, the functions associated with each of the parallel states are called in the order specified by the execution order. 
+
+
+List.~4 from~\figref{pm_code} presents a pseudo-code for processing each of the parallel states. If the state is active, all transitions outgoing from its active substate are evaluated in the prespecified execution order. The first enabled transition is taken and associated transition actions are executed. In the generated code only $Eng$ state, which is executed last, is used to broadcast events as part of its transition actions. As shown in~List.~5,~\figref{pm_code}, broadcasting an event associates the (current event) variable $\_sfEvent\_$ with the event, before it reactivates the chart (by calling \texttt{c1\_ChartName()}). 
+
+
+
+\subsection{Platform Implementation}
+\label{sec:impl}
+The pacemaker code generated by the Simulink RTWEC was executed on nanoRK~\cite{nanork}, a fixed-priority preemptive RTOS that runs on a variety of resource constrained platforms. We tested the implementation on the TI MSP-EXP430F5438 Experimenter Board interfaced with a signal generator that provides inputs for the pacemaker code (\figref{setup}). The compiled (without optimization) pacemaker procedure uses 2536 B for code and additional 180 B for data. To interface the code with the environment, each of the inputs ($AinB$, $VinB$) triggers an interrupt routine used to set the appropriate event for \texttt{rt\_OneStep} function.
+
+\begin{table}[!b]
+Execution times for the pacemaker procedure; OL denotes open-loop, without inputs from the signal generator.
+{
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+CPU & Average & Minimal & Maximal & Standard \\ 
+frequency & ex. time & ex. time & ex. time & deviation \\\hline
+4MHz, OL	& $176.1\mu$s & $167.6\mu$s & $462.9\mu$s & $14.2\mu$s \\\hline
+4MHz			& $180.9\mu$s & $167.6\mu$s & $738.2\mu$s & $17.3\mu$s \\\hline		
+8MHz, OL	& $89.5\mu$s & $84.7\mu$s & $234.6\mu$s & $7.2\mu$s \\\hline
+8MHz			& $92.0\mu$s & $84.9\mu$s & $370.4\mu$s & $13.7\mu$s \\\hline
+\end{tabular}
+}
+\caption{}
+\label{tab:MSP430exec_time}
+
+\end{table}
+
+
+The pacemaker code was run as a task with period $1ms$. \tableref{MSP430exec_time} shows measured execution times for the pacemaker tasks, for two different CPU frequencies. As expected, an increase in CPU frequency scales into a reduction in the task's execution time. Note that the measurements from \tableref{MSP430exec_time} can be mapped to CPU utilization for the pacemaker task. With the average utilization of 9.2\% for an 8MHz CPU, we can run multiple tasks on the RTOS. 
+
+
+\begin{figure} [!t]
+\center
+\includegraphics[width=0.6\textwidth]{figs/HW_setup1.png}
+\caption{Hardware setup with MSP430F5438 experimenters board.}
+\label{fig:setup}
+\end{figure}
+
+
+
+\subsection{Decoupling the Controller and the Environment}
+\label{sec:disc_IO}
+In Sec.~\ref{sec:pm_sf} and~\ref{sec:impl} we have described the method we used to decouple models of the pacemaker and the heart. The solution guarantees that the implemented code generates output events as soon as the corresponding local events are generated. However, our implementation introduces some problems regarding processing of input signals. By introducing an interrupt routine that sets a flag if the input occurs, we effectively synchronize asynchronous input signals. This has a twofold effect on the implemented code. First, each input signal will be processed at most once even if it appears more than one time between consecutive task's activations. This is not a problem for the pacemaker, since in the initial UPPAAL model, due to the buffers,  all inputs after the first input in a cycle are disregarded until at least $dL\_a$ (or $dL\_v$) time. 
+Second, it introduces a latency up to the task's period (i.e., $clk$ interval, in our case 1ms) before the input signals are processed. To solve this issue, the extracted procedure could be activated as soon as an input appears. Beside problems with tasks scheduling, if the input signal could affect clock valuations in the initial UPPAAL model this would introduce a time measurement error in the code. For example, if $Ain$ occurs 0.5ms before the next $clk$ activation and the procedure is instantaneously activated as a result of the input, the clock in $ASbuf$ would be reset to zero. Thus, the next $clk$ activation of the procedure would set $t$ to 1, although only 0.5~ms have passed since the input. 
+
+This problem occurs even if the code has been generated using Times, or any other tool, since the number of clocks used in models is usually greater than the number of timers that CPU provides. To avoid this type of errors, we opted to use the aforementioned approach where input events only set a flag to indicate the need to process input events in the following procedure activation. To take this into account in the initial UPPAAL model, we reverified the safety properties for the model where input buffers increase the upper bound on the introduced delay (i.e., $dH\_a, dH\_v$). The bounds are increased to incorporate the maximal input latency introduced by synchronous processing of the input events (in our case 1ms).
+
+
+\subsection{Worst Case Execution Time Estimation in UPPAAL}
+
+Correctness of the generated code relies on the assumption that execution of the code completes before the next external activation. To make sure that it does, we need to estimate the WCET of the code execution, taking into account that the \texttt{c1\_ChartName} procedure (i.e., the chart) may be internally activated multiple times. We propose an approach that does not require translation from UPPAAL to Stateflow. Rather it uses the initial UPPAAL model to calculate an upper bound on the maximal number of internal activations $N_i$ within an external activation (i.e., per $clk$ execution). 
+This enables a WCET estimation at an early stage, during system modeling in UPPAAL.
+
+
+Since the chart is reactivated with event broadcasts and some transitions, 
+to determine the bound for $N_i$ we extend the model with the following accounting features:
+ 
+\begin{itemize}
+\item Global variable $tr\_cnt$ and the automaton \texttt{TrMonitor} (\figref{TrMon}) that resets the variable at integer time points,
+\item In the controller part of the UPPAAL model, reset operation $tr\_cnt=tr\_cnt+1$ should be added to all edges with transmissions over a broadcast channel, or edges that would be translated into Stateflow transitions with $act=1$ reset (i.e., the transition for which $Eng$ state would reactivate the chart),
+\item Reset $tr\_cnt=tr\_cnt+1$ to the edges with transmissions over broadcast channels that present inputs to the controller,
+\item Introduce UPPAAL temporal formula $A\Box~tr\_cnt \leq \tilde{N}_i$.
+\end{itemize}
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{figure*}[!t]
 \centering
-		\subfigure 
-		{			
-		\includegraphics[width=0.46\textwidth]{figs/HM_PM_newMon.png}
-		\label{fig:hm_pm}
-		}
-		\subfigure 
-		{	
-			\includegraphics[width=0.48\textwidth]{figs/HW_setup1.png}
-			\label{fig:PM_timer}
+		\subfigure [Basic monitor]{			
+		\includegraphics[width=0.24\textwidth]{figs/TrMon.png}	
+		\label{fig:TrMon_s}
 		} 
-\caption{(a)~Structure of the pacemaker model in UPPAAL and Stateflow, including the interaction between the pacemaker and heart, and the monitors used for verification. (b) Hardware setup with MSP430F5438 experimenters board.}
-\label{fig:setup}
+	  \subfigure [Transition automaton with input ordering]{			
+		\includegraphics[width=0.56\textwidth]{figs/TrMon_order.png}
+		\label{fig:TrMon_order}
+		} 
+\caption{Transition monitors (\texttt{TrMonitor}) used for the worst-case execution time estimation.}
+\label{fig:TrMon}
 \end{figure*} 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
+With the above changes the variable $tr\_cnt$ bounds the number of internal activations of the chart. 
+Therefore, if the above proposition is satisfied, the value $\tilde{N}_i+1$ provides an upper bound for the number of chart executions within a single $clk$ execution (1 is due to external activation). For the pacemaker UPPAAL model from \figref{PMdesign} we added the reset operation to 8 transitions. We proved that the formula holds for $\tilde{N}_i=5$. 
+Note that since the UPPAAL model contains a model of the environment (i.e., the heart), $\tilde{N}_i$ takes into account chart activations caused by inputs. On the other hand, when we considered open-loop execution of the pacemaker (without input events from the heart), using the pacemaker model  \figref{PMdesign} without the model of the environment (i.e., RH automata) we proved that the formula holds for $\tilde{N}_i^{ol}=1$. Thus, in this case at most two chart executions can occur within a single $clk$ execution (i.e., task activation).
 
-\subsection{Summary:}
-In this chapter, we first introduced a model translation method from UPPAAL timed automata models to Stateflow charts. Combined with Simulink coder, the tool chain provides rigorous evidence of traceability from physiological requirements to the C code implementation. Oversensing, crosstalk and lead displacement are three examples in which the cause of the problem is not modeled in the abstract interface in the timed-automata model. In such cases, closed-loop testing with the more refined heart models and EGM interface can be used to provide safety evidence.
+If these results are compared with the execution time measurements from \tableref{MSP430exec_time}, we can notice that for the open-loop experiments, the ratio between the maximal and minimal execution time is less than 3. Similarly, for the experiments with the test generator, the ratio is less than 5. Since in our case the minimal execution time corresponds to a single chart execution during the task's  activation (which in general might not be the case), we can infer that $N_i^{ol}=1$ and $N_i=3$. Therefore, our WCET analysis provided the exact bound for the open-loop scenario and a conservative bound for the closed-loop case.
+
+The reason for this is that the transition monitor from \figref{TrMon_s} does not take into consideration the order of the input events processing, and if both $AinB!$ and $VinB!$ occur at the same time instance, the UPPAAL model might synchronize over the channel $AinB$ first. On the other hand, the pacemaker model in Stateflow, and thus the obtained code, have a fixed input ordering, meaning that the inputs are always processed in the predefined order; in the pacemaker code $VinB$ is always processed before $AinB$ (and the $clk$ event is processed last). To take this into account we used the monitor from \figref{TrMon_order} and specified the proposition as $A\Box~((tr\_cnt\leq\tilde{N}_i)~|| ~(TrMonitor.l2))$. This effectively disregards scenarios in which $AinB$ is processed before $VinB$ within a task execution. We proved that this formula holds for $\tilde{N}_i=4$, thus improving the bound.
+Note that if the obtained code has more than two inputs (beside $clk$) it is necessary to specify all possible invalid combinations of the inputs' ordering, which might significantly increase the verification time. 
+\section{Testing of the Physical Implementation}
+\label{sec:testing}
+
+
+We validated the physical implementation using the procedure from Section~\ref{sec:valSF}. Unlike validation of the Stateflow chart, for physical testing we considered two types of tests. For the \textit{ideal} system specifications we used $\epsilon \leq 80\mu s$, since $84.9\mu s$ was the chart's minimal execution time (\tableref{MSP430exec_time}). Similarly, since the values for all the predefined tolerances are $\pm 4 ms$, for the second set of tests we used $4ms < \epsilon \leq 4.08 ms$.
+
+\tableref{test_results} presents testing results for the pacemaker implementation executed on the MSP430 Experimenter Board. When the tolerances are not taken into account some of the properties that were verified in UPPAAL and validated in Simulink were violated during the tests. The reason is that the UPPAAL semantics uses an unrealistic assumption that the machine executing the code is infinitely fast (i.e., no time elapses during transitions) and the system's reaction to synchronization is instantaneous. In the general case, the execution delays can cause violation of the UPPAAL semantics in the obtained physical implementation, which is the main reason for violation of some of the verified safety properties. However, when interval tolerances are taken into account, all properties were satisfied, as shown in \tableref{test_results}.
+
+\begin{table}[!b]
+Results of the tests performed on the setup from \figref{setup}.
+
+{
+\begin{tabular}{|l|c|c|c|c|c|c|c|}
+\hline
+Requirement 		& P1.1 & B1.1 & B1.2 & P2.1 & P2.2 & B2.1 & B2.2 \\\hline
+Ideal 					& Pass & Fail & Pass & Pass & Pass & Fail & Fail \\\hline
+With tolerance 	& Pass & Pass & Pass & Pass & Pass & Pass & Pass \\\hline
+\hline
+Requirement 		& P3.1 & B3.1 & B3.2 & P4.1 & B4.1 & B4.2 &\\\hline
+Ideal 					& Pass & Fail & Fail & Pass & Fail & Fail &\\\hline
+With tolerance 	& Pass & Pass & Pass & Pass & Pass & Pass &\\\hline
+\end{tabular}}
+\caption{}
+\label{tab:test_results}
+\end{table}
+
+
+\begin{figure} [!t]
+\center
+		\includegraphics[width=0.54\textwidth]{figs/tek00003_new1.png}
+\caption{A test screen shot for property \textbf{B4.2}; $clk$ pulses are highlighted.}
+\label{fig:screen1}
+\end{figure}
+
+
+For example, consider the property~\textbf{B4.2}. \figref{screen1} presents one of the oscilloscope screenshots obtained during the testing. The signals shown are $Ain$ (top), $AS$ (middle) and $clk$ (bottom). As shown, $Ain$ appeared right after the first $clk$ occurrence. It sets the appropriate flag in the interrupt routine, but the processing of the corresponding event occurred with the next $clk$. The event processing takes approximately $232 \mu s$ before AS is generated. This, along with the time (up to $1 ms$) between $Ain$ and the following $clk$, results in delay of up to $1.232 ms$. Thus, \textit{ideal} requirement \textbf{B4.2} is violated. However, since the delay is within the tolerance bound, the requirement is satisfied when the tolerances are taken into account.
+
+
+
+\section{Conclusion}
+
+We have described the design of the UPP2SF tool for automatic translation of UPPAAL models in Stateflow. We have shown that for a large class of UPPAAL models, UPP2SF preserves behavior of the initial UPPAAL model. Furthermore, we have presented an UPP2SF-enabled Model-Driven Development framework for safety-critical system design. By applying the UPP2SF model translation tool on the dual-chamber, implantable cardiac pacemaker case study, we have demonstrated the process starting from the formalization of the device specifications, followed by system modeling and verification in UPPAAL, to closed-loop system simulation in Simulink/Stateflow and testing of the physical implementation. We have also shown how the translation tool provides a way to estimate WCET during modeling and verification stage in UPPAAL, and facilitates development of modular code from UPPAAL timed-automata based models. The presented case-study fits into the scenarios where the system is controlled using a single, centralized, controller. 
+We plan to investigate the use of the UPP2SF-based MDD framework for code synthesis for distributed applications.
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 %\subsection{Acknowledgements}

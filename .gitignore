@@ -16,3 +16,5 @@ PhDThesis/main.toc
 PhDThesis/main.lot
 *.tps
 *.tps
+*.log
+*.tps

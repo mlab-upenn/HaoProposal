@@ -1,4 +1,253 @@
-\section{Physiological Requirements}
+\section{}
+\textbf{Proof for $\bf{N_2^1\| P_2\| N_2^2\preceq_t N_3^1\| P_3\| N_3^2}$}\\\\
+In this subsection we manually prove the timed simulation relation $N_2^1\| P_2\| N_2^2\preceq_t N_3^1\| P_3\| N_3^2$. The other relations can be proved accordingly.
+\subsection{Timed Simulation Relation \textsf{sim}}
+For two timed automata $T^1$ and $T^2$, we write timed simulation relation \textsf{sim} is defined on $\Omega_1\times\Omega_2$ where $(s,v)\in\Omega_1$ and $v$ is the valuation of all clocks $t_1\in X_1$. $((s,v),(s',v'))$ is in \textsf{sim} if and only if $v'=v(\lambda+\delta)$, for $\delta\in D$, such that \textsf{sim}$(s,v)=(s',v(\lambda +D))$
+
+%There exists $d\in D$ such that $(s',v(t+d))\in\Omega_2$
+Let $T^1=N_2^1\| P_2\| N_2^2$ and $T^2=N_3^1\| P_3\| N_3^2$. $X_1=\{tn_2^1,tp_2,tn_2^2\}$ and $X_2=\{tn_3^1,tp_3,tn_3^2\}$, the state mapping for the timed simulation relation is shown below:\\
+\\
+\textsf{sim}($RE\| ID\| RE,v)=(RE\| ID\| RE,v(tn_3^1+D_1,tn_3^2+D_2)$)
+where $D_1=[N_2^1.Terp\_min,N_2^1.Terp\_max]$,\\
+ $D_2=[N_2^2.Terp\_min,N_2^2.Terp\_max]$\\
+\\
+A special condition for this mapping is the initial state:\\
+\textsf{sim}$(RE\| ID\| RE,v(tn_3^1:=0,tp_3:=0,tn_3^2:=0))=$\\ 
+($RE\| ID\| RE,v(tn_3^1+D_1,tn_3^2+D_2)$)\\
+\\
+\textsf{sim}$(ER\| AN\| RE,v)=(RE\| AN\| RE,v)$\\
+\\
+\textsf{sim}$(RE\| RT\| ER,v)=(RE\| RT\| RE,v)$\\
+\\
+\textsf{sim}$(ER\| ID\| ER,v)=(RE\| ID\| RE,v)$\\
+\\
+\textsf{sim}$(ER\| ID\| RE,v)=(RE\| ID\| RE,v(tn_3^2+D))$\\
+where $D=[N_2^2.Terp\_min,N_2^2.Terp\_max]$\\
+\\
+\textsf{sim}($RE\| ID\| ER,v)=(RE\| ID\| RE,v(tn_3^1+D))$\\
+where $D=[N_2^1.Terp\_min,N_2^1.Terp\_max]$
+
+The location mapping is shown in \figref{abs}.
+\subsection{Timed Transitions}
+Here we want to ensure every timed transition for $T^1$ has a corresponding timed transition in $T^2$. We denote $S=(s,v)$ and $S_\delta=(s,v+\delta)$. For each location in $T^1$ we have $S\xrightarrow{\delta}S_\delta$ for $\forall \delta\in\mathbb{R}$ under condition $v+\delta\models inv(s)$. In $T^2$ we use $S'=(s',v')$ and $S_\delta '=(s',v'+\delta)$. For $(S,S')\in$\textsf{sim} we show that there exists $S_\delta '$ such that $s'\xrightarrow{\delta}s_\delta '$ and $(s_\delta,s_\delta ')\in$\textsf{sim}. For every location we list all the corresponding components and provide proof. \\
+\\
+For location $RE\| ID\| RE$ in $T^1$ we have:\\
+$S=(RE\| ID\| RE,v)$\\
+$S_\delta =(RE\| ID\| RE,v+\delta$)\\
+$inv(s)=tn_2^1+\delta\leq N_2^1.Trest\_max$ $\&\&$\\ $tn_2^2+\delta\leq N_2^2.Trest\_max)$\\
+$D_1=[N_2^1.Terp\_min,N_2^1.Terp\_max]$,\\
+$D_2=[N_2^2.Terp\_min,N_2^2.Terp\_max]$.\\ 
+$S'=(RE\| ID\| RE,v(tn_3^1+D_1,tn_3^2+D_2)$)\\
+$S_\delta '=(RE\| ID\| RE,v(tn_3^1+D_1,tn_3^2+D_2)+\delta)$\\
+$inv(s')=tn_3^1+D_1+\delta\leq N_3^1.Trest\_max$ and $tn_3^2+D_2+\delta\leq N_3^2.Trest\_max$
+
+Since
+$$N_3.Trest\_max = N_2.Trest\_max+N_2.Terp\_max$$
+we have $inv(s)\equiv inv(s')$ so the correspondence holds.\\
+\\
+For location $ER\| AN\| RE$ in $T^1$ we have:\\
+$S=(ER\| AN\| RE,v)$\\
+$S_\delta=(ER\| AN\| RE,v+\delta)$\\
+$inv(s)=tp_2+\delta\leq P_2.Tcond\_max$\\
+$S'=(RE\| AN\| RE,v)$\\
+$S_\delta '=(RE\| AN\| RE,v+\delta)$\\
+$inv(s')=tp_3+\delta\leq P_3.Tcond\_max$
+
+Since $P_2.Tcond\_max==P_3.Tcond\_max$, we have $inv(s)\equiv inv(s')$ so the correspondence holds.\\
+\\
+For location $RE\| RT\| ER$ in $T^1$ we have:\\
+$S=(RE\| RT\| ER,v)$\\
+$S_\delta=(RE\| RT\| ER,v+\delta)$\\
+$inv(s)=tp_2+\delta\leq P_2.Tcond\_max$\\
+$S'=(RE\| RT\| RE,v)$\\
+$S_\delta '=(RE\| RT\| RE,v+\delta)$\\
+$inv(s')=tp_3+\delta\leq P_3.Tcond\_max$
+
+Since $P_2.Tcond\_max==P_3.Tcond\_max$, we have $inv(s)\equiv inv(s')$ so the correspondence holds.\\
+\\
+For location $ER\| ID\| ER$ in $T^1$ we have:\\
+$S=(ER\| ID\| ER,v)$\\
+$S_\delta=(ER\| ID\| ER,v+\delta)$\\
+$inv(s)=tn_2^1+\delta\leq N_2^1.Terp\_max \&\&$\\
+$tn_2^2+\delta\leq N_2^2.Terp\_max$\\
+$S'=(RE\| ID\| RE,v)$\\
+$S_\delta '=(RE\| ID\| RE,v+\delta)$\\
+$inv(s')=tn_3^1+\delta\leq N_3^1.Trest\_max \&\&$\\
+$tn_3^2+\delta\leq N_3^2.Trest\_max$
+
+Since $$N_3.Trest\_max = N_2.Trest\_max+N_2.Terp\_max$$
+We have $inv(s)\subseteq inv(s')$ so the correspondence holds.\\
+\\
+For location $ER\| ID\| RE$ in $T^1$ we have:\\
+$S=(ER\| ID\| RE,v)$\\
+$S_\delta=(ER\| ID\| RE,v+\delta)$\\
+$inv(s)=tn_2^1+\delta\leq N_2^1.Terp\_max \&\&$\\
+$tn_2^2+\delta\leq N_2^2.Trest\_max$\\
+$D=[N_2^2.Terp\_min,N_2^2.Terp\_max]$\\
+$S'=(RE\| ID\| RE,v(tn_3^2+D)$\\
+$S_\delta '=(RE\| ID\| RE,v(tn_3^2+D)+\delta)$\\
+$inv(s')=tn_3^1+\delta\leq N_3^1.Trest\_max \&\&$\\
+$tn_3^2+D+\delta\leq N_3^2.Trest\_max$
+
+Since $$N_3.Trest\_max = N_2.Trest\_max+N_2.Terp\_max$$
+We have $inv(s)\subseteq inv(s')$ so the correspondence holds.\\
+\\
+For location $RE\| ID\| ER$ in $T^1$ we have:\\
+$S=(RE\| ID\| ER,v)$\\
+$S_\delta=(RE\| ID\| ER,v+\delta)$\\
+$inv(s)=tn_2^1+\delta\leq N_2^1.Trest\_max \&\&$\\
+$tn_2^2+\delta\leq N_2^2.Terp\_max$\\
+$D=[N_2^1.Terp\_min,N_2^1.Terp\_max]$\\
+$S'=(RE\| ID\| RE,v(tn_3^1+D)$\\
+$S_\delta '=(RE\| ID\| RE,v(tn_3^1+D)+\delta)$\\
+$inv(s')=tn_3^1+D+\delta\leq N_3^1.Trest\_max \&\&$\\
+$tn_3^2+\delta\leq N_3^2.Trest\_max$
+
+Since $$N_3.Trest\_max = N_2.Trest\_max+N_2.Terp\_max$$
+We have $inv(s)\subseteq inv(s')$ so the correspondence holds.\\
+\subsection{Discrete Transitions}
+During a discrete transition, a state $S=(s,v)$ proceed to $S_\lambda=(s',v(\lambda:=0))$. Here we prove that for every discrete transition $S\xrightarrow{\sigma}S_\lambda$ in $T^1$, there exists $S_1=(s_1,v)$ such that $(S,S_1)\in$\textsf{sim}, $S_1\xrightarrow{\sigma}S_{\lambda,1}$ for $S_{\lambda,1}=(s_1',v(\lambda':=0))$ and $(S_\lambda,S_{\lambda,1})\in$\textsf{sim}.
+
+Self-activation for $N_2^1$ triggers antegrade conduction, we have $N_3.Trest=N_2.Terp+N_2.Trest$\\
+($RE\| ID\| RE$,$v$) 
+$\xrightarrow[Act\_path\_1!]{tn_2^1>N_2^1.Trest\_min \| Act\_node\_1?}$ \\
+%$\xrightarrow{}$
+($ER\| AN\| RE$,$v(tn_2^1:=0,tp_2:=0)$)\\
+$\Downarrow$\\
+($RE\| ID\| RE$,$v$) 
+$\xrightarrow[Act\_path\_1!]{tn_3^1>N_3^1.Trest\_min\| Act\_node\_1?}$ \\
+%$\xrightarrow{}$
+($RE\| AN\| RE$,$v(tn_3^1:=0,tp_3:=0)$)\\
+
+Self-activation for $N_2^2$ triggers retrograde conduction, we have $N_3.Trest=N_2.Terp+N_2.Trest$.\\
+($RE\| ID\| RE$,$v$) 
+$\xrightarrow[Act\_path\_2!]{tn_2^2>N_2^2.Trest\_min\| Act\_node\_2?}$ \\
+%$\xrightarrow{}$
+($RE\| RT\| ER$,$v(tp_2:=0,tn_2^2:=0)$)\\
+$\Downarrow$\\
+($RE\| ID\| RE$,$v$) 
+$\xrightarrow[Act\_path\_2!]{tn_3^2>N_3^2.Trest\_min)\| Act\_node\_2?}$ \\
+%$\xrightarrow{}$
+($RE\| RT\| RE$,$v(tp_3:=0,tn_3^2:=0)$)\\
+
+$N_2^2$ activated after antegrade conduction\\
+($ER\| AN\| RE$,$v$) 
+$\xrightarrow[Act\_node\_2!]{tp_2>Tcond\_min}$ \\
+%$\xrightarrow{}$
+($ER\| ID\| ER$,$v(tn_2^2:=0)$)\\
+$\Downarrow$\\
+($RE\| AN\| RE$,$v$) 
+$\xrightarrow[Act\_node\_2!]{tp_3>Tcond\_min}$ \\
+%$\xrightarrow{}$
+($RE\| ID\| RE$,$v(tn_3^2:=0)$)\\
+
+$N_2^1$ activated after retrograde conduction\\
+($RE\| RT\| ER$,$v$) 
+$\xrightarrow[Act\_node\_1!]{tp_2>Tcond\_min)}$ \\
+%$\xrightarrow{}$
+($ER\| ID\| ER$,$v(tn_2^1:=0)$)\\
+$\Downarrow$\\
+($RE\| RT\| RE$,$v$) 
+$\xrightarrow[Act\_node\_1!]{tp_3>Tcond\_min)}$ \\
+%$\xrightarrow{}$
+($RE\| ID\| RE$,$v(tn_3^1:=0)$)\\
+
+ERP of $N_2^1$ finishes first\\
+($ER\| ID\| ER$,$v$) 
+$\xrightarrow{tn_2^1>N_2^1.Terp\_min}$ \\
+($RE\| ID\| ER$,$v(tn_2^1:=0)$)\\
+$\Downarrow$\\
+($RE\| ID\| RE$,$v$) 
+$\xrightarrow{tn_3^1>N_3^1.Terp\_min}$ \\
+($RE\| ID\| RE$,$v$)\\
+
+ERP of $N_2^2$ finishes first\\
+($ER\| ID\| ER$,$v$) 
+$\xrightarrow{tn_2^2>N_2^2.Terp\_min}$ \\
+($ER\| ID\| RE$,$v(tn_2^2:=0)$)\\
+$\Downarrow$\\
+($RE\| ID\| RE$,$v$) 
+$\xrightarrow{tn_3^2>N_3^2.Terp\_min}$ \\
+($RE\| ID\| RE$,$v$)\\
+
+ERP of $N_2^2$ finishes after $N_2^1$\\
+($RE\| ID\| ER$,$v$) 
+$\xrightarrow{tn_2^2>N_2^2.Terp\_min}$ \\
+($RE\| ID\| RE$,$v(tn_2^2:=0)$)\\
+$\Downarrow$\\
+$D=[N_2^1.Terp\_min,N_2^1.Terp\_max]$\\
+($RE\| ID\| RE$,$v(tn_3^1+D)$)
+$\xrightarrow{tn_3^2>N_3^2.Terp\_min}$ \\
+($RE\| ID\| RE$,$v(tn_3^1+D)$)\\
+
+ERP of $N_2^1$ finishes after $N_2^2$\\
+($ER\| ID\| RE$,$v$) 
+$\xrightarrow{tn_2^1>N_2^1.Terp\_min}$ \\
+($RE\| ID\| RE$,$v(tn_2^1:=0)$)\\
+$\Downarrow$\\
+$D=[N_3^1.Terp\_min,N_3^1.Terp\_max]$\\
+($RE\| ID\| RE$,$v(tn_3^2+D)$) 
+$\xrightarrow{tn_3^1>N_3^1.Terp\_min}$ \\
+($RE\| ID\| RE$,$v(tn_3^2+D)$)\\
+
+$N_2^2$ is activated when $N_2^1$ is in ERP\\
+($ER\| ID\| RE$,$v$) 
+$\xrightarrow[Act\_path\_2!]{Act\_node\_2?}$ \\
+($ER\| ID\| ER$,$v(tn_2^2:=0)$)\\
+($\Downarrow$\\
+($RE\| ID\| RE$,$v$) 
+$\xrightarrow[Act\_path\_2!]{Act\_node\_2?}$ \\
+%$\xrightarrow{}$ \\
+($RE\| ID\| RE$,$v(tn_3^2:=0)$)\\
+
+$N_2^2$ is activated when $N_2^1$ is in ERP\\
+($RE\| ID\| ER$,$v$) 
+$\xrightarrow[Act\_path\_1!]{Act\_node\_1?}$ \\
+($ER\| ID\| ER$,$v(tn_2^1:=0)$)\\
+$\Downarrow$\\
+($RE\| ID\| RE$,$v$) 
+$\xrightarrow[Act\_path\_1!]{Act\_node\_1?}$ \\
+%$\xrightarrow{}$ \\
+($RE\| ID\| RE$,$v(tn_3^1:=0)$)\\
+\\
+Blocking during \textsf{ERP} is simulated by a non-deterministic transition in the path\\
+($ER\| ID\| ER$,$v$) 
+$\xrightarrow{Act\_node\_1?}$ 
+($ER\| ID\| ER$,$v$)\\
+$\Downarrow$\\
+($RE\| ID\| RE$,$v$) 
+$\xrightarrow[Act\_path\_1!]{Act\_node\_1?}$ 
+$\xrightarrow{Act\_path\_1?}$ \\
+($RE\| ID\| RE$,$v$)\\
+\\
+($ER\| ID\| ER$,$v$) 
+$\xrightarrow{Act\_node\_2?}$
+($ER\| ID\| ER$,$v$)\\
+$\Downarrow$\\
+($RE\| ID\| RE$,$v$) 
+$\xrightarrow[Act\_path\_2!]{Act\_node\_2?}$ 
+$\xrightarrow{Act\_path\_2?}$ \\
+($RE\| ID\| RE$,$v$)\\
+\\
+($ER\| ID\| RE$,$v$) 
+$\xrightarrow{Act\_node\_1?}$ 
+($ER\| ID\| RE$,$v$)\\
+$\Downarrow$\\
+$D=[N_2^2.Terp\_min,N_2^2.Terp\_max]$\\
+($RE\| ID\| RE$,$v(tn_3^2+D)$) 
+$\xrightarrow[Act\_path\_1!]{Act\_node\_1?}$ 
+$\xrightarrow{Act\_path\_1?}$ \\
+($RE\| ID\| RE$,$v(tn_3^2+D)$)\\
+\\
+($RE\| ID\| ER$,$v$) 
+$\xrightarrow{Act\_node\_2?}$ 
+($RE\| ID\| ER$,$v$)\\
+$\Downarrow$\\
+$D=[N_2^1.Terp\_min,N_2^1.Terp\_max]$\\
+($RE\| ID\| RE$,$v(tn_3^1+D)$) 
+$\xrightarrow[Act\_path\_2!]{Act\_node\_2?}$ 
+$\xrightarrow{Act\_path\_2?}$ \\
+($RE\| ID\| RE$,$v(tn_3^1+D)$)\\
 
 Physiological requirements for medical devices specify the closed-loop conditions that the device is designed to achieve with its outputs to the patient. Unlike \emph{specifications} which specify desired device actions in response to the inputs from the patients, physiological requirements focus on the conditions of the patient with and without the device, which would indicate whether the device has fulfilled its intended goals. In this chapter, we address the following questions:
 \begin{itemize}

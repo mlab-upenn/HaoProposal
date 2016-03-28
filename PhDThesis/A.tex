@@ -5,8 +5,8 @@ Examples include everything from adhesive bandages, stents, artificial joints, d
 To take one example of the societal impact of medical devices, an estimated 3 million people worldwide have implanted cardiac pacemakers (a heart rate adjustment device), with 600,000 added annually.
 Clinical trials have presented evidence that patients implanted with cardiac defibrillators (another heart rate adjustment device) have a mortality rate reduced by up to 31\%.
 % MADIT II trial
-Implanted cardiac pacemakers and defibrillators have approximately 80,000-100,000 lines of software code which essentially makes all sensing, control and actuation decisions autonomously within the human body, over the 5-7 year device lifetime \footnote{Paul L. Jones. Senior Systems/Software Engineer, Office of Science and Engineering
-Laboratories, U. S. FDA. Personal communication, 2010.}. With the increasing complexity of combining hardware and software in a large class of these life-saving technologies, there is an urgent need for approaches to rigorously validate the device and therapy to be safe and efficacious.
+Implanted cardiac pacemakers and defibrillators have approximately 80,000-100,000 lines of software code which essentially makes all sensing, control and actuation decisions autonomously within the human body, over the 5-7 year device lifetime \footnote{Paul L. Jones. Senior Systems/Software Engineer, Office of Science and Engineering Laboratories, U. S. FDA. Personal communication, 2010.}. 
+With the increasing complexity of combining hardware and software in a large class of these life-saving technologies, there is an urgent need for approaches to rigorously validate the device and therapy to be safe and efficacious.
 \begin{figure}[t]
 		\centering
 		\includegraphics[width=\textwidth]{figs/devices_new.pdf}
@@ -14,12 +14,18 @@ Laboratories, U. S. FDA. Personal communication, 2010.}. With the increasing com
 		\label{fig:Cur}
 \end{figure}
 
-The US Food and Drug Administration defines a medical device as an instrument, apparatus, implement, machine, or implant which is:
+The US Food and Drug Administration (FDA) defines a medical device as an instrument, apparatus, implement, machine, or implant which is:
 \begin{itemize}
 	\item intended for use in the diagnosis of disease or other conditions, or in the cure, mitigation, treatment, or prevention of disease, in humans or other animals, or
 	\item intended to affect the structure or any function of the human body or other animals, and which does not achieve any of its primary intended purposes through chemical action and which is not dependent upon being metabolized for the achievement of any of its primary intended purposes."
 \end{itemize}
-\newpage
+According to their mission statement, the US FDA is responsible for protecting the public health by assuring the \textbf{safety, efficacy and security} of medical devices.
+The three terms are defined as:
+\begin{itemize}
+	\item \emph{Efficacy: }The device is effective in achinving the claims that are made for its intended and expected use
+\end{itemize}
+
+
 In general, medical devices are categorized according to their risk factors - Class I, Class II and Class III, corresponding to low-risk, medium-risk and high-risk devices (\cite{class}).  \figref{Cur} gives an intuitive description of medical devices examples across a range of diagnostic and therapeutic risk.
 
 
@@ -32,24 +38,39 @@ In general, medical devices are categorized according to their risk factors - Cl
 		\label{fig:closed-loop}
 \end{figure}
 \section{Closing the Device-Patient Loop}
-Medical devices operate across a range of invasiveness and intervention with the patient in the loop. For diagnostic-only devices, like an X-ray machine, the physician operates the device to obtain patient data. Upon interpretation of the data, the physician performs diagnosis followed by delivery of proper therapy to the patient (\figref{closed-loop}.(a)). For therapy-only devices, e.g. a drug infusion pump, the physician configures the device infrequently based on prior diagnosis of the patient so the device executes the therapy on the patient (\figref{closed-loop}.(b)). We denote these devices as \textbf{Open-loop Medical Devices} as there is no direct feedback loop between the patient and the device. For open-loop devices, the device operates under the supervision of professionally-trained physicians. The device's safety is mostly determined by how accurately it provides information to the physicians or how faithfully it operates as instructed by the physicians.
+Medical devices operate across a range of invasiveness and intervention with the patient in the loop. 
+For diagnostic-only devices, like an X-ray machine, the physician operates the device to obtain patient data. 
+Upon interpretation of the data, the physician performs diagnosis followed by delivery of proper therapy to the patient (\figref{closed-loop}.(a)). 
+For therapy-only devices, e.g. a drug infusion pump, the physician configures the device infrequently based on prior diagnosis of the patient so the device executes the therapy on the patient (\figref{closed-loop}.(b)). 
+We denote these devices as \textbf{Open-loop Medical Devices} as there is no direct feedback loop between the patient and the device. 
+For open-loop devices, the device operates under the supervision of professionally-trained physicians. 
+The device's safety is mostly determined by how accurately it provides information to the physicians or how faithfully it operates as instructed by the physicians.
 
-There is a class of devices with both diagnostic and therapeutic functions, i.e. implantable cardiac devices to treat cardiac arrhythmia, deep brain stimulation devices (\cite{Brain_sti}) to treat Parkinson's disease and artificial pancreas to treat Type-1 diabetes. These devices capture and diagnose the patient's physiological conditions from sensory data, \emph{and} deliver therapy in response (\figref{closed-loop}.(c)). These devices usually operate (semi-) autonomously with very little human intervention. 
+There is a class of devices with both diagnostic and therapeutic functions, i.e. implantable cardiac devices to treat cardiac arrhythmia, deep brain stimulation devices (\cite{Brain_sti}) to treat Parkinson's disease and artificial pancreas to treat Type-1 diabetes. 
+These devices capture and diagnose the patient's physiological conditions from sensory data, \emph{and} deliver therapy in response (\figref{closed-loop}.(c)). These devices usually operate (semi-) autonomously with very little human intervention. 
 The benefits of closed-loop medical devices are timely therapy and better life-style.
 However, autonomy of these medical devices also arose safety concerns. 
 Malfunctions or inappropriate therapies from these devices also cannot be corrected timely, which can cause serious adverse effects on patients' health. 
-With open-loop medical devices, the diagnosis and therapy decisions are made by medical professionals, who have expert knowledge of human physiology. Therefore they are able to identify adverse health conditions and adjust the therapy accordingly. On the other hand, closed-loop medical devices have to make both the diagnosis and therapy decisions on their own. The domain expertise required to make those decisions has to be programmed into the device. It is impossible to encode all the knowledge of human physiology into the device. Therefore, for unanticipated physiological conditions, when the appropriate response has not been programmed into the device, the device may deliver inappropriate therapy which can have an adverse effect on patient's health. 
+With open-loop medical devices, the diagnosis and therapy decisions are made by medical professionals, who have expert knowledge of human physiology. Therefore they are able to identify adverse health conditions and adjust the therapy accordingly. 
+On the other hand, closed-loop medical devices have to make both the diagnosis and therapy decisions on their own. 
+The domain expertise required to make those decisions has to be programmed into the device. 
+It is impossible to encode all the knowledge of human physiology into the device. 
+Therefore, for unanticipated physiological conditions, when the appropriate response has not been programmed into the device, the device may deliver inappropriate therapy which can have an adverse effect on patient's health. 
 Therefore, these devices are usually classified into the highest risk category and undergo the most stringent regulation. We denote them as \textbf{Closed-loop Medical Devices}. 
 
 There are multiple challenges to develop safe and effective closed-loop medical devices:
 
-\subsection{Physiological Complexity:} Human physiology is complex and only partially understood. For instance, the functionality of the heart can be interpreted from \emph{multiple perspectives}: from its electrical activity, mechanical contractions of the heart muscles, and dynamics of blood flow. The physiology of the heart can also be analyzed with \emph{multiple scales}: from the molecular level to cellular level all the way to the organ and system level. It is impossible to encode all these contexts into the device, hence inappropriate diagnosis and therapy are observed due to the lack of physiological contexts~\cite{killedbycode, icd_recall}.
-	\subsection{Physiological Variability:} Physiological conditions and parameters demonstrate different levels of variability both within the individual at different times, levels of exertion and under the influence of medication and also across individuals. For instance, a segment of the population may have additional conduction pathways within their heart, which makes them vulnerable to certain heart diseases. Consequently, autonomous medical devices should be able to safely operate under a large variety of physiological conditions. This is difficult to guarantee, as the device designer must consider all possible physiological conditions (including rare conditions) during the design of the device.
+\subsubsection{Physiological Complexity:} Human physiology is complex and only partially understood. 
+For instance, the functionality of the heart can be interpreted from \emph{multiple perspectives}: from its electrical activity, mechanical contractions of the heart muscles, and dynamics of blood flow. 
+The physiology of the heart can also be analyzed with \emph{multiple scales}: from the molecular level to cellular level all the way to the organ and system level. 
+It is impossible to encode all these contexts into the device, hence inappropriate diagnosis and therapy are observed due to the lack of physiological contexts~\cite{killedbycode, icd_recall}.
+	\subsubsection{Physiological Variability:} Physiological conditions and parameters demonstrate different levels of variability both within the individual at different times, levels of exertion and under the influence of medication and also across individuals. 
+	For instance, a segment of the population may have additional conduction pathways within their heart, which makes them vulnerable to certain heart diseases. Consequently, autonomous medical devices should be able to safely operate under a large variety of physiological conditions. This is difficult to guarantee, as the device designer must consider all possible physiological conditions (including rare conditions) during the design of the device.
 	%\hatodoin{last sentence: rather than say "always", say something like: "the designer will likely miss some rare conditions during the design of the device".}
 	
-	\subsection{Limited Observability:} Autonomous medical devices normally rely on minimally invasive measurement of the physiological parameters in order to allow the patients to live their normal life. For example, implantable pacemakers and defibrillators commonly have just two leads and therefore two points of observation for the whole heart. The limited observability inevitably leads to ambiguities as different physiological conditions can map to the same input sequence to the device, resulting in inaccurate diagnosis. 
+	\subsubsection{Limited Observability:} Autonomous medical devices normally rely on minimally invasive measurement of the physiological parameters in order to allow the patients to live their normal life. For example, implantable pacemakers and defibrillators commonly have just two leads and therefore two points of observation for the whole heart. The limited observability inevitably leads to ambiguities as different physiological conditions can map to the same input sequence to the device, resulting in inaccurate diagnosis. 
 
-\subsection{Software-related Medical Device Recalls}
+\subsubsection{Software-related Medical Device Recalls}
 Due to the complexity of the diagnostic and therapeutic functions of the closed-loop devices, these functions are mostly controlled by their software components. 
 Software embedded in a medical device, unlike electrical and mechanical components, does not fail due to corrosion, fatigue or have statistical failures of subcomponents. Software failures are uniquely sourced in the design and development of the system. %Unlike other industries such as consumer electronics where product life cycles are measured in months, software engineering for medical devices often spans a decade and must prioritize safety and efficacy over time to market. 
 %\begin{figure}[t]
@@ -174,7 +195,10 @@ To address this \textbf{safety gap} between ensuring the device satisfies its th
    %
 %Formal methods have traditionally been used for verification of time-critical and safety-critical embedded systems \cite{form-meth}. Until recently, these methods have not been used for medical device certification. \cite{med-form3} presented the use of Extended Finite State Machines for model checking of a resuscitation device. Formal techniques have also been applied to improve medical device protocols (\cite{med-form2}) and safety (\cite{med-form1}), but the authors either used a simplified patient model or did not model the patient at all. 
 \section{Model-based design to improve medical device safety}
-With the deluge of software-based closed-loop medical devices in the coming years, relying on clinical trials as the only closed-loop evaluation method to identify risks rooted in device software is not scalable. Model-based design and virtual integration have been proposed and applied in other industries like automotive and avionics (\cite{autosar, avsi}), and can potentially help during the development process and provide extra confidence to the device before conducting clinical trials. However, unlike man-made systems like automobiles and aircrafts, physiological systems are less understood with larger variations for the type and degree of patient conditions. The lack of faithful models of physiological environment of the closed-loop medical devices is one of the reason that model-based design is not well-adopted in the medical device industry. 
+With the deluge of software-based closed-loop medical devices in the coming years, relying on clinical trials as the only closed-loop evaluation method to identify risks rooted in device software is not scalable. 
+Model-based design and virtual integration have been proposed and applied in other industries like automotive and avionics (\cite{autosar, avsi}), and can potentially help during the development process and provide extra confidence to the device before conducting clinical trials. 
+However, unlike man-made systems like automobiles and aircrafts, physiological systems are less understood with larger variations for the type and degree of patient conditions. 
+The lack of faithful models of physiological environment of the closed-loop medical devices is one of the reason that model-based design is not well-adopted in the medical device industry. 
 \begin{figure}[t]
 		\centering
 		\includegraphics[width=\textwidth]{figs/MDIC.pdf}

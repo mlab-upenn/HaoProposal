@@ -1,14 +1,12 @@
 \section{EP Heart Model Validation}
 %The validity of the environment models affects the validity of the closed-loop verification results. 
-Since models are approximations of the actual environment, there are always discrepancies between the model and the actual patient (group). The challenge is to evaluate the confidence in the safety guarantees that model-based closed-loop verification can provide. The metrics and process to validate the environment model is different for the two applications of heart modeling: in closed-loop model checking, the model's \textbf{coverage} on environmental behaviors is more important, while in closed-loop simulation, the \textbf{accuracy} of the model is more important. 
+Since models are approximations of the actual environment, there are always discrepancies between the model and the actual patient (group). 
+The validity of closed-loop validation results directly correlated to the validity of the physiological models.
 
-In this chapter, we aim to answer the following questions and use our heart models as examples to demonstrate different validation procedures which improve the fidelity of the environment model. 
-\begin{itemize}
-	\vspace{-5pt}
-	\item What are the different methods to validate physiological models?
-	\vspace{-5pt}
-	\item How much confidence is sufficient from the model validation process?
-\end{itemize}
+In this section we validate the heart model structure by demonstrating its capability to represent physiological behaviors of 1) a particular patient for closed-loop simulation, and 2) a group of patients for closed-loop model checking.
+The metrics and process to validate the heart model are different for the two applications of heart modeling: in closed-loop simulation, the \textbf{accuracy} of the model is more important, while in closed-loop model checking, the model's \textbf{coverage} on environmental behaviors is more important.
+
+
 
 \subsection{Validating Models for Closed-loop Simulation}
 A physiological model is considered valid for closed-loop simulation if (a) it is capable of generating the same output as the patient, for the same input; and (b) it is general enough to represent other patients with similar conditions by adjusting its parameters. The second point is to ensure that the model successfully captures the underlying mechanism instead of over-fitting the data. In the following example we validate the capability of our heart models to represent certain heart conditions according to the mechanisms described in physiological literature, and  output the correct responses across a range of inputs.\\
@@ -74,36 +72,25 @@ A physiological model is considered valid for closed-loop simulation if (a) it i
 \noindent\textbf{Validation by comparison to real patients:} This heart condition can also show Wenckebach type A-V nodal response. In this case, a sequence of pacing signals with a short coupling interval ($A_1-A_2<=AV.Terp+AV.Trrp$) is delivered in the atrium. This results in a gradual increase in the AV nodal conduction delay and then a dropped beat occurs in the ventricle due to the increased ERP period of the AV node. The EGMs for a real patient with Wenckebach type A-V nodal response are shown in \figref{WB_book}. With the VHM, we observe similar behavior, and the gradually increasing ERP and conduction delay are visualized in \figref{WB}.
 \subsection{Validating Models for Closed-loop Model Checking}
 In model checking, a lot of complex dynamics of the environment are abstracted so that the environment model covers a larger number of environmental behaviors using non-determinism. The validity of the model is obtained by a valid initial model and a rigorous abstraction processes. In \cite{STTT13}, we started with a valid detailed deterministic model (as described above) and by applying different abstraction steps we were able to generate a series of non-deterministic heart models. Between each abstraction step, the heart models satisfy a timed simulation relationship (\cite{simulation}) which is described below. The timed simulation guarantees all behaviors are covered in the more abstract model.
-
-For two timed automata $T^1=\left\langle S^1,S_0^1,\Sigma^1,X^1,inv^1,E^1\right\rangle$ and $T^2=\left\langle S^2,S_0^2,\Sigma^2,X^2,inv^2,E^2\right\rangle$, a timed simulation relation is a binary relation $\textsf{sim}\subseteq \Omega^1\times \Omega^2$ where $\Omega^1$ and $\Omega^2$ are sets of states of $T^1$ and $T^2$. We say $T^2$ \textsf{time simulates} $T^1$ ($T^1 \preceq_t T^2$) if the following conditions holds:
-\begin{itemize}
-	\item Initial states correspondence: $(\left\langle s_0^1,\textbf{0}\right\rangle,\left\langle s_0^2,\textbf{0}\right\rangle)\in \textsf{sim}$
-	\item Timed transition: For every $(\left\langle s_1,v_1\right\rangle,\left\langle s_2,v_2\right\rangle)\in\textsf{sim}$, if $\left\langle s_1,v_1\right\rangle\xrightarrow{\delta}\left\langle s_1,v_1+\delta\right\rangle$, there exists $\left\langle s_2,v_2+\delta\right\rangle$ such that $\left\langle s_2,v_2\right\rangle\xrightarrow{\delta}\left\langle s_2,v_2+\delta\right\rangle$ and \\$(\left\langle s_1,v_1+\delta\right\rangle,\left\langle s_2,v_2+\delta\right\rangle)\in\textsf{sim}$.
-	\item Discrete transition: For every $(\left\langle s_1,v_1\right\rangle,\left\langle s_2,v_2\right\rangle)\in\textsf{sim}$, if $\left\langle s_1,v_1\right\rangle\xrightarrow{\sigma}\left\langle s_1',v_1'\right\rangle$, there exists $\left\langle s_2',v_2'\right\rangle$ such that $\left\langle s_2,v_2\right\rangle\xrightarrow{\sigma}\left\langle s_2',v_2'\right\rangle$ and $(\left\langle s_1',v_1'\right\rangle,\left\langle s_2',v_2'\right\rangle)\in\textsf{sim}$.
-\end{itemize}
-
-As shown in the later chapters, these validated heart models can then be used for closed-loop verification of implantable pacemaker. Both the identification and validation of the heart models can be used to provide more confidence to the verification results, which would be helpful during the medical device certification process.
-
-
+More details regarding heart model abstraction will be discussed in Chapter 3.
 
 \section{EP Heart Model Identification}
 
-Physiological models are developed to represent certain clinical conditions common across a population of patients, or the conditions of a specific patient. Consequently, the structure of the model and corresponding parameters have to be identified. This information can be obtained from electrogram data collected during medical procedures and from physiological literature in which population data has been analyzed and summarized. Due to limited interactions with the patient (e.g. during a device implantation procedure or an ablation procedure), currently the quality and quantity of patient-specific physiological data is sparse as there is generally not enough information to identify all the parameters in the heart model.  A model with the spatio-temporal structure that is similar to the conduction patterns in the heart helps simplify the process of identifying the model parameters. A rigorous procedure for the model identification step is an important contributor to the model validation step. In this chapter, we first aim to answer the following questions:
+Physiological models are developed to represent certain clinical conditions common across a population of patients, or the conditions of a specific patient. 
+Consequently, the structure of the model and corresponding parameters have to be identified. 
+This information can be obtained from electrogram data collected during medical procedures and from physiological literature in which population data has been analyzed and summarized. 
+Due to limited interactions with the patient (e.g. during a device implantation procedure or an ablation procedure), currently the quality and quantity of patient-specific physiological data is sparse as there is generally not enough information to identify all the parameters in the heart model.  
+A model with the spatio-temporal structure that is similar to the conduction patterns in the heart helps simplify the process of identifying the model parameters. 
+A rigorous procedure for the model identification step is an important contributor to the model validation step. 
 %%It is essential to choose the right level of abstraction so that the model is identifiable (to a large extent). Having physiological correspondence for the model structure and parameters can also simplify the identification process. 
-
-\begin{itemize}
-	\vspace{-5pt}
-	\item What is the importance of model identification for closed-loop simulation and model checking?
-	\vspace{-5pt}
-    	\item How are models identified from patient data and patient population parameters?
-\end{itemize}
 \begin{figure}[t]
 \center
 	\includegraphics[width=0.9\textwidth]{figs/vhmsim.png}
 	\caption{Simulation model of the heart showing the conduction pathways (left) with electrogram signals from different probe locations (right) and an interactive pacing panel (bottom left). In this case, the heart was paced four times at an interval of 500ms, followed by a pacing at a shorter (250ms) interval. This EP Testing procedure is employed to trigger conduction along alternative pathways and check for the existence of a reentry circuit.}
 	\label{fig:vhmsim}
 \end{figure}
-In the following section, we briefly discuss our model identification effort for heart models used in two closed-loop verification applications, and their corresponding challenges. This is followed by the procedures to validate the heart models before they are used for closed-loop verification and testing of the pacemaker.
+In this section, we briefly discuss our model identification effort for heart models used in two closed-loop validation applications, and their corresponding challenges. 
+
 \begin{figure}[!b]
 \centering
 		\includegraphics[width=0.9  \textwidth]{figs/modelID.png}
@@ -154,5 +141,13 @@ In model checking, the heart models have simpler structure and fewer parameters 
 
 
 \section{Discussion}
-In this chapter, we use heart modeling as example to demonstrate how to develop physiological models for closed-loop evaluation of closed-loop medical devices. We emphasized that models should be developed according to their applications. We developed heart models based on clinical Electrophysiological Testing, and modeled the topological and temporal behaviors of the heart with timed-automata formulation. In the next chapter we will demonstrate the identification and validation of the heart models.
+%Physiological modeling is the most important aspect for closed-loop validation of autonomous medical devices.
+The quality and validity of closed-loop validation results depend on the quality and validity of the physiological models.
+It is essential for the physiological models to be complex enough to accurately interpret the behaviors of physiological conditions, and abstract enough to be identifiable from patient data.
+In this chapter, an EP heart model structure is developed for closed-loop evaluation of implantable cardiac devices. 
+The heart model structure is capable of representing different heart conditions and its parameters can be identified from patient data.
+In the remaining dissertation, the heart model structure will be used in different model-based techniques to provide safety and efficacy evidence for implantable cardiac devices.
+
+
+
  

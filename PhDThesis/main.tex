@@ -266,7 +266,7 @@ COPYRIGHT
 \newpage
 \begin{center}
 \vspace*{\fill}
-\it{To the universe.}
+\it{To my parents.}
 \vspace*{\fill}
 \end{center}
 %=================================================
@@ -298,8 +298,34 @@ $ $\\
 Zhihao Jiang\\
 Rahul Mangharam\\
 \end{center}
+\noindent Medical devices play an essential role in the care of patients around the world, and can have a life-saving effect.
+An emerging category of autonomous medical devices like implantable pacemakers and implantable cardioverter defibrillators (ICD) diagnose conditions of the patient and autonomously deliver corresponding therapies.
+Without trained professionals in the loop, autonomous medical devices pose a new set of challenges to guarantee the safety of the patients.
+To guarantee the safety of the patients, device manufacturers are required to submit evidence for the safety and efficacy of the medical devices before they can be released to the market.
+Due to the closed-loop interaction between the device and the patient, the safety and efficacy of closed-loop medical devices can only be evaluated within their physiological context.
+Currently the only closed-loop evaluation is in form of clinical trials, in which the devices are evaluated on real patients.
+Clinical trials are expensive and expose the patients and physicians to risks associated with untested devices.
+Clinical trials are also conducted after device development, therefore issues found during clinical trials are expensive to fix.
+There is urgent need for closed-loop validation of autonomous medical devices before the devices are used in clinical trials.
 
-\noindent 
+In this thesis, I used implantable cardiac devices as example to demonstrate the application of model-based approaches during and after device development to provide confidence towards the safety and efficacy of the devices.
+
+A heart model structure is first developed to model the generation and conduction of electrical signals within the heart in various heart conditions. 
+The heart models create realistic synthetic signals as device inputs and are capable of responding to device outputs.
+The heart model structure enables closed-loop evaluation during and after the development of implantable cardiac devices.
+
+The heart model structure is then used for closed-loop model checking of a dual chamber pacemaker design in UPPAAL.
+I demonstrated that model checking is capable of identifying known and unknown safety violations within the pacemaker design.
+More importantly, I developed a framework to choose the most appropriate heart models to cover physiological conditions that the pacemaker may encounter, and provide physiological context to counter-examples returned by the model checker.
+
+A model translation tool UPP2SF is then developed to translate the pacemaker design in UPPAAL to Stateflow chart, and then automatically generated to C code implementation.
+The automated and rigorous translation ensures that the properties verified during model checking still hold in the implementation, which justifies the model checking effort.
+
+Finally, the devices are evaluated with a virtual patient cohort consists of a large number of heart models before evaluated in clinical trials.
+These in-silico pre-clinical trials provide useful insights which can be used to increase the success rate of a clinical trial.
+
+The work in this dissertation highlighted the importance and challenges to represent physiological behaviors during closed-loop evaluations of autonomous medical devices, and demonstrated the capability of model-based approaches to provide safety and efficacy evidence during and after device development.
+
 
 
 
@@ -358,7 +384,7 @@ Rahul Mangharam\\
 
 
 \appendix
-\include{D}
+%\include{D}
 %\include{pm}
 
 %\include{tex/Appendix}

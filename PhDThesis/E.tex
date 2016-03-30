@@ -18,11 +18,33 @@
 %Unfortunately, because of the extremely high cost of clinical trials (several million dollars and spanning several years,~\cite{trialcost}), the amount and variety of human subjects during the clinical trials are limited, which reduces the opportunity to find bugs. 
 %Moreover, clinical trials are often conducted at the final design stage. Fixing bugs at this stage is very costly.
 
-Model checking is a technique in which the state space of the model under investigation is automatically and exhaustively explored to identify executions or states that violate specified properties. Violations of the properties are returned by the model checkers as \emph{counter-examples}, which can be used by designers to revise the design. 
+Model checking is a technique in which the state space of the model under investigation is automatically and exhaustively explored to identify executions or states that violate specified properties. 
+Violations of the properties are returned by the model checkers as \emph{counter-examples}, which can be used by designers to revise the design. 
 In this chapter, model checking is used to evaluate an early design of a dual chamber pacemaker. 
 More specifically, model checking is used to identify known and unknown physiological hazards induced by implantable pacemakers (e.g. when the pacemaker provides inappropriate therapy which drives the heart to an unsafe state).  
 
-The chapter is organized as follow: first the basis for timed-automata formalism is introduced; the dual chamber pacemaker specification introduced in Chapter 2 is implemented in UPPAAL; then the heart models used during closed-loop model checking of the pacemaker model is introduced, as well as the abstraction refinement framework for the heart models to capture heart behaviors for different applications; finally we use the heart models developed to check safety and efficacy properties of the pacemaker model, as well as the effectiveness of additional algorithms developed to mitigate two known safety hazards. We demonstrated that closed-loop model checking is capable of finding violations of safety and/or efficacy properties.
+The chapter is organized as follow: first the basis for timed-automata formalism is introduced.
+The dual chamber pacemaker specification introduced in Chapter 2 is implemented in model checker UPPAAL.
+The heart model structure in Chapter 3 is adjusted for closed-loop model checking of the pacemaker model.
+An abstraction tree of heart models is constructed to capture heart behaviors for different heart conditions and provide physiological contexts to counter-examples.
+Finally the abstraction tree is used to check safety and efficacy properties of the pacemaker model, as well as the effectiveness of additional algorithms developed to mitigate two known safety hazards. 
+We demonstrated that with appropriate models of the physiological environment, closed-loop model checking is capable of finding safety and/or efficacy violations within autonomous medical devices during device development.
+
+\section{Related Work}
+Jee et. al present a safety assured development approach of real-time software using pacemaker as their case study in \cite{Jee}. They formally model and verify a single chamber VVI pacemaker using UPPAAL and then implement it and check the preservation of properties transferred from model to implementation code. 
+
+Chen et. al \cite{Marta} extended our verification work \cite{TACAS12}. They developed a hybrid heart model which is able to simulate action potential at tissue level. The model is a more refined model than our Virtual Heart Model \cite{VHM_proc}, with linear dynamics on each state of the heart tissue. They also developed a probability model to simulate natural pacemaker function. They then used the combined heart model for quantitative verification of the pacemaker. However, since the pacemaker only sense the timing of the heart tissue activation, their hybrid extension for action potential does not bring much benefit but increased model complexity dramatically. As a result, they have to use bounded model checking thus sacrificed accuracy.
+
+Tuan et. al propose an RTS formal model for pacemaker and its environment and verified it against number of safety properties and timed constraints using the PAT model checker \cite{Tuan}. They have modeled the pacemaker for all 18 operating modes as described in Boston scientific, but their work lacks specification and analysis of complex behaviors of the pacemaker, such as mode-switch.
+
+Wiggelinkhuizen uses mCRL2 and UPPAAL to formally model the pacemaker from the firmware design of Vitatron's DA+ pacemaker \cite{Wigg}. Two main approaches have been used to investigate the feasibility of applying formal model checking to the design of device firmware. The main approach consists of verifying the firmware model in context of a formal heart model and a formal model of a hardware module which fails for high heart rates because of the state explosion. Another approach is to verify a part of firmware design which was feasible and was able to detect a known deadlock rather soon.
+
+Macedo et. al have developed a concurrent and distributed real-time model for a cardiac pacemaker through a pragmatic incremental approach \cite{Macedo}. The models are expressed using the VDM and are validated primarily by scenario-based test, where test scenarios are defined to model interesting situations such as the absence of input pulses. The models cover 8 modes of pacemaker operation.
+
+Gomes et. al present a formal specification of pacemaker system using the Z notation in \cite{Gomes}. They have also tried to validate that the formal specification satisfies the informal requirements of Boston Scientific by using a theorem prover, ProofPower-Z. They have partially checked the consistency of their specification through reasoning. No validation experiment regarding safety conditions were performed yet.
+
+Mery et. al in \cite{Mery}, formally model all operational modes of a single electrode pacemaker system using event-B and prove them. They use an incremental proof-based approach to refine the basic abstract model of the system and add more functional and timing properties. They use the ProB tool to validate their models in different situations such as absence of input pulses. \\
+
 
 
 %Due to the curse of dimensionality as models get more complex, and hence the large computational cost, there are usually restrictions on the formalism and the complexity of the models under investigation. Using abstract models of the actual system adds the responsibility of proving the conformance between the abstract model and the real system. Assumptions made during abstractions may also introduce false-positives and/or false-negatives into the model checking results. Back in Chapter 2, we introduced a set of heart models with different abstraction levels, that can be used to cover behaviors of physiological conditions using non-determinism. In Chapter 4, we then modeled a dual chamber pacemaker algorithm using timed-automata without doing abstractions. In this chapter, we use model checker UPPAAL to evaluate the pacemaker model against safety properties under different heart conditions captured by the heart models. Techniques to eliminate false-positives by refining the heart models are also discussed. We will try to answer the following questions:
@@ -82,9 +104,15 @@ The chapter is organized as follow: first the basis for timed-automata formalism
 %Testing, on the other hand, may be the only option for some complex systems that are beyond the capacity of today's model checkers, or which do not possess formal semantics.
 %
 %In this chapter we cover formal verification of the closed-loop system and address testing in the following chapter.
-
-\section{Timed Automata}
-Timed automata (\cite{timed_automata}) is an extension of a finite automaton with a finite set of real-valued clocks. It has been used for modeling and verifying systems which are triggered by events and have timing constraints between events.  UPPAAL is a standard tool for modeling and verification of real-time systems, based on networks of timed automata. The graphical and text-based interface makes modeling more intuitive. Requirements can be specified using Computational Tree Logic (CTL), as described in \cite{Clarke}, and violations can be visualized in the simulation environment.
+\section{Model of A Dual Chamber pacemaker}
+During development of a dual chamber pacemaker, the specification can be translated into a model so that it can be analyzed by model checkers.
+The pacemaker specification discussed in Chapter 2 utilizes the timing and patterns of electrical events in the heart, which can be intuitively modeled by timed-automata (\cite{timed_automata}) and evaluated using model checker UPPAAL \cite{uppaal}.
+\subsection{Timed Automata}
+Timed automata (\cite{timed_automata}) is an extension of a finite automaton with a finite set of real-valued clocks. 
+It has been used for modeling and verifying systems which are triggered by events and have timing constraints between events. 
+UPPAAL is a standard tool for modeling and verification of real-time systems, based on networks of timed automata. 
+The graphical and text-based interface makes modeling more intuitive. 
+Safety and efficacy requirements can be specified using Computational Tree Logic (CTL), as described in \cite{Clarke}, and violations can be visualized in the simulation environment.
 
 \subsubsection{Syntax of Timed Automata}
 A timed automaton \textbf{G} is a tuple $\left\langle S,S_0,\Sigma,X,inv,E\right\rangle$, where
@@ -109,8 +137,10 @@ $$\Rightarrow (s,v)\xrightarrow{\delta}(s,v+\delta)$$
 
 
 \subsection{UPPAAL Model of a Dual Chamber Pacemaker}
-The five timing cycles introduced in Chapter 2 can be modeled as timed automata in UPPAAL. (\figref{PMdesign})
-
+%A pacemaker diagnoses the heart condition using the timing and patterns of electrical events, which can be intuitively modeled using timed automata.
+The five timing cycles introduced in Chapter 2 can be modeled as timed automata in UPPAAL (\figref{PMdesign}).
+Different components communicate with each other using broadcast channels in UPPAAL.
+The pacemaker model takes $Aget$ and $Vget$ events as inputs from the heart model, and outputs $AP$ and $VP$ as pacing signals to the heart.
 \begin{figure}[!t]
 \center
 %\vspace{-10pt}
@@ -129,20 +159,33 @@ The five timing cycles introduced in Chapter 2 can be modeled as timed automata 
     %\item How to encode the information loss during each abstraction steps?
 %\end{itemize}
 During closed-loop model checking, the device model is verified against safety and efficacy properties under physiological conditions covered by the human physiology. 
-The ideal physiological model should be: (1) general enough to cover possible physiological behaviors, and (2) expressive enough to distinguish specific physiological conditions from other conditions. 
-It is obvious that no single model can achieve both properties.
- A rigorous framework should be adapted so that models with the appropriate level of details are selected.
+%The ideal physiological model should be: (1) general enough to cover possible physiological behaviors, and (2) expressive enough to distinguish specific physiological conditions from other conditions. 
+%It is obvious that no single model can achieve both properties.
+ %A rigorous framework should be adapted so that models with the appropriate level of details are selected.
+It is challenging to develop physiological models for closed-loop model checking of autonomous medical devices.
+The following aspects need to be taken into account:
+\begin{itemize}
+\item \textbf{Model Interpretability: } How much detail should the physiological models have in order to unambiguously describe a physiological behavior? In particular, if the model checker returns an execution trace as counter-example, how much detail should the physiological model have so that the execution traces can be interpreted by medical domain experts? 	
+	\item \textbf{Behavior Coverage:} What approach must we use for physiological models to cover the large variability of human physiology? How can these models cover rare physiological cases and those that are unknown to us?
 
-\subsection{Modeling Philosophy}
+	%\hatodoin{what are intermediate states? sentence not clear. }
+	\item \textbf{Model Ambiguity: } Multiple physiological conditions can map to the same event trace due to the limited observability of the device. How can we eliminate only the healthy execution from the model so that it would not cause a false-positive?
+	\end{itemize}
+	The heart model structure proposed in Chapter 3 can be used to model various heart conditions.
+	The model structure provides interpretability for closed-loop interaction between the heart and the pacemaker and is capable of solving ambiguities between heart conditions that can map to the same pacemaker execution.
+	However, physiological conditions cannot be exhaustively enumerated and model checking on all possible heart models is infeasible.
+In the remaining section, over-approximation is first proposed to increase behavior coverage of heart models. 
+However, over-approximation inevitably introduces invalid behaviors into the model, which can cause false-positives.
+Moreover, due to the loss of details during over-approximation, the interpretability of the model decreases which prevents the model to distinguish between different heart conditions.
+At the end of this section, an abstraction tree framework is proposed to balance model abstraction and refinement for closed-loop model checking.
+\subsection{Covering More Behaviors With Over-approximation}
+Over-approximation \cite{CEGAR} has originally been proposed to reduce model complexity during model checking.
+For timed-automata, timed-simulation is a form of over-approximation.
+%The most challenging aspect during closed-loop model checking is the abstraction and refinement of the environment model. 
+%In \cite{STTT13} we developed a series of heart model abstractions at various abstraction levels. 
+%The models are abstracted using abstraction rules derived from physiological knowledge, thus ensuring that each abstraction step covers more physiological conditions. 
+%The models in adjacent abstraction levels also satisfy \textsf{timed-simulation} relationship (\cite{simulation}) to ensure complete coverage in the more abstract model. In the remainder of this section, we briefly discuss this multi-scale modeling process and the domain knowledge used. 
 
-\textbf{Model Coverage: } Pacemakers are designed to treat bradycardia by maintaining the appropriate heart rate when the intrinsic rate is low. However, at the same time, a pacemaker should not adversely affect other heart conditions such as supraventricular tachycardia (\cite{pacemakerrecalls}). Even for the same patient, the heart condition changes over time and must be addressable by the modeling effort. In order to achieve safety across all possible heart conditions, the heart models used during closed-loop verification should be able to cover all possible heart behaviors, more precisely, their mapping to pacemaker inputs. Over-approximation (\cite{CEGAR}) with non-determinism can be used to simplify model structure while covering larger variety of environmental behaviors. Techniques like model-checking can then be used to examine the whole closed-loop state space for property violations.\\\\ 
-\textbf{Ambiguity due to Limited Sensing Capability: }The spatial sensing resolution of pacemakers is low, in terms of the number of sensing location (2-3 leads), as well as the information obtained from each sensing location (binary events with no analog morphology). Through the process of abstraction, if different heart conditions are able to generate exactly the same input sequence to the pacemaker, there will be ambiguities in concretizing abstract closed-loop executions. For certain conditional requirements, it is important to differentiate all possible concrete executions corresponding to an abstract execution. As the result, the heart model(s) should have the capability to differentiate these heart conditions when verifying certain properties. Thus, a single heart model will not suffice and a family of heart models are required.\\\\
-\textbf{Information Loss during Abstraction: }While over-approximation achieves simplicity and coverage, it also inevitably introduces invalid behaviors (e.g. not clinically feasible or relevant) into the model which can cause false-negatives and false-positives during model checking. To solve this problem, refined models of the heart should be available which can resolve spurious counterexamples and eliminate invalid executions when necessary to avoid false-positives.
-
-The most challenging aspect during closed-loop model checking is the abstraction and refinement of the environment model. In \cite{STTT13} we developed a series of heart model abstractions at various abstraction levels. The models are abstracted using abstraction rules derived from physiological knowledge, thus ensuring that each abstraction step covers more physiological conditions. The models in adjacent abstraction levels also satisfy \textsf{timed-simulation} relationship (\cite{simulation}) to ensure complete coverage in the more abstract model. In the remainder of this section, we briefly discuss this multi-scale modeling process and the domain knowledge used. 
-
-
-\subsubsection{Timed Simulation}
 For two timed automata $T^1=\left\langle S^1,S_0^1,\Sigma^1,X^1,inv^1,E^1\right\rangle$ and $T^2=\left\langle S^2,S_0^2,\Sigma^2,X^2,inv^2,E^2\right\rangle$, a timed simulation relation is a binary relation $\textsf{sim}\subseteq \Omega^1\times \Omega^2$ where $\Omega^1$ and $\Omega^2$ are sets of states of $T^1$ and $T^2$. We say $T^2$ \textsf{time simulates} $T^1$ ($T^1 \preceq_t T^2$) if the following conditions holds:
 \begin{itemize}
 	\item Initial states correspondence: $(\left\langle s_0^1,\textbf{0}\right\rangle,\left\langle s_0^2,\textbf{0}\right\rangle)\in \textsf{sim}$
@@ -150,20 +193,30 @@ For two timed automata $T^1=\left\langle S^1,S_0^1,\Sigma^1,X^1,inv^1,E^1\right\
 	\item Discrete transition: For every $(\left\langle s_1,v_1\right\rangle,\left\langle s_2,v_2\right\rangle)\in\textsf{sim}$, if $\left\langle s_1,v_1\right\rangle\xrightarrow{\sigma}\left\langle s_1',v_1'\right\rangle$, there exists $\left\langle s_2',v_2'\right\rangle$ such that $\left\langle s_2,v_2\right\rangle\xrightarrow{\sigma}\left\langle s_2',v_2'\right\rangle$ and $(\left\langle s_1',v_1'\right\rangle,\left\langle s_2',v_2'\right\rangle)\in\textsf{sim}$.
 \end{itemize}
 
-Certain properties are preserved for timed simulation relation. For $\varphi\in ATCTL$, if $M\preceq_t M'$, we have $M'\models \varphi\Rightarrow M\models\varphi$.\cite{simulation} However, $M'\not\models \varphi\Rightarrow M\not\models\varphi$ does not hold. Violations of $ATCTL$ yield \textsf{counter-examples} and the validity of which need to be checked on more refined model.
+Certain properties are preserved for timed simulation relation. 
+For $\varphi\in ATCTL$, if $M\preceq_t M'$, we have $M'\models \varphi\Rightarrow M\models\varphi$ \cite{simulation}. 
+However, $M'\not\models \varphi\Rightarrow M\not\models\varphi$ does not hold. 
+Violations of $ATCTL$ yield \textsf{counter-examples} and the validity of which need to be checked.
 
+In this work, the property of introducing additional behaviors is used as our advantage to cover more behaviors into a more abstract heart model.
+By applying physiological abstraction rules to heart models, we creates over-approximation of the heart models that not only covers all behaviors of the original heart model, but also covers additional behaviors that belong to other heart conditions.
 
-It is known that timed simulation relation is also closed under composition \cite{simulation}. So when we have two heart models $H_1\preceq_t H_2$ we will have $H_1\| P\preceq_t H_2\| P$ where $P$ is the timed-automata model of the pacemaker. For $\varphi\in ATCTL$, we have $H_2\| P\models\varphi\Rightarrow H_1\| P\models\varphi$. With this property we can verify the pacemaker model with abstract heart model. In the rest of the section, we will describe how we develop our initial heart model from the physiological perspective and abstract the model step by step so that the complexity of the model is reduced for verification. Given two heart models $H_1$, $H_2$ and a timed simulation mapping \textsf{sim}=$\Omega_1\times\Omega_2$, there are no automated methods to check $H_1\preceq_t H_2$. In the Appendix, we show the manual proof for the timed simulation relation between two heart models $H_2$ and $H_3$. Other timed simulation relations can be proved similarly.
+It is known that timed simulation relation is also closed under composition \cite{simulation}. 
+So when we have two heart models $H_1\preceq_t H_2$ we will have $H_1\| P\preceq_t H_2\| P$ where $P$ is the timed-automata model of the pacemaker. 
+For $\varphi\in ATCTL$, we have $H_2\| P\models\varphi\Rightarrow H_1\| P\models\varphi$. 
+%With this property we can verify the pacemaker model with abstract heart model. 
+%In the rest of the section, we will describe how we develop our initial heart model from the physiological perspective and abstract the model step by step so that the complexity of the model is reduced for verification. 
+%Given two heart models $H_1$, $H_2$ and a timed simulation mapping \textsf{sim}=$\Omega_1\times\Omega_2$, there are no automated methods to check $H_1\preceq_t H_2$. In the Appendix, we show the manual proof for the timed simulation relation between two heart models $H_2$ and $H_3$. Other timed simulation relations can be proved similarly.
 
 \subsection{Counter-Example-Guided Abstraction Refinement}
-In closed-loop model checking, there is only one device model. 
-However there can be a large number of environmental conditions which require different models to represent them. For instance, a heart with atrial flutter has an additional conduction pathway that is not present in a healthy heart, causing fast atrial rate. The timing and structural differences of different heart conditions should be distinguished in corresponding heart models.
-%\todo[inline]{should we give an example of a heart condition?}
-A set of initial models of the environment can be constructed but the set is inherently incomplete because of the large number of environment conditions and their combinations. 
-As a result, performing model checking using every model in the set cannot ensure full coverage of the environmental conditions. 
-
-In this paper, domain-specific over-approximation rules are developed that produce abstract models that not only cover explicitly modeled environment conditions, but also cover timing behaviors and conditions not modeled in the set of initial models. 
-The abstract models can be then used for closed-loop model checking of the device model. 
+%In closed-loop model checking, there is only one device model. 
+%However there can be a large number of environmental conditions which require different models to represent them. For instance, a heart with atrial flutter has an additional conduction pathway that is not present in a healthy heart, causing fast atrial rate. The timing and structural differences of different heart conditions should be distinguished in corresponding heart models.
+%%\todo[inline]{should we give an example of a heart condition?}
+%A set of initial models of the environment can be constructed but the set is inherently incomplete because of the large number of environment conditions and their combinations. 
+%As a result, performing model checking using every model in the set cannot ensure full coverage of the environmental conditions. 
+%
+%In this paper, domain-specific over-approximation rules are developed that produce abstract models that not only cover explicitly modeled environment conditions, but also cover timing behaviors and conditions not modeled in the set of initial models. 
+The abstract heart models obtained by over-approximation can be used for closed-loop model checking of the device model. 
 If the closed-loop system satisfies a requirement, the device under verification satisfies the requirement under environment conditions covered by the abstract models. 
 However, if the requirement is not satisfied, the model checker returns a counter-example. 
 In device modeling, the counter-example is considered \emph{spurious} if it can not be produced by the device (as shown in (\figref{distinction}(a)).
@@ -196,7 +249,7 @@ More importantly, the heart models should have rigorous relationships among each
 In this section we present the abstraction tree framework that maintains formal \emph{Timed Simulation} relationships between heart models and enables automated closed-loop model checking of implantable pacemaker. %\todo{this sentence need revise}
 \begin{figure}[!t]
 	\centering
-	\includegraphics[width=0.52\textwidth]{figs/init_abs.pdf}
+	\includegraphics[width=0.9\textwidth]{figs/init_abs.pdf}
 	\caption{\small Node and Path Automata which models the timing properties of the heart tissue. A network of node and path automata models the generation and conduction of electrical activities of a heart}
 	\label{fig:nodepathTA}
 \end{figure}
@@ -220,9 +273,9 @@ Domain experts can always expand the set with knowledge of new heart conditions.
 \end{figure}
 \subsubsection{Interaction With the Pacemaker}
 The interactions between the heart and the pacemaker are modeled by using binary event channels. For the atrial lead, we have:
-\textsf{$N_A.Act\_path!\rightarrow$AS!},
+\textsf{$N_A.Act\_path!\rightarrow$Aget!},
 and for ventricular lead we have
-\textsf{$N_V.Act\_path!\rightarrow$VS!}.\\
+\textsf{$N_V.Act\_path!\rightarrow$Vget!}.\\
 The pacemaker accordingly generates atrial or ventricular pacing actions \textsf{AP!$\rightarrow N_A.Act\_node!$} and \textsf{VP!$\rightarrow N_V.Act\_node!$}.
 \subsubsection{Physiological Abstraction Rules}
 The initial set of heart models only represents a subset of all possible conditions.
@@ -406,7 +459,7 @@ The following section demonstrates the use of this abstraction tree during the c
 
  \begin{figure*}[!t]
 	\centering
-	\includegraphics[width=0.8\textwidth]{figs/abs_tree.pdf}
+	\includegraphics[width=0.95\textwidth]{figs/abs_tree.pdf}
 	%\vspace{-5pt}
 	\caption{\small One example of abstraction tree of heart models}
 	\label{fig:HM_abs}
@@ -421,15 +474,15 @@ The most essential function for the pacemaker is to treat bradycardia by maintai
 we have a closed-loop system with heart model $H_0$ : 
 $$H_0\| P\| PLRI\_test\models\varphi_{LRI}$$
 
-\begin{figure*}[t]
+\begin{figure*}[b]
 \centering
 %\vspace{-10pt}
 		\subfigure[Monitor \textsf{PLRI\_test}] {
-				\includegraphics[width=0.5\textwidth]{figs/LRI_test.pdf}
+				\includegraphics[width=0.4\textwidth]{figs/LRI_test.pdf}
 				\label{fig:safety1}
 		} 
 		\subfigure[Monitor \textsf{PURI\_test}] {	
-			\includegraphics[width=0.45\textwidth]{figs/uri_test.pdf}
+			\includegraphics[width=0.3\textwidth]{figs/uri_test.pdf}
 			\label{fig:uri_test}
 		}
 		%\vspace{-10pt}
@@ -479,7 +532,7 @@ However, in order to avoid ambiguities in the counter-examples, the properties f
 With the abstraction tree approach, the ambiguities can potentially be resolved since the abstraction tree considers all known heart conditions.
 Therefore the property for PMTs can be specified more generally.
 In this paper, we specify a property such that\\
-$\varphi_{PMT}$: The interval between ventricular events (Vget, VP) should not be shorter than TURI for 30 consecutive beats\\
+$\varphi_{PMT}$: \emph{The interval between ventricular events (Vget, VP) should not be shorter than TURI for 30 consecutive beats}\\
 which means that the ventricular rate should not be faster than the upper rate interval (TURI) for too long, either intrinsically or because of pacemaker interaction.
 Counter-example because of intrinsic fast ventricular rates can be removed from results after analysis from the abstraction tree.
 
@@ -495,7 +548,7 @@ A UPPAAL monitor $M_{con}$ for the property is shown in Fig. \ref{fig:monitor}, 
 	\label{fig:monitor}
 \end{figure}
 
-The model checker UPPAAL\cite{uppaal} was used to check Property 1 on the pacemaker model using the abstraction tree of heart models.
+The model checker UPPAAL was used to check Property $\varphi_{PMT}$ on the pacemaker model using the abstraction tree of heart models.
 The property is violated in $H0 || PM$, thus thus the abstraction tree is followed to select pair $H1$ with the pacemaker model and Property 1 is verified again.
 The process continues till either the leaves of the tree are reached of the property is satisfied.
 The result is shown in \figref{CE}, which demonstrates 5 different scenarios that can happen when using the abstraction tree.
@@ -507,6 +560,7 @@ The shaded area marks the heart models with counter-examples.
 	\caption{\small Four different physiological conditions in which Property 1 is violated. In $CE_{af}$ the pacemaker extends a fast atrial rate to a dangerously fast ventricular rate; in $CE_{vt}$ the ventricular rate is intrinsically fast; in $CE_{st}$ the pacemaker appropriately maintained A-V conduction delay; in $CE_{pvc}$ the pacemaker inappropriately increased the ventricular rate, causing Endless Loop Tachycardia}
 	\label{fig:CE}
 \end{figure*}
+
 \textbf{Case 1:} Property 1 is violated in $H2\_1 || PM$ but is satisfied in its children $H3\_1 || PM$.
 Careful examination of the counterexample finds it to be spurious and so it is successfully eliminated by model refinement.
 
@@ -697,25 +751,14 @@ Indicating the mode-switch algorithm failed to eliminate the PMT scenario. The c
 			\includegraphics[width=0.4\textwidth]{figs/liveness.pdf}
 			\label{fig:liveness}
 		}
-	\caption{(a) Safety Violation: VP is delayed due to the reset of timer during mode-switch, (b) Correctness Violation: The blocking period may block some atrial events, turning two \emph{Fast} events to one \emph{Slow} event (\cite{TACAS12}})
+	\caption{(a) Safety Violation: VP is delayed due to the reset of timer during mode-switch, (b) Efficacy Violation: The blocking period may block some atrial events, turning two \emph{Fast} events to one \emph{Slow} event (\cite{TACAS12}})
 \end{figure} 
 
-\section{Related Work}
-Chen et. al \cite{Marta} extended our verification work \cite{TACAS12}. They developed a hybrid heart model which is able to simulate action potential at tissue level. The model is a more refined model than our Virtual Heart Model \cite{VHM_proc}, with linear dynamics on each state of the heart tissue. They also developed a probability model to simulate natural pacemaker function. They then used the combined heart model for quantitative verification of the pacemaker. However, since the pacemaker only sense the timing of the heart tissue activation, their hybrid extension for action potential does not bring much benefit but increased model complexity dramatically. As a result, they have to use bounded model checking thus sacrificed accuracy.
-
-Jee et. al present a safety assured development approach of real-time software using pacemaker as their case study in \cite{Jee}. They formally model and verify a single chamber VVI pacemaker using UPPAAL and then implement it and check the preservation of properties transferred from model to implementation code. 
-
-Tuan et. al propose an RTS formal model for pacemaker and its environment and verified it against number of safety properties and timed constraints using the PAT model checker \cite{Tuan}. They have modeled the pacemaker for all 18 operating modes as described in Boston scientific, but their work lacks specification and analysis of complex behaviors of the pacemaker, such as mode-switch.
-
-Wiggelinkhuizen uses mCRL2 and UPPAAL to formally model the pacemaker from the firmware design of Vitatron's DA+ pacemaker \cite{Wigg}. Two main approaches have been used to investigate the feasibility of applying formal model checking to the design of device firmware. The main approach consists of verifying the firmware model in context of a formal heart model and a formal model of a hardware module which fails for high heart rates because of the state explosion. Another approach is to verify a part of firmware design which was feasible and was able to detect a known deadlock rather soon.
-
-Macedo et. al have developed a concurrent and distributed real-time model for a cardiac pacemaker through a pragmatic incremental approach \cite{Macedo}. The models are expressed using the VDM and are validated primarily by scenario-based test, where test scenarios are defined to model interesting situations such as the absence of input pulses. The models cover 8 modes of pacemaker operation.
-
-Gomes et. al present a formal specification of pacemaker system using the Z notation in \cite{Gomes}. They have also tried to validate that the formal specification satisfies the informal requirements of Boston Scientific by using a theorem prover, ProofPower-Z. They have partially checked the consistency of their specification through reasoning. No validation experiment regarding safety conditions were performed yet.
-
-Mery et. al in \cite{Mery}, formally model all operational modes of a single electrode pacemaker system using event-B and prove them. They use an incremental proof-based approach to refine the basic abstract model of the system and add more functional and timing properties. They use the ProB tool to validate their models in different situations such as absence of input pulses. \\
-
-
 \section{Discussion}
-Model checking is not widely use in industry, in part, due to scalability issues and also because domain expertise must be a skill possessed by the verification engineer. However, with rigorous abstraction of the system and its environment, model checking can be used to identify 
-known and even unknown mechanisms to induce hazards. In this chapter, we use a model of a dual chamber pacemaker as an example to demonstrate the use of model checking during risk analysis. During the process we identified the need to refine the heart models to eliminate false-positives introduced during the abstraction, and demonstrated the difficulty to do so manually. The abstraction tree approach is then proposed to reduce the effort needed for both the developers and the domain experts, which makes model checking a viable approach for providing safety and effectiveness evidence. 
+Model checking is not widely use in industry, in part, due to scalability issues and also because domain expertise must be a skill possessed by the verification engineer. 
+However, with rigorous abstraction of the system and its environment, model checking can be used to identify 
+known and even unknown mechanisms to induce hazards. 
+In this chapter, we used a model of a dual chamber pacemaker as an example to demonstrate the use of model checking during risk analysis. 
+During the process we identified the need to refine the heart models to eliminate false-positives introduced during the abstraction, and demonstrated the difficulty to do so manually. 
+The abstraction tree approach is then proposed to reduce the effort needed for both the developers and the domain experts, which makes model checking a viable approach for providing safety and effectiveness evidence. 
+With the abstraction tree of heart models, safety and efficacy violations are identified within the pacemaker specification, which demonstrates the capability of model checking to identify issues during the early development of autonomous medical devices.

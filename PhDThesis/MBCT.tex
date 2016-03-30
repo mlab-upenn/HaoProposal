@@ -294,9 +294,9 @@ A match between the current activity and one of the pre-defined patterns is used
 %	\label{fig:validationSetup}
 %\end{figure}
 
-\begin{figure}[t ]
+\begin{figure}[t]
 	\centering
-	\includegraphics[scale=0.5]{figures/figScreenshot.pdf}
+	\includegraphics[scale=0.4]{figures/figScreenshot.pdf}
 	\caption{\small Example of validation output screenshots (Ventricular fibrillation) showing matching therapy decision for the ICD and our implementation.}
 	\label{fig:validation}
 \end{figure}
@@ -427,7 +427,6 @@ In the case of Atrial flutter, Rhythm ID categorizes it inappropriately as VT fo
 Condition-level analysis pinpoints the specific pathways of the discrimination algorithm which must be addressed to reduce the device's rate of inappropriate therapy. It is difficult to get such insight through an RCT as the patient population is fixed and the conditions are determined retroactively. Such analysis can be further used to investigate condition distributions across different patient population types (e.g. abnormal heart rhythms in children vs geographic region-specific or race-specific condition distributions).   
 
 \begin{table}[t]
-	Specificity and sensitivity.
 \begin{tabular}{|p{2.8cm}|p{1.5cm}|p{1.5cm}|c|}
 	\hline Arrhythmia & Rhythm ID & PR Logic + Wavelet  & P value \\ 
 	\hline &	\multicolumn{2}{|c|}{\textbf{Specificity} (\%)}& \\
@@ -443,7 +442,8 @@ Condition-level analysis pinpoints the specific pathways of the discrimination a
 	\hline Ventricular tachycardia & 100 & 100 & 1 \\ 
 	\hline 
 \end{tabular} 
-\caption{}
+\caption{Specificity and sensitivity under different heart conditions.
+}
 \label{tab:vtsvt}
 \end{table}
 

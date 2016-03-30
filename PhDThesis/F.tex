@@ -1,18 +1,24 @@
 \chapter{Theme 3: Verified Model to Verified Code}
-Model checking is performed on abstract models of the system, which is at an early stage in the development process. The verified system model during model checking is then translated into a Stateflow model, which is a step towards simulation-based testing and subsequently to code generation. Closed-loop simulation/testing are performed on more refined deterministic models, and on the actual system, complement model checking in terms of resolving ambiguities within abstract counterexamples. We aim to answer the following questions here:
+Model checking is performed on abstract models of the device, which is at an early stage in the development process. 
+However, there is no guarantee that the safety and efficacy properties verified during model checking still hold in the device implementation.
+In this chapter, a model translation tool is developed to automatically and rigorously translate the UPPAAL device model validated during model checking into a Stateflow model, which is a step towards simulation-based testing and subsequently to code generation. 
 
-\begin{itemize}
-	\vspace{-5pt}
-	\item How are abstract models translated to deterministic models for simulation-based testing?
-	\vspace{-5pt}
-	\item What system level issues are best tested at the platform level?
-\end{itemize}
+\section{Related Work}
+\label{sec:code_gen}
+There are only few tools that can be used for automatic implementation of timed-automata models designed in UPPAAL (e.g., \cite{times,up2nqc}). A commonly used tool is Times~\cite{times} that supports code generation for general platforms, extended with task support for {Lego Mindstorm}\texttrademark  platform. 
 
-In this chapter, we first describe an approach to automatically translate formal models that are verified in UPPAAL to Stateflow charts for simulation-based testing, and then code generated to run on an embedded platform. Following this, we demonstrate two examples that cannot be explicitly modeled using abstract semantics and must be tested.
+The code synthesized using Times has a very simple structure, where all transitions are stored in an array. Each transition is represented with four fields: an activity flag, source and destination location ids, and a synchronization id. The transitions are evaluated in automatically generated \texttt{check\_trans} function, and for the code to operate correctly the values for all clocks should be updated in a separate procedure, triggered by the system timers. Since \texttt{check\_trans} performs a single evaluation for each transition (in the order specified by the array structure), to ensure that no transitions are missed the \texttt{check\_trans} function has to be continuously invoked within an infinite loop, unless the code is executed on a LEGO Mindstorm RCX brick running brickOS. Thus, in the general case, the code generated with Times completely utilizes the CPU, disallowing instantiation of any other tasks. As we will show later in the paper, this is not the case for the code that is synthesized using our development framework.
+
+Due to this array-based structure, with the code obtained using Times it is not straightforward to decouple the controller (in our case the pacemaker) and the environment (e.g., the heart). For example, to facilitate the decoupling~\cite{kim_emsoft11} propose a modification of the initial UPPAAL model by specifying the interaction between the controller and the environment using boolean shared variables. 
+Although the solution preserves behaviors of the initial model, as pointed out by the authors, this type of manual modifications is effectively one of the most error prone aspects of the model-based development. Hence, to avoid this type of errors, it is necessary to provide modular code synthesis from verified UPPAAL models. We will later show  that UPP2SF resolves this issue, since the obtained code has a modular structure (instead of maintaining an array of transitions).
+
+Finally, the code generated from Times models does not guarantee that some aspects of the UPPAAL timed-automata semantics will be preserved~\cite{anaheed}. For example, it does not ensure that the requirement for committed states is satisfied. 
+
+
 \section{A Brief Overview of UPPAAL}
 \label{sec:uppaal}
 
-In this section, we present an overview of the UPPAAL tool, including some of the UPPAAL extensions~\cite{uppaal,uppaal_tut,uppaal_wang} of the timed-automata formalism from~\cite{timed-aut}. Also, to illustrate the need for a tool like UPP2SF we survey existing tools for code synthesis from UPPAAL models.
+In this section, we present an overview of the UPPAAL tool, including some of the UPPAAL extensions~\cite{uppaal,uppaal_tut,uppaal_wang} of the timed-automata formalism from~\cite{timed-aut}. 
 
 \subsection{UPPAAL Modeling of Real-time Systems}
 
@@ -101,17 +107,6 @@ Beside integer variables and synchronization channels, UPPAAL extends timed-auto
 \textit{Committed locations} are more restrictive and they are usually used to model atomic sequences of actions. In a network of timed automata, if some automata are in committed locations then only transitions outgoing from the committed locations are allowed. UPPAAL also introduces \textit{broadcast channels}, where one sender can synchronize with multiple receivers (e.g.,~zero, one, or more than one). Furthermore, \textit{urgent channels} can be used for synchronization, to specify that if a transition with synchronization over an urgent channel is enabled, then the transition should occur without any delay. 
 
 
-
-\subsection{Code Synthesis from UPPAAL Models}
-\label{sec:code_gen}
-There are only few tools that can be used for automatic implementation of timed-automata models designed in UPPAAL (e.g., \cite{times,up2nqc}). A commonly used tool is Times~\cite{times} that supports code generation for general platforms, extended with task support for {Lego Mindstorm}\texttrademark  platform. 
-
-The code synthesized using Times has a very simple structure, where all transitions are stored in an array. Each transition is represented with four fields: an activity flag, source and destination location ids, and a synchronization id. The transitions are evaluated in automatically generated \texttt{check\_trans} function, and for the code to operate correctly the values for all clocks should be updated in a separate procedure, triggered by the system timers. Since \texttt{check\_trans} performs a single evaluation for each transition (in the order specified by the array structure), to ensure that no transitions are missed the \texttt{check\_trans} function has to be continuously invoked within an infinite loop, unless the code is executed on a LEGO Mindstorm RCX brick running brickOS. Thus, in the general case, the code generated with Times completely utilizes the CPU, disallowing instantiation of any other tasks. As we will show later in the paper, this is not the case for the code that is synthesized using our development framework.
-
-Due to this array-based structure, with the code obtained using Times it is not straightforward to decouple the controller (in our case the pacemaker) and the environment (e.g., the heart) in scenarios described in \figref{setup_w_monitors}. For example, to facilitate the decoupling~\cite{kim_emsoft11} propose a modification of the initial UPPAAL model by specifying the interaction between the controller and the environment using boolean shared variables. 
-Although the solution preserves behaviors of the initial model, as pointed out by the authors, this type of manual modifications is effectively one of the most error prone aspects of the model-based development. Hence, to avoid this type of errors, it is necessary to provide modular code synthesis from verified UPPAAL models. We will later show  that UPP2SF resolves this issue, since the obtained code has a modular structure (instead of maintaining an array of transitions).
-
-Finally, the code generated from Times models does not guarantee that some aspects of the UPPAAL timed-automata semantics will be preserved~\cite{anaheed}. For example, it does not ensure that the requirement for committed states is satisfied. 
 
 
 \section{Extracting Runs from UPPAAL Models}
@@ -293,7 +288,7 @@ The transformation of the basic clock conditions presented in \tableref{UP2SF_cl
 
 
 \begin{table*}[!t]
-Mapping UPPAAL conditions over clocks into Stateflow{
+{
 \centering
 \begin{tabular}{|l|r|r|}
 \hline
@@ -307,7 +302,7 @@ $x-y\bowtie n$  & $n_x-n_y\bowtie n$  \\
 \hline
 \end{tabular}
 }
-\caption{}
+\caption{Mapping UPPAAL conditions over clocks into Stateflow}
 \label{tab:UP2SF_clocks}
 \end{table*}
 
@@ -371,7 +366,7 @@ Note that $ID(c)>0$, and~$ExO(P_i)\neq ExO(P_j)$ if $P_i\neq P_j$.
 
 \begin{table}[!t]
 \centering
-Mapping UPPAAL edges from automaton $P_k$ into Stateflow transitions{
+{
 \begin{tabular}{|l|c|}
 \hline
 UPPAAL edge & Stateflow transition\\\hline
@@ -380,7 +375,7 @@ $l_i \xrightarrow{g_j,c!,r_j} l_j$	& $[(sent==0) \wedge G_{C,V}(l_i,g,r,l_j)] /\
 $l_i \xrightarrow{g_i,c?,r_i} l_j$	& $c[(sent\sim=-ExO(P_k))\wedge G_{C,V}(l_i,g,r,l_j)] /\{R_{C,V}(r); \}$		\\\hline
 \end{tabular}
 }
-\caption{}
+\caption{Mapping UPPAAL edges from automaton $P_k$ into Stateflow transitions}
 \label{tab:up2sf_bc}
 \end{table}
 
@@ -619,7 +614,6 @@ Similarly, no time was spent in committed states $st3C\_CC$ in AVI, and $inter\_
 
 
 \begin{table}[!b]
-Pacemakers parameters.
 
 {
 \begin{tabular}{|l|c|c|c|}
@@ -632,7 +626,8 @@ $URI_{d}$ & 1000 ms     &  400ms & $\pm 4ms$  \\\hline
 $VRP_{d}$ & 150-500 ms  &  150ms & $\pm 4ms$  \\\hline
 $ARP_{d}$ & 150-500 ms  &  200ms & $\pm 4ms$  \\\hline
 \end{tabular}}
-\caption{}
+\caption{Pacemakers parameters.
+}
 \label{tab:params}
 \end{table}
 
@@ -671,7 +666,7 @@ List.~4 from~\figref{pm_code} presents a pseudo-code for processing each of the 
 The pacemaker code generated by the Simulink RTWEC was executed on nanoRK~\cite{nanork}, a fixed-priority preemptive RTOS that runs on a variety of resource constrained platforms. We tested the implementation on the TI MSP-EXP430F5438 Experimenter Board interfaced with a signal generator that provides inputs for the pacemaker code (\figref{setup}). The compiled (without optimization) pacemaker procedure uses 2536 B for code and additional 180 B for data. To interface the code with the environment, each of the inputs ($AinB$, $VinB$) triggers an interrupt routine used to set the appropriate event for \texttt{rt\_OneStep} function.
 
 \begin{table}[!b]
-Execution times for the pacemaker procedure; OL denotes open-loop, without inputs from the signal generator.
+
 {
 \begin{tabular}{|l|c|c|c|c|}
 \hline
@@ -683,7 +678,7 @@ frequency & ex. time & ex. time & ex. time & deviation \\\hline
 8MHz			& $92.0\mu$s & $84.9\mu$s & $370.4\mu$s & $13.7\mu$s \\\hline
 \end{tabular}
 }
-\caption{}
+\caption{Execution times for the pacemaker procedure; OL denotes open-loop, without inputs from the signal generator.}
 \label{tab:MSP430exec_time}
 
 \end{table}
@@ -761,7 +756,7 @@ We validated the physical implementation using the procedure from Section~\ref{s
 \tableref{test_results} presents testing results for the pacemaker implementation executed on the MSP430 Experimenter Board. When the tolerances are not taken into account some of the properties that were verified in UPPAAL and validated in Simulink were violated during the tests. The reason is that the UPPAAL semantics uses an unrealistic assumption that the machine executing the code is infinitely fast (i.e., no time elapses during transitions) and the system's reaction to synchronization is instantaneous. In the general case, the execution delays can cause violation of the UPPAAL semantics in the obtained physical implementation, which is the main reason for violation of some of the verified safety properties. However, when interval tolerances are taken into account, all properties were satisfied, as shown in \tableref{test_results}.
 
 \begin{table}[!b]
-Results of the tests performed on the setup from \figref{setup}.
+
 
 {
 \begin{tabular}{|l|c|c|c|c|c|c|c|}
@@ -774,7 +769,7 @@ Requirement 		& P3.1 & B3.1 & B3.2 & P4.1 & B4.1 & B4.2 &\\\hline
 Ideal 					& Pass & Fail & Fail & Pass & Fail & Fail &\\\hline
 With tolerance 	& Pass & Pass & Pass & Pass & Pass & Pass &\\\hline
 \end{tabular}}
-\caption{}
+\caption{Results of the tests performed on the setup from \figref{setup}.}
 \label{tab:test_results}
 \end{table}
 

@@ -262,7 +262,7 @@ Therefore, domain experts from clinical electrophysiology can construct models o
 
 An example set of initial heart models is shown in \figref{init}.
 The different topologies of node and path automata represent the mechanism of different heart diseases.
-These heart models represent the current knowledge for heart condition variability, thus the set is inherintly incomplete, meaning there is no guarantee for 100\% safety even if a property is satisfied in all of these models.
+These heart models represent the current knowledge for heart condition variability, thus the set is inherently incomplete, meaning there is no guarantee for 100\% safety even if a property is satisfied in all of these models.
 These models are mostly used for providing physiological contexts for counter-examples returned by the model checker.
 Domain experts can always expand the set with knowledge of new heart conditions.
 \begin{figure}[!h]
@@ -279,7 +279,7 @@ and for ventricular lead we have
 The pacemaker accordingly generates atrial or ventricular pacing actions \textsf{AP!$\rightarrow N_A.Act\_node!$} and \textsf{VP!$\rightarrow N_V.Act\_node!$}.
 \subsubsection{Physiological Abstraction Rules}
 The initial set of heart models only represents a subset of all possible conditions.
-There always exists conditions that beyond our knowledge or that are combinations of known conditions.
+There always exists conditions that are beyond our knowledge or that are combinations of known conditions.
 By using \emph{over-approximation}, heart models can be created that cover the observable behaviors of the initial set and that introduce behaviors that were not captured in the initial set.
 Inevitably, some of the introduced behaviors will be physiologically invalid.
 This problem can be alleviated by carefully designing the abstraction rules so that behaviors introduced are mostly physiologically valid.
@@ -326,7 +326,7 @@ First detect all circles in the input graph. For each circle with nodes $N_i,i\i
 \begin{figure}[!h]
 	\centering
 	\includegraphics[width=0.4\textwidth]{figs/rule1.pdf}
-	\caption{\small Rule 1: Remove reentry circuits from the model}
+	\caption{\small Rule R1: Remove reentry circuits from the model}
 	\label{fig:rule1}
 \end{figure}
 \subsubsection{Rule R2: Remove Non-essential Structures}
@@ -340,16 +340,21 @@ After the circles within the topology are removed, the topology of the heart mod
 \begin{figure}[!h]
 	\centering
 	\includegraphics[width=0.4\textwidth]{figs/rule2.pdf}
-	\caption{\small Rule 2: Remove non-essential structures}
+	\caption{\small Rule R2: Remove non-essential structures}
 	\label{fig:rule2}
 \end{figure}
-\subsubsection{Rule 3: Removing Unnecessary Non-self-activation Nodes}
+\subsubsection{Rule R3: Removing Unnecessary Non-self-activation Nodes}
 The effect of non-self-activation nodes is blocking electrical events with interval shorter than its ERP period. If the self-activation nodes at both ends of a core path have self-activation interval longer than the maximum ERP period of nodes along the core path, the nodes can be removed.
 
 For a core path from a self-activation node $N_1$ to another core node $N_2$, for any structure $P_1-N_n-P_2$ which $N_n$ is a non-self-activation node, if $N_n.ERP_{max}<min(N_1.Rest_{min},N_2.Rest_{min})$, replace $P_1-N_n-P_2$ with $P_3$ so that:
 $$P_3.cond_{min}=P_1.cond_{min}+P_2.cond_{min}$$
 $$P_3.cond_{max}=P_1.cond_{max}+P_2.cond_{max}$$
-
+\begin{figure}[!h]
+	\centering
+	\includegraphics[width=0.7\textwidth]{figs/rule4.pdf}
+	\caption{\small Rule R4: Merging parameter ranges}
+	\label{fig:rule4}
+\end{figure}
 \subsubsection{Rule R4: Merge Parameter Ranges}
 Timing periods of heart tissue, such as Rest and ERP, are modeled as locations in the node and path automata. 
 The minimum and maximum time an automaton can remain in a location is governed by the parameters in the guards and invariants. 
@@ -360,33 +365,32 @@ This rule applies to heart models with the same node and path topology but possi
 \textbf{Output Model: }The abstract model has the same topology as the original models.\\
 \textbf{Effects on parameters:} The parameter ranges in the new model are a super-set of the parameter ranges in the old models.\\
 \textbf{Effects on behaviors: }The abstract model captures all behaviors of the original models. In addition, heart conditions with parameters outside of the ranges of the original models are covered.
-\begin{figure}[!h]
-	\centering
-	\includegraphics[width=0.7\textwidth]{figs/rule4.pdf}
-	\caption{\small Rule 4: Merging parameter ranges}
-	\label{fig:rule4}
-\end{figure}
-\subsubsection{Rule 5: Merge Self-activation Nodes with Interaction Nodes}
+
+\subsubsection{Rule R5: Merge Self-activation Nodes with Interaction Nodes}
 %\todo[inline]{not clear}
 The effect of self-activation nodes on the interaction of the pacemaker is triggering sensing events within certain delay. In this rule we merge all the self-activation nodes to their neariest interaction nodes. If there exists multiple self-activation nodes merging to the same interaction node, the parameters of the new model are determined following Rule 3.
-
+\begin{figure}[!t]
+	\centering
+	\includegraphics[width=0.8\textwidth]{figs/rule6.pdf}
+	%\vspace{-5pt}
+	\caption{\small Rule R6 application example: the blocking property of $N_1^3$ is fulfilled by a non-deterministic conduction path $P_2^1$}
+	\label{fig:rule6}
+\end{figure}
 \subsubsection{Rule R6: Replace Blocking With Non-deterministic Conduction}
 %\todo[inline]{in modeling section mention self-activating and passive nodes}
 %If a node automaton is in its \textsf{ERP} state, a \textsf{Act\_node} event is "blocked" and will not trigger corresponding path conduction. If we add non-deterministic transitions to the path automata such that a \textsf{Act\_path} event do not trigger state transitions to \textsf{ante} or \textsf{retro} (\figref{rule5}), the blocking behavior of the node is covered. We can then merge the \textsf{ERP} state with the \text{Rest} state in the node automata, and all passive nodes can be removed. An application of Rule 6 is shown in \figref{abs_exam}.\\
-Consider the structure $N_1 P_1 N_2 P_2 N_3$ with three nodes and two paths, where $N_2$ is a passive node (i.e. not self-activating).
-If $N_2$ blocks an activation signal from $N_1$ to $N_3$, this is equivalent to the paths $P_1$ or $P_2$ not conducting.
-In this rule, the structure $P_1 N_2 P_2$ is replaced by a path $P$ whose automaton can take a self loop when it receives an activation signal, thus effectively stopping the conduction. 
-This is shown in Fig.~\ref{fig:rule5}: the extra transitions are marked Act\_path\_1? and Act\_path\_2?.
-Because the blocking effect of nodes is now incorporated into the paths, the node automata of self-activating nodes can be modified to the one shown in Fig.~\ref{fig:rule5}, which doesn't have the (now useless) ERP period.
+Consider the structure $N_1^1 P_1^1 N_1^3 P_1^2 N_1^2$ with three nodes and two paths, where $N_1^3$ is a passive node (i.e. not self-activating).
+If $N_1^3$ blocks an activation signal from $N_1^1$ to $N_1^2$, this is equivalent to the paths $P_1^1$ or $P_1^2$ not conducting.
+In this rule, the structure $P_1^1 N_1^3 P_1^2$ is replaced by a path $P_2^1$ whose automaton can take a self loop when it receives an activation signal, thus effectively stopping the conduction. 
+This is shown in Fig.~\ref{fig:rule6}.
+Because the blocking effect of nodes is now incorporated into the paths, the node automata of self-activating nodes can be modified to the one shown in Fig.~\ref{fig:rule6}, which does not have the (now useless) ERP period.
 \\
 \textbf{Subgraph to which it applies}.
-Line graphs with 3 vertices $N_1 P_1 N_2 P_2 N_3$, and self-activating nodes.\\
+Line graphs with 3 vertices $N_1^1 P_1^1 N_1^3 P_1^2 N_1^2$, and self-activating nodes.\\
 \textbf{Applicability conditions}.
-$N_2$ is a passive node.\\
+$N_1^2$ is a passive node.\\
 \textbf{Output subgraph}.
-$N'_1 P' N'_3$
-A path $P'$ whose path automaton is as shown in Fig.~\ref{fig:rule5}.b.
-The self-activating nodes $N$ are replaced by nodes $N'$ with automata shown in Fig.~\ref{fig:rule5}.a.\\
+$N_2^1 P_2^1 N_2^2$as shown in Fig.~\ref{fig:rule6}\\
 \textbf{Effect on parameters}
 For the new path, $P.cond_{min}=P_1.cond_{min}+P_2.cond_{min}$ and 
 $P.cond_{max}=P_1.cond_{max}+P_2.cond_{max}$
@@ -398,7 +402,7 @@ $N'.Trest_{max}=N.Terp_{max}+N.Trest_{max}$.\\
 	\centering
 	\includegraphics[width=1.05\textwidth]{figs/rule5.pdf}
 	%\vspace{-5pt}
-	\caption{\small (a) Rule 7 application example; (b)(c) Node and path automata used in $H_{vt}'''$; (d) Node automata used in $H_{all}$ }
+	\caption{\small (a) Rule R7 application example; (b)(c) Node and path automata used in $H_{vt}'''$; (d) Node automata used in $H_{all}$ }
 	\label{fig:rule5}
 \end{figure}
 

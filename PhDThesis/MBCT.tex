@@ -206,7 +206,7 @@ Thus each generated model is probabilistic to reflect inherent rhythm variabilit
 \section{Implementing Device Algorithms} 
 \label{sec:device models}
 Due to the limited sensing capability of ICDs, device manufacturers have developed different algorithms to identify the electrical events and correctly diagnose the cardiac arrhythmia as being VT or SVT.
-In this paper we implemented the detection algorithm Rhythm ID of Boston Scientific \cite{compass,Ellenbogen11_Pacingbook},% [???Compass, pacingdefibrillation,VTC paper, ICD book, Ellenbogen].
+In this chapter we implemented the detection algorithm Rhythm ID of Boston Scientific \cite{compass,Ellenbogen11_Pacingbook},% [???Compass, pacingdefibrillation,VTC paper, ICD book, Ellenbogen].
 and PRLogic+Wavelet (PRL+W) of Medtronic \cite{Singer,Wavelet}.
 %In available literature on the evaluations of device algorithms descriptions of the device algorithms are not detailed enough for full implementation.
 %To obtain the detailed implementation we further reviewed clinical execution traces from literature like \cite{Singer} to infer detailed executions of the algorithms. 
@@ -298,11 +298,11 @@ A match between the current activity and one of the pre-defined patterns is used
 	\centering
 	\includegraphics[scale=0.4]{figures/figScreenshot.pdf}
 	\caption{\small Example of validation output screenshots (Ventricular fibrillation) showing matching therapy decision for the ICD and our implementation.}
-	\label{fig:validation}
+	\label{fig:dev_validation}
 \end{figure}
 
 Conformance testing was used to validate the software implementations of the Vitality II device by Boston Scientific. 
-The validation hardware setup is illustrated in Fig.~\ref{fig:validation}. 
+The validation hardware setup is illustrated in Fig.~\ref{fig:dev_validation}. 
 14 different scenarios were specified and programmed into an EGM Waveform generator (CRM3 Simulator, Guidant, USA) such that it would output a signal to the connected Vitality II device.
 The various scenarios traverse 7 out of 9 branches of the detection algorithm for Boston Scientific described in Sec. \ref{sec:svtvt} and shown in Fig. \ref{fig:BS_det}. 
 The response of the ICD interrogated using an ICD programmer (ZOOM Latitiude, Boston Scientific).

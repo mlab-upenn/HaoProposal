@@ -208,7 +208,7 @@ after(n, \hbox{sec}) = \left\{
 before(n, \hbox{sec}) = not(after(n, \hbox{sec}))
 \end{equation}
 where $t$ denotes the time that has elapsed since the activation of the associated state (i.e., from the last transition to the state - including self-transitions). The value for time $t$ can be obtained using the operator $temporalCount(\hbox{sec})$. Similarly, event-based temporal logic operators are used for event counting -- e.g.,~$after(n,clk)$ returns 1 if the event $clk$ has occurred more than $(n-1)$ times after the state has been activated.
-section{UPP2SF: Model Translation Procedure}
+\section{UPP2SF: Model Translation Procedure}
 \label{sec:upp2sf}
 
 In this section, we present an overview of the UPP2SF translation procedure. We also describe the translation rules for UPPAAL models with urgent and broadcast channels, urgent and committed locations, and local clocks, as these functionalities are used for the pacemaker modeling. For the full UPP2SF description refer to~\cite{upp2sf_rep}. 
@@ -548,7 +548,7 @@ Note that the chart's execution trace $\mathcal{R}^\mathcal{S}$ can be decompose
 Therefore, since the initial UPPAAL location vector $\bar{l}_0$ and valuation $w_0$ are equal to the initial Stateflow vector of active states and valuation $w^{\mathcal{S}}$, from the above three propositions and Theorem~\ref{thm:basic_mpa} we have that the sequence of \textit{SF-transitions} for the UPP2SF-derived chart corresponds to an MPA run of the initial UPPAAL model. Furthermore, it is worth noting that these proofs can be easily extended to show that the semantics of committed locations is also preserved by the translation rules (semantics of urgent channels and locations are guaranteed by the \textit{MPA-runs} requirement). 
 
 
-In the rest of the paper, we will demonstrate the use of the UPP2SF-based MDD framework on the pacemaker case study. 
+In the rest of the chapter, we will demonstrate the use of the UPP2SF-based MDD framework on the pacemaker case study. 
 
 \section{Pacemaker Stateflow Design}
 \label{sec:pm_sf}
@@ -588,7 +588,7 @@ Since the UPP2SF mapping has been validated, we ensure that the chart's executio
 
 We performed validation of the pacemaker Stateflow chart after the decoupling by extending the approach for testing real-time constraints described in~\cite{ClarkeLee}. The same approach was also used for the testing of the final physical implementation (Section~\ref{sec:testing}).
 
-In~\cite{ClarkeLee}, the authors proposed a testing procedure for behavioral and performance constraints (as the ones specified in Section~\ref{sec:form_reqs}) if the following assumptions are satisfied:
+In~\cite{ClarkeLee}, the authors proposed a testing procedure for behavioral and performance constraints if the following assumptions are satisfied:
 
 \begin{enumerate}
 \item All output sequences of a system under test must be eventually distinguishable.
@@ -636,7 +636,7 @@ $ARP_{d}$ & 150-500 ms  &  200ms & $\pm 4ms$  \\\hline
 \label{sec:code}
 
 
-We generated C code from the pacemaker Stateflow chart using the Simulink Real-Time Workshop Embedded Coder (RTWEC).\footnote{Since Matlab 2011b, RTWEC toolbox is referred to as Simulink Embedded Coder.}$^,$\footnote{Although we focus on a specific implementation, code with the same structure would be generated from all Stateflow charts obtained from UPPAAL models using UPP2SF (due to the derived charts' structure).} 
+We generated C code from the pacemaker Stateflow chart using the Simulink Real-Time Workshop Embedded Coder (RTWEC).\footnote{Since Matlab R2011b, RTWEC toolbox is referred to as Simulink Embedded Coder.}$^,$\footnote{Although we focus on a specific implementation, code with the same structure would be generated from all Stateflow charts obtained from UPPAAL models using UPP2SF (due to the derived charts' structure).} 
 The code was generated for the general embedded real-time target and as a result we obtained the main procedure, \texttt{rt\_OneStep}, which processes the three input events, $VinB$, $AinB$ and $clk$. To ensure that the model semantics is preserved (modulo the execution time), $clk$ input events should be created every 1ms, followed by the procedure's activation.\footnote{In this case, the procedure's execution corresponds to the $clk$ execution.}  This makes it suitable for implementation on top of a real-time operating system (RTOS).
 
 \begin{figure*} [!t]

@@ -1,4 +1,4 @@
-\chapter{Discussion and Open Challenges}
+\chapter{Conclusion}
 Closed-loop medical devices like implantable cardiac devices have both diagnostic and therapeutic capabilities and interact with the patient autonomously in closed-loop. 
 Their autonomy makes them among the highest risk devices which require the most stringent regulation. 
 Currently, clinical trials are the primary means to identify risks associated with the closed-loop interaction between the devices and the patients. 
@@ -25,8 +25,12 @@ This allows us to explore a wider range of heart behaviors and expose more corne
 in-silico pre-clinical trials for medical device software have the potential to complement the current regulatory approach by reducing the cost, scope and probability of failure of a traditional clinical trials. 
 
 The area of Medical Cyber-Physical Systems is in its early days with several exciting and urgent fundamental challenges in modeling, control, verification and testing for higher confidence life-critical systems.
-Similar model-based approaches used in this dissertation can be potentially applied in other application domains (i.e. autonomous vehicles).
-However
+Similar approaches used in this dissertation can potentially be applied in developing other autonomous medical devices.
+The major challenge is the amount of physiological domain expertise required to develop appropriate physiological models. 
+The model developer needs to identify the minimum amount of details required in the model to interact with the device and interpret different physiological conditions.
+The physiological models are then required to be optimized for appropriate formalism in order to do closed-loop model checking.
+Variations of the physiological models are also required for different model applications and different physiological requirements.
+Most importantly, the validity of the physiological models have to be justified to provide confidence to the evaluation results.
 
 %We developed heart models that capture the electrical behaviors across a range of heart conditions, and tailored the heart models for closed-loop model checking and closed-loop testing, which have different requirements. In closed-loop model checking, an abstract model of the pacemaker was validated against physiological requirements. We identified the need for heart models at different abstraction levels and demonstrated an automated approach to select the most appropriate heart model for specific safety requirements. The abstract model of the pacemaker was then automatically translated to Stateflow chart using a model translation tool and then generated into C code implementation. With this model-driven design, we are able to retain the safety properties of the modeled device from verified models to verified code. In closed-loop testing, we use more refined heart models to capture mechanisms that were not captured in the abstract heart models and evaluated pacemaker algorithms. 
 

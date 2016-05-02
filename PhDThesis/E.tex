@@ -33,13 +33,13 @@ We demonstrated that with appropriate models of the physiological environment, c
 \section{Related Work}
 Jee et. al present a safety assured development approach of real-time software using pacemaker as their case study in \cite{Jee}. They formally model and verify a single chamber VVI pacemaker using UPPAAL and then implement it and check the preservation of properties transferred from model to implementation code. 
 
-Chen et. al \cite{Marta} extended our verification work \cite{TACAS12}. They developed a hybrid heart model which is able to simulate action potential at tissue level. The model is a more refined model than our Virtual Heart Model \cite{VHM_proc}, with linear dynamics on each state of the heart tissue. They also developed a probability model to simulate natural pacemaker function. They then used the combined heart model for quantitative verification of the pacemaker. However, since the pacemaker only sense the timing of the heart tissue activation, their hybrid extension for action potential does not bring much benefit but increased model complexity dramatically. As a result, they have to use bounded model checking thus sacrificed accuracy.
+Chen et. al \cite{Marta} extended our verification work (\cite{TACAS12}). They developed a hybrid heart model which is able to simulate action potential at tissue level. The model is a more refined model than our Virtual Heart Model (\cite{VHM_proc}), with linear dynamics on each state of the heart tissue. They also developed a probability model to simulate natural pacemaker function. They then used the combined heart model for quantitative verification of the pacemaker. However, since the pacemaker only sense the timing of the heart tissue activation, their hybrid extension for action potential does not bring much benefit but increased model complexity dramatically. As a result, they have to use bounded model checking thus sacrificed accuracy.
 
-Tuan et. al propose an RTS formal model for pacemaker and its environment and verified it against number of safety properties and timed constraints using the PAT model checker \cite{Tuan}. They have modeled the pacemaker for all 18 operating modes as described in Boston scientific, but their work lacks specification and analysis of complex behaviors of the pacemaker, such as mode-switch.
+Tuan et. al propose an RTS formal model for pacemaker and its environment and verified it against number of safety properties and timed constraints using the PAT model checker (\cite{Tuan}). They have modeled the pacemaker for all 18 operating modes as described in Boston scientific, but their work lacks specification and analysis of complex behaviors of the pacemaker, such as mode-switch.
 
-Wiggelinkhuizen uses mCRL2 and UPPAAL to formally model the pacemaker from the firmware design of Vitatron's DA+ pacemaker \cite{Wigg}. Two main approaches have been used to investigate the feasibility of applying formal model checking to the design of device firmware. The main approach consists of verifying the firmware model in context of a formal heart model and a formal model of a hardware module which fails for high heart rates because of the state explosion. Another approach is to verify a part of firmware design which was feasible and was able to detect a known deadlock rather soon.
+Wiggelinkhuizen uses mCRL2 and UPPAAL to formally model the pacemaker from the firmware design of Vitatron's DA+ pacemaker (\cite{Wigg}). Two main approaches have been used to investigate the feasibility of applying formal model checking to the design of device firmware. The main approach consists of verifying the firmware model in context of a formal heart model and a formal model of a hardware module which fails for high heart rates because of the state explosion. Another approach is to verify a part of firmware design which was feasible and was able to detect a known deadlock rather soon.
 
-Macedo et. al have developed a concurrent and distributed real-time model for a cardiac pacemaker through a pragmatic incremental approach \cite{Macedo}. The models are expressed using the VDM and are validated primarily by scenario-based test, where test scenarios are defined to model interesting situations such as the absence of input pulses. The models cover 8 modes of pacemaker operation.
+Macedo et. al have developed a concurrent and distributed real-time model for a cardiac pacemaker through a pragmatic incremental approach (\cite{Macedo}). The models are expressed using the VDM and are validated primarily by scenario-based test, where test scenarios are defined to model interesting situations such as the absence of input pulses. The models cover 8 modes of pacemaker operation.
 
 Gomes et. al present a formal specification of pacemaker system using the Z notation in \cite{Gomes}. They have also tried to validate that the formal specification satisfies the informal requirements of Boston Scientific by using a theorem prover, ProofPower-Z. They have partially checked the consistency of their specification through reasoning. No validation experiment regarding safety conditions were performed yet.
 
@@ -186,7 +186,7 @@ For timed-automata, timed-simulation is a form of over-approximation.
 %The models are abstracted using abstraction rules derived from physiological knowledge, thus ensuring that each abstraction step covers more physiological conditions. 
 %The models in adjacent abstraction levels also satisfy \textsf{timed-simulation} relationship (\cite{simulation}) to ensure complete coverage in the more abstract model. In the remainder of this section, we briefly discuss this multi-scale modeling process and the domain knowledge used. 
 
-For two timed automata $T^1=\left\langle S^1,S_0^1,\Sigma^1,X^1,inv^1,E^1\right\rangle$ and $T^2=\left\langle S^2,S_0^2,\Sigma^2,X^2,inv^2,E^2\right\rangle$, a timed simulation relation is a binary relation $\textsf{sim}\subseteq \Omega^1\times \Omega^2$ where $\Omega^1$ and $\Omega^2$ are sets of states of $T^1$ and $T^2$. We say $T^2$ \textsf{time simulates} $T^1$ ($T^1 \preceq_t T^2$) if the following conditions holds:
+For two timed automata $T^1=\left\langle S^1,S_0^1,\Sigma^1,X^1,inv^1,E^1\right\rangle$ \\and $T^2=\left\langle S^2,S_0^2,\Sigma^2,X^2,inv^2,E^2\right\rangle$, a timed simulation relation is a binary relation $\textsf{sim}\subseteq \Omega^1\times \Omega^2$ where $\Omega^1$ and $\Omega^2$ are sets of states of $T^1$ and $T^2$. We say $T^2$ \textsf{time simulates} $T^1$ ($T^1 \preceq_t T^2$) if the following conditions holds:
 \begin{itemize}
 	\item Initial states correspondence: $(\left\langle s_0^1,\textbf{0}\right\rangle,\left\langle s_0^2,\textbf{0}\right\rangle)\in \textsf{sim}$
 	\item Timed transition: For every $(\left\langle s_1,v_1\right\rangle,\left\langle s_2,v_2\right\rangle)\in\textsf{sim}$, if $\left\langle s_1,v_1\right\rangle\xrightarrow{\delta}\left\langle s_1,v_1+\delta\right\rangle$, there exists $\left\langle s_2,v_2+\delta\right\rangle$ such that $\left\langle s_2,v_2\right\rangle\xrightarrow{\delta}\left\langle s_2,v_2+\delta\right\rangle$ and \\$(\left\langle s_1,v_1+\delta\right\rangle,\left\langle s_2,v_2+\delta\right\rangle)\in\textsf{sim}$.
@@ -398,14 +398,6 @@ For the new nodes, $N'.Trest_{min}=N.Terp_{min}+N.Trest_{min}$ and
 $N'.Trest_{max}=N.Terp_{max}+N.Trest_{max}$.\\
 
 
-\begin{figure}[!t]
-	\centering
-	\includegraphics[width=1.05\textwidth]{figs/rule5.pdf}
-	%\vspace{-5pt}
-	\caption{\small (a) Rule R7 application example; (b)(c) Node and path automata used in $H_{vt}'''$; (d) Node automata used in $H_{all}$ }
-	\label{fig:rule5}
-\end{figure}
-
 \subsubsection{Rule R7: Replace Conduction With Self-activation}
 We describe Rule R7 as it illustrates both effects of an abstraction rule: structure change and modifications to the automata.
 The effect of a conduction path is to conduct electrical activity from a node. Since the pacemaker cannot distinguish self-activation of the node and activation triggered by path conduction, we can use self-activation to replace path conduction.
@@ -417,6 +409,13 @@ All edges are deleted: $G' = (V(G), \emptyset)$. The node automata are replaced 
 \textbf{Effect on parameters}
 For every node automaton $N$ in $G'$, $N.Trest_{min}=0$.\\
 
+\begin{figure}[!t]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/rule7.pdf}
+	%\vspace{-5pt}
+	\caption{\small Rule R7 application example: The conduction property of $P_2^1$ is replaced by self activation of $N_3^1$ and $N_3^2$}
+	\label{fig:rule5}
+\end{figure}
 Now we use R7 as example to demonstrate the timed-simulation relationship between heart models before and after the application of R7.
 Consider \figref{rule5}.(a) showing an application of R7, $H_{vt}'''=N^1_AP^1N^1_V$ is abstracted to $H_{all}=N^2_AN^2_V$. Here we prove that $H_{vt}'''\preceq_t H_{all}$ with observable events $\Sigma_o=\{N_A.Act\_path,N_V.act\_path\}$. The state of $H_{vt}'''$ is represented by $(N^1_A.loc,P^1_1.loc,N^1_V.loc,N^1_A.t,P^1_1.t,N^1_V.t)$ and the state of $H_{all}$ is represented by $(N^2_A.loc,N^2_V.loc,N^2_A.t,N^2_V.t)$. Due to space limit, only one transition from each category is presented:\\
 \textbf{Initial state: }First for the initial state we have:
@@ -535,7 +534,7 @@ However, in order to avoid ambiguities in the counter-examples, the properties f
 
 With the abstraction tree approach, the ambiguities can potentially be resolved since the abstraction tree considers all known heart conditions.
 Therefore the property for PMTs can be specified more generally.
-In this paper, we specify a property such that\\
+Here we specify a property such that\\
 $\varphi_{PMT}$: \emph{The interval between ventricular events (Vget, VP) should not be shorter than TURI for 30 consecutive beats}\\
 which means that the ventricular rate should not be faster than the upper rate interval (TURI) for too long, either intrinsically or because of pacemaker interaction.
 Counter-example because of intrinsic fast ventricular rates can be removed from results after analysis from the abstraction tree.
@@ -755,14 +754,20 @@ Indicating the mode-switch algorithm failed to eliminate the PMT scenario. The c
 			\includegraphics[width=0.4\textwidth]{figs/liveness.pdf}
 			\label{fig:liveness}
 		}
-	\caption{(a) Safety Violation: VP is delayed due to the reset of timer during mode-switch, (b) Efficacy Violation: The blocking period may block some atrial events, turning two \emph{Fast} events to one \emph{Slow} event (\cite{TACAS12}})
+	\caption{(a) Safety Violation: VP is delayed due to the reset of timer during mode-switch, (b) Efficacy Violation: The blocking period may block some atrial events, turning two \emph{Fast} events to one \emph{Slow} event (\cite{TACAS12})}
 \end{figure} 
-
+\vspace{-10pt}
 \section{Discussion}
+\vspace{-5pt}
 Model checking is not widely use in industry, in part, due to scalability issues and also because domain expertise must be a skill possessed by the verification engineer. 
 However, with rigorous abstraction of the system and its environment, model checking can be used to identify 
 known and even unknown mechanisms to induce hazards. 
-In this chapter, we used a model of a dual chamber pacemaker as an example to demonstrate the use of model checking during risk analysis. 
+In this chapter, we demonstrated the use of closed-loop model checking to identify unknown safety hazards in an implantable pacemaker. 
 During the process we identified the need to refine the heart models to eliminate false-positives introduced during the abstraction, and demonstrated the difficulty to do so manually. 
 The abstraction tree approach is then proposed to reduce the effort needed for both the developers and the domain experts, which makes model checking a viable approach for providing safety and effectiveness evidence. 
 With the abstraction tree of heart models, safety and efficacy violations are identified within the pacemaker specification, which demonstrates the capability of model checking to identify issues during the early development of autonomous medical devices.
+
+The abstraction tree approach can potentially be used in other application domains (i.e. autonomous vehicles). 
+However, note that in our application, the most refined heart models can still be used for model checking, as the heart model structure is simple. 
+Depending on the application, there may not exist environment models that are simple enough for model checking.
+And there may not exist abstraction rules that can guarantee behavior coverage.

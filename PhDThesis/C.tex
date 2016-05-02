@@ -127,7 +127,7 @@ In model checking, the heart models have simpler structure and fewer parameters 
 		\includegraphics[width=0.8\textwidth]{figs/intervals.pdf}
 		
 %\vspace{-10pt}
-\caption{\small Timing intervals measured during clinical studies \cite{josephson}}
+\caption{\small Timing intervals measured during clinical studies (\cite{josephson})}
 \label{fig:intervals}
 %\vspace{-15pt}
 \end{figure} 
@@ -144,8 +144,13 @@ In model checking, the heart models have simpler structure and fewer parameters 
 %Physiological modeling is the most important aspect for closed-loop validation of autonomous medical devices.
 The quality and validity of closed-loop validation results depend on the quality and validity of the physiological models.
 It is essential for the physiological models to be complex enough to accurately interpret the behaviors of physiological conditions, and abstract enough to be identifiable from patient data.
+In order to evaluate the devices in closed-loop, the models should also be simple enough so that they can be used for model checking and interact with device implementations in real-time.
+
 In this chapter, an EP heart model structure is developed for closed-loop evaluation of implantable cardiac devices. 
-The heart model structure is capable of representing different heart conditions and its parameters can be identified from patient data.
+The heart model structure is capable of representing a large variety of heart conditions and its parameters can be identified from patient data.
+
+However, the heart model structure can describe electrical activities of the heart, thus heart conditions related to other perspectives (i.e. mechanical) cannot be inferred from the model.
+
 In the remaining dissertation, the heart model structure will be used in different model-based techniques to provide safety and efficacy evidence for implantable cardiac devices.
 
 

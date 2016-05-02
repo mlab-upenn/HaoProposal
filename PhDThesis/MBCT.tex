@@ -1,9 +1,9 @@
 \chapter{Theme 4: in-silico Pre-clinical Trials for Implantable Cardiac Devices} 
-10,000 people in the U.S. receive an Implantable Cardioverter Defibrillator (a heart rhythm adjustment device) every month \cite{asktheicd}.
-Clinical trials have presented evidence that patients implanted with ICDs have a mortality rate reduced by up to 31\% \cite{maditrit}.
+10,000 people in the U.S. receive an Implantable Cardioverter Defibrillator (a heart rhythm adjustment device) every month (\cite{asktheicd}).
+Clinical trials have presented evidence that patients implanted with ICDs have a mortality rate reduced by up to 31\% (\cite{maditrit}).
 Unfortunately, ICDs suffer from a high rate of \emph{inappropriate therapy}, which takes the form of unnecessary electric shocks or pulse sequences delivered to the heart.
-Inappropriate therapy increases patient stress, reduces their quality of life, and is linked to increased morbidity \cite{shock_mortality}.
-Depending on the particular ICD and its settings, the rates of inappropriate therapy range from 46\% to 62\% of all delivered therapy episodes \cite{GoldABBTB11_RIGHTresults}.
+Inappropriate therapy increases patient stress, reduces their quality of life, and is linked to increased morbidity (\cite{shock_mortality}).
+Depending on the particular ICD and its settings, the rates of inappropriate therapy range from 46\% to 62\% of all delivered therapy episodes (\cite{GoldABBTB11_RIGHTresults}).
 	\begin{figure}[t]
 		\centering
 		\includegraphics[scale=0.5]{figures/figTransResearchSpectrum.pdf}
@@ -25,7 +25,7 @@ In a trial, a group of patients that are treated with the new device (this is th
 The objective is to see whether the different devices result in significantly different effects on the patients.
 Clinical trials are major endeavors, involving physicians, patients, statisticians, clinical centers, companies and regulators, sometimes in several countries.
 Late-phase trials can run for several years, and cost millions of dollars.
-For example, a 2002 trial for stents lasted 2 years, enrolled 800 patients and cost \$10 to \$12 million and lasted 24 months \cite{Kaplan04_Cost}.
+For example, a 2002 trial for stents lasted 2 years, enrolled 800 patients and cost \$10 to \$12 million and lasted 24 months (\cite{Kaplan04_Cost}).
 Trials also pose an inherent risk to the patients in the intervention group by exposing them to an unproven device.
 Thus it is crucial that they be well planned, and rigorously executed.
 
@@ -33,30 +33,30 @@ In reality, any trial runs the risk of errors during its planning and execution 
 In this paper, we pose and propose an answer to the following question: \emph{how can modeling of CPS assist in the planning and execution of a clinical trial, so as to increase the chances of a successful trial}?
 %The advent of computer models for various physiological functions defines a new convergence point for computer science and engineering with medicine.
 
-Most medical models today are aimed at either better understanding the phenomenon under study \cite{vfiborganization_Tusscher07} or at device debugging and verification \cite{VHM_proc}. 
-There is only one case in which a computer model has been used to intervene in the regulatory process of medical devices, namely the T1 Diabetes Model (T1DM) of UVA/PADOVA \cite{T1DM}.
+Most medical models today are aimed at either better understanding the phenomenon under study (\cite{vfiborganization_Tusscher07}) or at device debugging and verification (\cite{VHM_proc}). 
+There is only one case in which a computer model has been used to intervene in the regulatory process of medical devices, namely the T1 Diabetes Model (T1DM) of UVA/PADOVA (\cite{T1DM}).
 T1DM models glucose kinetics in hypoglycemia, and has been accepted by the FDA as a substitute for animal trials.
 The T1DM has a fixed virtual cohort with 300 patients.
 Its objective is to test the efficacy of new glucose control algorithms by simulating them on the virtual cohort.
 While our models can be used in this way, our objective here is to target specific clinical trials steps and improve how they are conducted.
 This dictates the experimental setup and the cohort generation considerations.
 
-The Avicenna consortium \cite{Avicenna} lays out a vision for `In-Silico Clinical Trials' similar to our approach.
+The Avicenna consortium (\cite{Avicenna}) lays out a vision for In-Silico Clinical Trials' similar to our approach.
 However, the emphasis in Avicenna is on individualized patient models, as they propose to customize the model to each patient enrolled in a trial.
-In the present work, we propose a usage of MBCT \emph{prior} to recruitment.
+In the present work, we propose a usage of in-silico pre-clinical trial \emph{prior} to recruitment.
 Thus our models need not be fitted to a given patient's data, which might be impossible, invasive, or burdensome for the conduct of the trial.
 
 In this chapter,
 we demonstrate how  computer models can be used for early, affordable and reproducible testing of a clinical trial's premises and assumptions.
 Model-based empirical validation of the premises reduces the risk of conducting a trial that fails to demonstrate the desired effect (typically, an improvement of new intervention over the control). 
-We used the Rhythm ID Going Head to Head Trial (RIGHT) \cite{GoldABBTB11_RIGHTresults}, which lasted five years and sought to compare the diagnostic algorithms used by two ICDs for correctly diagnosing potentially fatal tachycardias (abnormally fast heart rhythms).
+We used the Rhythm ID Going Head to Head Trial (RIGHT) (\cite{GoldABBTB11_RIGHTresults}), which lasted five years and sought to compare the diagnostic algorithms used by two ICDs for correctly diagnosing potentially fatal tachycardias (abnormally fast heart rhythms).
 
 
 \section{Clinical trials and RIGHT}
 \label{sec:rcts}
 
 At the clinical trial stage (Fig.~\ref{fig:spectrum}), the objective is no longer to find bugs in the device: it is, rather, to evaluate the safety and efficacy of the validated device on humans. 
-RCT are the gold standard for evaluating the safety and efficacy of a new medical device \cite{FriedmanFD10_ClinicalTrials}.
+RCT are the gold standard for evaluating the safety and efficacy of a new medical device (\cite{FriedmanFD10_ClinicalTrials}).
 They constitute the only time prior to market use where the effects of the device on humans are actually observed, and are legally mandated for new high-risk medical devices like ICD.
 %It is important to understand how a typical RCT proceeds to appreciate where CPS modeling can help in that process.
 %Very broadly, in an \ac{RCT}, a new treatment also known as the \emph{intervention}, is compared to the current standard of care, commonly known as the \emph{control}.
@@ -65,8 +65,8 @@ They constitute the only time prior to market use where the effects of the devic
 %At the end of the trial, any clinically relevant differences between the two groups are evaluated to determine if they are statistically significant.
 The planning and execution of an RCT requires carefully navigating a number of technical, logistical and ethical issues to obtain reliable and statistically significant results.
 
-Because of the very high cost of RCT in terms of money, time, and the risk of harm they present to enrolled patients, our focus in this paper is on the use of CPS models, formalized in an MBCT, \emph{to validate the assumptions made by the investigators and thus increase the chances of success of an RCT}.
-We illustrate our approach by applying it to the Rhythm ID Going Head-to-Head Trial (RIGHT) \cite{GoldABBTB11_RIGHTresults}, which we present next.
+Because of the very high cost of RCT in terms of money, time, and the risk of harm they present to enrolled patients, our focus in this paper is on the use of CPS models, formalized in an in-silico pre-clinical trial, \emph{to validate the assumptions made by the investigators and thus increase the chances of success of an RCT}.
+We illustrate our approach by applying it to the Rhythm ID Going Head-to-Head Trial (RIGHT) (\cite{GoldABBTB11_RIGHTresults}), which we present next.
 \begin{figure}[tb]
 	\includegraphics[scale=0.6]{figures/figICD.pdf}
 	\caption{ICD connected to the heart. The atrial, ventricular, and shock electrogram signals are measured by the device, which uses them to diagnose the current state of the heart and determine whether therapy is required.}
@@ -79,11 +79,11 @@ We first provide a brief background to better understand RIGHT. Tachycardias (ab
 and SVT, which originate above the ventricles.
 A sustained VT can be fatal, while an SVT is typically non-fatal.
 The therapy applied by the ICD often takes the form of a high-energy electric shock.
-The shock can be pro-arrhythmic, and was even linked to increased morbidity \cite{shock_mortality}.
-Therefore, one of the biggest challenges for ICDs is to guarantee shock delivery for VT, and simultaneously reduce inappropriate shocks during SVT \cite{Ellenbogen11_Pacingbook}.
+The shock can be pro-arrhythmic, and was even linked to increased morbidity (\cite{shock_mortality}).
+Therefore, one of the biggest challenges for ICDs is to guarantee shock delivery for VT, and simultaneously reduce inappropriate shocks during SVT (\cite{Ellenbogen11_Pacingbook}).
 
-RIGHT is a trial that sought to compare the VT/SVT discrimination abilities of two algorithms \cite{GoldABBTB11_RIGHTresults}: 
-the Rhythm ID detection algorithm found in Boston Scientific's Vitality II ICDs~\cite{compass},
+RIGHT is a trial that sought to compare the VT/SVT discrimination abilities of two algorithms (\cite{GoldABBTB11_RIGHTresults}): 
+the Rhythm ID detection algorithm found in Boston Scientific's Vitality II ICDs (~\cite{compass}),
 and the PR Logic + Wavelet (PRL+W) detection algorithm found in a number of Medtronic's ICDs (Medtronic Maximo,
 Marquis, Intrinsic, Virtuoso, or Entrust ICD).
 %\mynote{SD}{make sure to list all the Boston Scientific and Medtronics ICD models that use each of these algorithims. This is very important}
@@ -92,15 +92,15 @@ Marquis, Intrinsic, Virtuoso, or Entrust ICD).
 RIGHT enrolled 1962 patients and ran for approximately five years.
 It was fully sponsored by Boston Scientific. 
 
-One of the trial's assumptions was that Rhythm ID would reduce the risk of inappropriate therapy by 25\% over PRL+W~\cite{Berger06_RIGHT}.
-The outcome of the trial~\cite{GoldABBTB11_RIGHTresults}, however, was that patients implanted with ICDs running Rhythm ID had a \emph{\textbf{34\% risk increase}} of inappropriate therapy as compared to patients implanted with ICD running PRL+W. 
+One of the trial's assumptions was that Rhythm ID would reduce the risk of inappropriate therapy by 25\% over PRL+W (~\cite{Berger06_RIGHT}).
+The outcome of the trial (~\cite{GoldABBTB11_RIGHTresults}), however, was that patients implanted with ICDs running Rhythm ID had a \emph{\textbf{34\% risk increase}} of inappropriate therapy as compared to patients implanted with ICD running PRL+W. 
 This result  is the opposite of the effect hypothesized by the trial investigators. 
-In this paper, we design an MBCT to test early and quickly whether the hypothesized effect holds by comparing the two ICDs on a large \emph{synthetic} cohort.\\\\
+In this paper, we design an in-silico pre-clinical trial to test early and quickly whether the hypothesized effect holds by comparing the two ICDs on a large \emph{synthetic} cohort.\\\\
 \textbf{\emph{Organization:}} In the following sections we describe the building blocks of in-silico pre-clinical trials: modeling the heart, processing 100's of real patients' data, mapping the timing and morphology components of the signal to a heart model we developed, generating a population of 10,000+ synthetic heart models, implementing the device algorithms and conducting multiple trials for the comparative rate of inappropriate therapy, condition-level rates and evaluating the effect of device parameters on discrimination rates.
 
  \section{Virtual Cohort Generation}
  \label{sec:heart modeling}
-%The first step in any MBCT is to choose a patient model that can interact with the device in a closed loop. 
+%The first step in any in-silico pre-clinical trial is to choose a patient model that can interact with the device in a closed loop. 
 %Computer models of the heart have been developed to model different aspects of the cardiac function to suit different applications (\cite{natalia,Grosu_wave}).
 %In this section we first give a brief overview of the basic Electrophysiology of the heart which describes the electrical activation and conduction, which is the basis for ICDs. 
 %We also describe our effort to model the electrical activity of the heart to generate signals corresponding to a large range of heart conditions that the ICD can encounter.
@@ -108,8 +108,8 @@ In this paper, we design an MBCT to test early and quickly whether the hypothesi
 Implantable Cardioverter Defibrillators (ICDs) can diagnose VT and VF by observing the electrical activity through three channels, as shown in Fig.~\ref{fig:icd}.
 The measured signals are known as \emph{electrograms}, or EGMs.
 VT and SVT can share similar heart rates and might even occur simultaneously, so an SVT can be mis-diagnosed as a VT. 
-This is problematic because VT therapy consists of low and high energy electric shocks of 30-40 Joules ($\sim$800V) delivered directly to the heart, which is very painful to the patient, and has been shown to increase morbidity \cite{shock_mortality}\footnote{\small{Physicians compare a shock to a ``horse kicking you in the chest"}}.
-Therefore, one of the biggest challenges for ICDs is to discriminate between VT that typically requires a shock, and SVT that typically should not be shocked \cite{Ellenbogen11_Pacingbook}.
+This is problematic because VT therapy consists of low and high energy electric shocks of 30-40 Joules ($\sim$800V) delivered directly to the heart, which is very painful to the patient, and has been shown to increase morbidity (\cite{shock_mortality})\footnote{\small{Physicians compare a shock to a ``horse kicking you in the chest"}}.
+Therefore, one of the biggest challenges for ICDs is to discriminate between VT that typically requires a shock, and SVT that typically should not be shocked (\cite{Ellenbogen11_Pacingbook}).
 
 An EGM signal can be characterized by the \emph{timing of events} that produced it, and the \emph{morphology of the signal itself}.
 An `event' is roughly characterized as the source of the largest peak in the EGM (e.g. a ventricular depolarization), and event timing is a crucial element of an arrhythmia's definition in clinical Electrophysiology.
@@ -125,14 +125,14 @@ Correspondingly, our model has two components: a timing model, and a morphology 
 	\label{fig:HM_top}
 \end{figure}
 
-The node and path topology used in the MBCT is shown in Fig. \ref{fig:HM_top}. 
+The node and path topology used in the in-silico pre-clinical trials is shown in Fig. \ref{fig:HM_top}. 
 The hollow nodes are passive nodes representing key locations within the heart where electrical events may be blocked. These include the Atrioventricular node (AV), Right Bundle Branch (RBB) and Left Ventricle Apex (LVA). 
 The filled nodes in red, Sinoatrial (SA) node and Right Ventricle Apex (RVA) node, represent the heart locations where ICD electrodes are placed to measure the EGMs.
 The timing of the activation events at these nodes determines the timing of corresponding EGMs.
 Different sources for tachyarrhythmias are represented by arrhythmia nodes (dashed filled nodes) which are capable of self-activating at prescribed rates. These include Premature Atrial Complexes (PACs) and Premature Ventricular Complexes (PVCs) which are sources of rhythm disturbances.
 
 Every node and path automaton has timing parameters that determine, for example, the delay between events, and how long it takes to conduct an electrical event between two nodes.
-These timing parameters can be directly derived from clinical data \cite{josephson}, and the model structure is compatible with clinical Electrophysiology concepts.
+These timing parameters can be directly derived from clinical data (\cite{josephson}), and the model structure is compatible with clinical Electrophysiology concepts.
 Thus we know the ranges for these parameters.
 In \cite{VHM_proc}, the timing model's capability to simulate various normal and abnormal heart conditions was validated quantitatively and by cardiac electrophysiologists.
 
@@ -147,7 +147,7 @@ By choosing the range, we control the variability of the signals produced by a g
 The ICD uses the EGM morphology in two ways:
 first, the atrial and ventricular EGMs are used to \emph{sense} when events occur via peak detection (Section \ref{sec:sensing}).
 Second, the Shock channel EGM is used in the morphology comparison discriminators (Section \ref{sec:svtvt}, \cite{VTC,Wavelet}).
-It is known that sensing (the detection of events) can be responsible for up to 20\% of inappropriate therapies \cite{wrong_sensing}.
+It is known that sensing (the detection of events) can be responsible for up to 20\% of inappropriate therapies (\cite{wrong_sensing}).
 Therefore, it is important that our model generate realistic and varied EGM waveforms for a proper evaluation of the detection algorithms.
 
 \begin{figure}[t]
@@ -170,7 +170,7 @@ We guarantee that this does not change the signature of the EGM, by running one 
 This variation is parametrized, e.g. the percentage of modified coefficients, the range of the random scaling.
 
 \subsection{Patient Data Adjudication and EGM Template Extraction}
-In order to obtain realistic morphologies for our simulations we utilize the Ann Arbor Electrogram Libraries (AAEL), a database of over 500 EGM recordings made during clinical electrophysiology studies~\cite{AAEL}. 
+In order to obtain realistic morphologies for our simulations we utilize the Ann Arbor Electrogram Libraries (AAEL), a database of over 500 EGM recordings made during clinical electrophysiology studies (~\cite{AAEL}). 
 The AAEL is used by all major ICD manufacturers and is licensed by the US FDA. 
 The AAEL provides descriptive annotations of records at a high level.
 We performed additional detailed examination to precisely segment each record according to rhythm type.
@@ -206,8 +206,8 @@ Thus each generated model is probabilistic to reflect inherent rhythm variabilit
 \section{Implementing Device Algorithms} 
 \label{sec:device models}
 Due to the limited sensing capability of ICDs, device manufacturers have developed different algorithms to identify the electrical events and correctly diagnose the cardiac arrhythmia as being VT or SVT.
-In this chapter we implemented the detection algorithm Rhythm ID of Boston Scientific \cite{compass,Ellenbogen11_Pacingbook},% [???Compass, pacingdefibrillation,VTC paper, ICD book, Ellenbogen].
-and PRLogic+Wavelet (PRL+W) of Medtronic \cite{Singer,Wavelet}.
+In this chapter we implemented the detection algorithm Rhythm ID of Boston Scientific (\cite{compass,Ellenbogen11_Pacingbook}),% [???Compass, pacingdefibrillation,VTC paper, ICD book, Ellenbogen].
+and PRLogic+Wavelet (PRL+W) of Medtronic (\cite{Singer,Wavelet}).
 %In available literature on the evaluations of device algorithms descriptions of the device algorithms are not detailed enough for full implementation.
 %To obtain the detailed implementation we further reviewed clinical execution traces from literature like \cite{Singer} to infer detailed executions of the algorithms. 
 We also set up a testing platform to validate our implementations against real ICDs using conformance testing.
@@ -257,7 +257,7 @@ This section gives an overview of both algorithms.
 \begin{figure*}[t]
 	\centering
 	\includegraphics[scale=0.4]{figs/BS_det.pdf}
-	\caption{\small SVT/VT detection algorithm by Boston Scientific \cite{compass}. The two cases on the right illustrate two different decisions by the algorithm. (a) illustrates a sustained VT case where at the end of the Duration, the ventricular rate is faster than the atrial rate. The algorithm correctly identified the rhythm as VT and delivered therapy. (b) illustrates a SVT case where at the end of the Duration, the ventricular rate is slower than the atrial rate. Then by comparing the EGM morphology in the Shock channel (Marker 1) with the stored NSR template (Marker 2) for the last 10 EGM events, the algorithm decided that the morphology is correlated, therefore therapy is inhibited.}
+	\caption{\small SVT/VT detection algorithm by Boston Scientific (\cite{compass}). The two cases on the right illustrate two different decisions by the algorithm. (a) illustrates a sustained VT case where at the end of the Duration, the ventricular rate is faster than the atrial rate. The algorithm correctly identified the rhythm as VT and delivered therapy. (b) illustrates a SVT case where at the end of the Duration, the ventricular rate is slower than the atrial rate. Then by comparing the EGM morphology in the Shock channel (Marker 1) with the stored NSR template (Marker 2) for the last 10 EGM events, the algorithm decided that the morphology is correlated, therefore therapy is inhibited.}
 	\label{fig:BS_det}
 \end{figure*}
 
@@ -267,7 +267,7 @@ Rhythm ID detects an episode by continuously examining the last 10 ventricular i
 If 8/10 intervals are shorter than the VF threshold for a certain pre-set \emph{VF Duration} (e.g., 2.5 seconds) then the algorithm declares VF.
 Otherwise, if 8/10 intervals are shorter than the VT threshold for a certain VT Duration, then further discriminators are used.
 First, if the ventricular rate is greater than the atrial rate for the last 10 ventricular beats, Rhythm ID will determine the condition is VT.
-Otherwise, the Vector Timing and Correlation (VTC) discriminator~\cite{VTC} compares EGM morphology of the last 10 ventricular events with an EGM \emph{template} saved during NSR.
+Otherwise, the Vector Timing and Correlation (VTC) discriminator (~\cite{VTC}) compares EGM morphology of the last 10 ventricular events with an EGM \emph{template} saved during NSR.
 VTC is based on the assumption that the EGM morphology of the shock channel during VT is different from its morphology during SVT and NSR.
 If the correlation between the current EGM's morphology and the stored NSR morphology is above a pre-set threshold, the current rhythm is more likely to be SVT than VT, and therapy is withheld.
 Otherwise, if the atrial rate is equal to a pre-set fibrillation rate and the variance of the ventricular interval length exceeds a certain limit, the algorithm decides it's an SVT. 
@@ -278,8 +278,8 @@ Otherwise, it decides this is a VT.
 
 \subsubsection{PR Logic+Wavelet}
 PRL+W also utilizes rate-based and morphology-based discriminators similar (but not identical) to Rhythm ID.
-The morphology discriminator used in PRL+W  is similar to VTC in Rhythm ID, but operates in the wavelet domain~\cite{Wavelet}.
-PRL+W also continuously compares the pattern of atrial and ventricular activation to 19 pre-defined patterns~\cite{Singer}.
+The morphology discriminator used in PRL+W  is similar to VTC in Rhythm ID, but operates in the wavelet domain (~\cite{Wavelet}).
+PRL+W also continuously compares the pattern of atrial and ventricular activation to 19 pre-defined patterns (~\cite{Singer}).
 Each pattern is associated to a heart condition, like Sinus Tachycardia or VT.
 A match between the current activity and one of the pre-defined patterns is used as an indication that the current rhythm is explained by the associated condition.
 
@@ -320,7 +320,7 @@ The Medtronic software implementation can be validated using a similar process.
 \subsection{The rate of inappropriate therapy}
 \label{sec:rate inapp}
 %\todo[inline]{justify episode-level rates and not patient-level}
-The first objective of the MBCT is to estimate the rate of inappropriate detection $\bar{t}$ for each of the two algorithms for all arrhythmias combined, i.e., for the entire synthetic cohort.
+The first objective of the in-silico pre-clinical trials is to estimate the rate of inappropriate detection $\bar{t}$ for each of the two algorithms for all arrhythmias combined, i.e., for the entire synthetic cohort.
 The rate of inappropriate therapy is defined as
 \[\bar{t} = \frac{\text{Number of inappropriately applied therapies}}{\text{Number of applied therapies}}\]
 From this we can confirm or invalidate the assumption that Rhythm ID outperforms PRL+W.
@@ -330,12 +330,12 @@ The number of instances was obtained from a Monte Carlo calculation.% whose deta
 \textbf{Conclusion 1: PRL+W delivers less inappropriate therapy.}
 The obtained rates of inappropriate detection were 6.65\% for Boston Scientific and 2.91\% for Medtronic (P < 0.0001), assuming an equal number of patients from each arrhythmia in the synthetic cohort.
 The corresponding relative improvement \emph{of Medtronic over Boston Scientific} is 56\%.
-In other words, the MBCT reveals that the PRL+W algorithm from Medtronic actually differentiates between VT and SVT better than Rhythm ID from Boston Scientific.
-Our findings are consistent with the observations of the RIGHT trial itself~\cite{GoldABBTB11_RIGHTresults}.
+In other words, the in-silico pre-clinical trial reveals that the PRL+W algorithm from Medtronic actually differentiates between VT and SVT better than Rhythm ID from Boston Scientific.
+Our findings are consistent with the observations of the RIGHT trial itself (~\cite{GoldABBTB11_RIGHTresults}).
 
 \textbf{Conclusion 2: result holds across population characteristics.}
 The above rates were obtained under the assumption that each arrhythmia is equally represented in the cohort.
-A significant feature of MBCT is that it allows us to study the endpoint of interest (here, rate of inappropriate detection) on a variety of populations, which have the various arrhythmias in different proportions.
+A significant feature of in-silico pre-clinical trial is that it allows us to study the endpoint of interest (here, rate of inappropriate detection) on a variety of populations, which have the various arrhythmias in different proportions.
 This may not be feasible in a real clinical trial, which has to contend with the population present at the clinical centers where the trial is conducted.
 We may then ask: does PRL+W maintain a lower rate of inappropriate detection across different populations?
 To answer this question, we varied the distribution of the arrhythmias in the synthetic cohort, and re-computed the cohort-wide rates of inappropriate therapy.
@@ -347,19 +347,19 @@ It can be seen that indeed, PRL+W maintains a better rate of arrhythmia discrimi
 \begin{figure*}[t]
 \centering
 \includegraphics[scale=0.4]{figures/popvar9}
-\caption{\small Rate of inappropriate detection ($2^{nd}$ and $4^{th}$ columns) for different arrhythmia distributions ($1^{st}$ and $3^d$ columns). The arrhythmias are (left to right on the x axis): Atrial fibrillation, Atrial flutter, Premature Ventricular Complexes, Nonsustained Ventricular Fibrillation, Supraventricular Tachycardia, Sinus Brady-Tachy, Ventricular Fibrillation, Ventricular Tachycardia \cite{josephson}. The top left distribution is uniform, and the bottom right distribution is that of the baseline characterization in RIGHT \cite{GoldABBTB11_RIGHTresults}.}
+\caption{\small Rate of inappropriate detection ($2^{nd}$ and $4^{th}$ columns) for different arrhythmia distributions ($1^{st}$ and $3^d$ columns). The arrhythmias are (left to right on the x axis): Atrial fibrillation, Atrial flutter, Premature Ventricular Complexes, Nonsustained Ventricular Fibrillation, Supraventricular Tachycardia, Sinus Brady-Tachy, Ventricular Fibrillation, Ventricular Tachycardia (\cite{josephson}). The top left distribution is uniform, and the bottom right distribution is that of the baseline characterization in RIGHT (\cite{GoldABBTB11_RIGHTresults}).}
 \label{fig:popvar8}
 \end{figure*}
 
-This illustrates very well the benefit that an MBCT can bring to the planning of an RCT: the fact that Rhythm ID could not be shown to be better than PRL+W %(let alone 25\% better as was hypothesized by the investigators) 
+This illustrates very well the benefit that an in-silico pre-clinical trial can bring to the planning of an RCT: the fact that Rhythm ID could not be shown to be better than PRL+W %(let alone 25\% better as was hypothesized by the investigators) 
 can cause the investigators to re-consider their assumptions and the feasibility of the trial.
-In this case, the MBCT casts doubt on the assumed \emph{direction} of the effect, i.e. whether intervention is better than control, or the other way around.
+In this case, the in-silico pre-clinical trial casts doubt on the assumed \emph{direction} of the effect, i.e. whether intervention is better than control, or the other way around.
 This early check can mean the difference between an expensive trial that fails at showing the desired effect, and a trial that is appropriately sized to demonstrate the desired effect size.
 
 %While we will not know the true distribution of the arrhythmias in the \ac{RCT} until its completion, 
-Thus, while an MBCT does not replace or mimic the RCT since we can not capture patient-level outcomes of the therapy, it can provide  but \emph{early insight} at a small fraction of the RCT cost and duration and without the ethical issues.	 
+Thus, while an in-silico pre-clinical trial does not replace or mimic the RCT since we can not capture patient-level outcomes of the therapy, it can provide  but \emph{early insight} at a small fraction of the RCT cost and duration and without the ethical issues.	 
 
-%\textbf{Sample size calculation for MBCT}.
+%\textbf{Sample size calculation for in-silico pre-clinical trial}.
 %The rate is naturally computed as the mean of a random variable.
 %Namely, it is the mean of the variable $t$ which equals 1 if the episode is a VT/VF for which therapy was applied, and 0 if it's a VT/VF for which therapy was withheld.
 %To get reliable estimates for this rate, we use a standard Monte-Carlo calculation under the assumption that the estimate of the mean is normally distributed around the true mean. 
@@ -400,7 +400,7 @@ Thus, while an MBCT does not replace or mimic the RCT since we can not capture p
 %(Note that some of those reported results, however, were not statistically significant at the 5\% significance level).
 %At the 5\% significance level and 90\% power, this yields a sample size of 11160.
 %% with an assumed BSC rate of 0.08.
-%We used 11400 instances in our MBCT.
+%We used 11400 instances in our in-silico pre-clinical trial.
 %The results were inappropriate therapy rates $\bar{t}_{BSC}= 0.0291$ and $\bar{t}_{MED} = 0.0665$, with an effect size (relative to Medtronic's algorithm) of 56\% with $P << 10^{-3}$.
 %Thus the null hypothesis of equality of inappropriate therapy rates can be rejected.
 
@@ -418,8 +418,8 @@ Unfortunately, these are typically competing goals: the more sensitive the devic
 %Moreover, if a VT episode is non-sustained, it won't receive therapy and won't be recorded, so it's not possible to measure sensitivity.
 %Even if the device were set to record all episodes whether treated or not, memory limitations mean that it won't record everything.
 
-We calculated sensitivity and specificity in our MBCT, and report them in \tableref{vtsvt} on a per-arrhythmia basis.
-The conditions are drawn from RIGHT's baseline characterization \cite{GoldABBTB11_RIGHTresults}.
+We calculated sensitivity and specificity in our in-silico pre-clinical trials, and report them in \tableref{vtsvt} on a per-arrhythmia basis.
+The conditions are drawn from RIGHT's baseline characterization (\cite{GoldABBTB11_RIGHTresults}).
 Specificity is reported for SVTs and sensitivity is reported for VTs.
 It can be seen from these results that in our synthetic cohort, Atrial flutter and other Supraventricular tachycardias are the main source of inappropriate detection for Rhythm ID compared to PRL+W.
 In the case of Atrial flutter, Rhythm ID categorizes it inappropriately as VT for 41.7\% of the cases.
@@ -427,14 +427,15 @@ In the case of Atrial flutter, Rhythm ID categorizes it inappropriately as VT fo
 Condition-level analysis pinpoints the specific pathways of the discrimination algorithm which must be addressed to reduce the device's rate of inappropriate therapy. It is difficult to get such insight through an RCT as the patient population is fixed and the conditions are determined retroactively. Such analysis can be further used to investigate condition distributions across different patient population types (e.g. abnormal heart rhythms in children vs geographic region-specific or race-specific condition distributions).   
 
 \begin{table}[t]
+\center
 \begin{tabular}{|p{2.8cm}|p{1.5cm}|p{1.5cm}|c|}
 	\hline Arrhythmia & Rhythm ID & PR Logic + Wavelet  & P value \\ 
 	\hline &	\multicolumn{2}{|c|}{\textbf{Specificity} (\%)}& \\
 	\hline Atrial Fibrillation & 99.8 & 99.6 & 0.3167 \\ 
-	\hline \cellcolor{blue!25} Atrial flutter & 58.3 & 79.33 & <0.0001 \\ 
+	\hline \cellcolor{blue!25} Atrial flutter & 58.3 & 79.33 & $<$ 0.0001 \\ 
 	\hline Premature ventricular complexes & 100 & 100 & 1 \\ 
 	\hline Nonsustained ventricular tachycardia & 100 & 99.8 & 0.3171 \\ 
-	\hline \cellcolor{blue!25} Other Supraventricular tachycardia & 96.3 & 99.7 & <0.0001 \\ 
+	\hline \cellcolor{blue!25} Other Supraventricular tachycardia & 96.3 & 99.7 & $<$ 0.0001 \\ 
 	\hline Brady-Tachy & 100 & 98.83 & 0.0079 \\ 
 		\hline
 	\hline &	\multicolumn{2}{|c|}{\textbf{Sensitivity} (\%)} & \textbf{P value}\\
@@ -450,14 +451,14 @@ Condition-level analysis pinpoints the specific pathways of the discrimination a
  \subsection{Effect of Device Parameters on Discriminating Capability}
 ICDs have a number of parameters which can be tuned to accommodate specific patient conditions by the physicians. 
 %For example, pacemakers have over 400 possible settings for which the physician may tune less than 5 parameters during implantation and in follow-up visits, while leaving the other settings at their default values.
-Currently there are very few clinical results on the effect of tuning parameters and their effect on sensitivity and specificity~\cite{maditrit}.
-One of the main causes of VT/SVT mis-classifications is inappropriate parameter settings~\cite{wrong_sensing}.
+Currently there are very few clinical results on the effect of tuning parameters and their effect on sensitivity and specificity (~\cite{maditrit}).
+One of the main causes of VT/SVT mis-classifications is inappropriate parameter settings (~\cite{wrong_sensing}).
 In order for the physicians to set appropriate parameters, it is very important to understand how the change of one parameter can affect the discriminating capability of the device.
 It is costly to experiment this on real patients.
-With MBCT, one can use the same population across multiple devices with different parameter settings at virtually no cost. 
+With in-silico pre-clinical trial, one can use the same population across multiple devices with different parameter settings at virtually no cost. 
 %The resulting trends can provide valuable insights to physicians.
 
-In this section, we use MBCT to demonstrate the effects of changing two common parameters on SVT/VT discrimination specificity.
+In this section, we use in-silico pre-clinical trial to demonstrate the effects of changing two common parameters on SVT/VT discrimination specificity.
 The first parameter is the \emph{\textbf{duration}} of arrhythmia before the ICD makes a therapy decision. 
 For Boston Scientific ICD the value can be set to 1 to 30 seconds.
 In this experiment we explore the values \{1,2,3,4,5,8,10\}.
@@ -466,7 +467,7 @@ In this experiment we explore the values \{8,10,12,16,18,24,30\} which roughly c
 Intuitively, with a longer duration the device can examine a longer history of the arrhythmia episode, and also allows a greater chance for the arrhythmia to self-terminate. 
 This can prevent inappropriate therapy.
 Setting the duration too long can also delay and in some cases withhold appropriate therapy. 
-These results are in agreement with the recently conducted ADVANCE-III RCT which showed that longer arrhythmia detection windows reduce shocks for Medtronic ICDs~\cite{advance3}.
+These results are in agreement with the recently conducted ADVANCE-III RCT which showed that longer arrhythmia detection windows reduce shocks for Medtronic ICDs (~\cite{advance3}).
 
 The second parameter we varied is the \emph{\textbf{VF threshold}}.
 For both devices, if the ventricular rate is faster than the VF threshold for a period of time the devices will deliver therapy without going into the SVT/VT discrimination algorithm. So a higher VF threshold means that more signals are passing through the discrimination algorithm.
@@ -474,8 +475,8 @@ In this experiment we explored the values \{170,184,200\} for both algorithms.
 Intuitively the higher the threshold, the more episodes will be examined by the SVT/VT discrimination algorithm, which may increase specificity.
 %However, VTs with rate less than the threshold may also be classified as SVT, causing missed therapies.\\
 \newline\textbf{Conducting the Model-based Clinical Trial}. 
-For each of the 21 parameter combinations described above, we ran a MBCT with 11,400 EGM episodes on both device models. 
-%Each MBCT took approximately 3 hours on a 3GHz Intel Xeon processor with 8 cores. The resulting specificity values are shown in Fig. \ref{fig:parameter}. 
+For each of the 21 parameter combinations described above, we ran an in-silico pre-clinical trial with 11,400 EGM episodes on both device models. 
+%Each in-silico pre-clinical trial took approximately 3 hours on a 3GHz Intel Xeon processor with 8 cores. The resulting specificity values are shown in Fig. \ref{fig:parameter}. 
 From the results we observe that for both algorithms the specificity increases monotonically with the length of the duration.
 When the duration is longer than 5, sensitivities dropped below 100\%, which is in line with the intuition.
 \begin{figure}[t]
@@ -496,8 +497,8 @@ One possible interpretation of the result is that the Boston Scientific algorith
 \section{Discussion}
 \label{sec:discussion}
 
-The above experiment has illustrated a practical application of the MBCT approach in the use of computer modeling for the support of clinical trial planning and execution.
-We now present the medically relevant limitations of this particular experiment, then discuss the MBCT approach in general.
+The above experiment has illustrated a practical application of computer modeling for the support of clinical trial planning and execution.
+We now present the medically relevant limitations of this particular experiment, then discuss the in-silico pre-clinical trial approach in general.
 First, we did not account for post-shock detection (a phase of detection that follows the delivery of therapy), which was part of the RIGHT results.
 The Onset discriminator was not implemented so the results exclude its effects.
 RIGHT included both dual-chamber and single-chamber devices, whereas we only implemented the algorithms for dual-chamber devices.
@@ -505,21 +506,21 @@ For the VTC and Wavelet algorithms, the literature did not specify which samples
 We chose to sample the electrogram uniformly in time, and validated that this gives correct results.
 %In the clinical setting, some of the programmable parameters of the device are set by the physician based on the current state of the patient. 
 %It is not currently possible to model this process.
-%However, it does point the way to an interesting application of MBCT, namely studying the sensitivity of a trial's results to parameter setting strategy.
+%However, it does point the way to an interesting application of in-silico pre-clinical trial, namely studying the sensitivity of a trial's results to parameter setting strategy.
 
 Clinical trials study the effect of an intervention \emph{in the patient}, and report patient-level results (e.g., ``The event of interest was observed in X\% of patients in Group 1''). 
 Our results are at the condition level: they take the form ``the event of interest was observed in X\% of generated conditions".
 To produce patient-level estimates requires an estimate of how conditions are distributed among patients. 
 This low-level data is not readily available.
 
-It is important to stress that in general, one should not expect \emph{absolute numbers} from an MBCT to match those from a clinical trial, nor should this be the goal of the MBCT.
-For example, in this work, it is unlikely that our MBCT will yield rates of inappropriate therapy that are equal to the rates obtained by RIGHT itself.
+It is important to stress that in general, one should not expect \emph{absolute numbers} from an in-silico pre-clinical trial to match those from a clinical trial, nor should this be the goal.
+For example, in this work, it is unlikely that our in-silico pre-clinical trials will yield rates of inappropriate therapy that are equal to the rates obtained by RIGHT itself.
 The reasons for this are many:
 \begin{itemize}
 	\item Many factors that affect the outcomes of the trial (such as changes in patient lifestyle) are not modeled.
 	\item The adjudication of episodes in RIGHT (and other trials) is limited by the fact that only therapy episodes were recorded by the devices.
-	The adjudication process is further limited by the lack of surface EKGs, which makes it hard to reliably distinguish certain atrial arrhythmias. 
-	Neither of these is a limitation in MBCT since we have the ground truth: we know exactly what arrhythmia is being simulated by the model.  Furthermore, the AAEL signals have both device electrograms (EGMs) and the corresponding surface EKGs which allow for precise adjudication.  
+	The adjudication process is further limited by the lack of surface EKGs, which makes it hard to reliably distinguish certain atrial arrhythmia. 
+	Neither of these is a limitation in in-silico pre-clinical trial since we have the ground truth: we know exactly what arrhythmia is being simulated by the model.  Furthermore, the AAEL signals have both device electrograms (EGMs) and the corresponding surface EKGs which allow for precise adjudication.  
 	\item Experts may disagree on how to adjudicate the more complex episodes, so our classification of episodes from the AAEL database and the classification of the RIGHT investigators have an irreducible discrepancy.
 	Again, this will affect the statistics that they and we compute.
 \end{itemize}
